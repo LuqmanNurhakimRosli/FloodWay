@@ -85,7 +85,7 @@ export function ShelterPage() {
 
     useEffect(() => {
         if (!selectedLocation) {
-            navigate('/home');
+            navigate('/location');
         }
     }, [selectedLocation, navigate]);
 
@@ -203,83 +203,78 @@ export function ShelterPage() {
             )}>
                 {selectedShelter ? (
                     // Selected Shelter Detail + Transport Mode Picker
-                    <div className="flex flex-col" style={{ maxHeight: 'calc(50vh - 0px)' }}>
-                        {/* Scrollable content area */}
-                        <div className="flex-1 overflow-y-auto overscroll-contain p-5 pb-3">
-                            {/* Shelter Info */}
-                            <div className="flex items-start gap-4 mb-4">
-                                <div className="size-14 flex items-center justify-center bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 rounded-2xl text-2xl shrink-0 border border-emerald-500/20">
-                                    🏥
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h2 className="text-base font-bold mb-1.5 leading-snug">{selectedShelter.name}</h2>
-                                    <div className="flex items-center flex-wrap gap-2 text-xs text-muted-foreground">
-                                        <span className="flex items-center gap-1 bg-muted/50 px-2 py-0.5 rounded-lg">
-                                            <MapPin className="size-3" />
-                                            {selectedShelter.distance} km
-                                        </span>
-                                        <span className="flex items-center gap-1 bg-muted/50 px-2 py-0.5 rounded-lg">
-                                            <Clock className="size-3" />
-                                            ~{getEstimatedTimeForMode(selectedShelter, selectedMode)} min
-                                        </span>
-                                    </div>
-                                </div>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="shrink-0 rounded-xl hover:bg-red-500/20 hover:text-red-500 size-8"
-                                    onClick={handleClose}
-                                >
-                                    <X className="size-4" />
-                                </Button>
+                    <div className="p-6 pb-[calc(1.5rem+var(--safe-bottom))]">
+                        {/* Shelter Info */}
+                        <div className="flex items-start gap-4 mb-4">
+                            <div className="size-16 flex items-center justify-center bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 rounded-2xl text-3xl shrink-0 border border-emerald-500/20">
+                                🏥
                             </div>
-
-                            {/* Transport Mode Picker */}
-                            <div>
-                                <span className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-2 font-medium">
-                                    Travel Mode
-                                </span>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {TRANSPORT_MODES.map(({ mode, label, icon: Icon, speed }) => (
-                                        <button
-                                            key={mode}
-                                            onClick={() => setSelectedMode(mode)}
-                                            className={cn(
-                                                "flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 transition-all duration-200",
-                                                selectedMode === mode
-                                                    ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
-                                                    : "border-white/10 bg-white/5 text-muted-foreground hover:border-white/20 hover:bg-white/10"
-                                            )}
-                                        >
-                                            <Icon className="size-5" />
-                                            <span className="text-xs font-semibold">{label}</span>
-                                            <span className="text-[10px] opacity-70">{speed}</span>
-                                        </button>
-                                    ))}
+                            <div className="flex-1 min-w-0">
+                                <h2 className="text-lg font-bold mb-2 leading-snug">{selectedShelter.name}</h2>
+                                <div className="flex items-center flex-wrap gap-3 text-sm text-muted-foreground">
+                                    <span className="flex items-center gap-1.5 bg-muted/50 px-2.5 py-1 rounded-lg">
+                                        <MapPin className="size-3.5" />
+                                        {selectedShelter.distance} km
+                                    </span>
+                                    <span className="flex items-center gap-1.5 bg-muted/50 px-2.5 py-1 rounded-lg">
+                                        <Clock className="size-3.5" />
+                                        ~{getEstimatedTimeForMode(selectedShelter, selectedMode)} min
+                                    </span>
                                 </div>
                             </div>
-                        </div>
-
-                        {/* Fixed Navigate Button - always visible above bottom nav */}
-                        <div className="px-5 pt-2 pb-[calc(1rem+4rem+var(--safe-bottom))] bg-gradient-to-t from-background via-background to-transparent">
                             <Button
-                                className="w-full h-12 text-base font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 shadow-lg shadow-emerald-500/30 rounded-xl"
-                                onClick={handleNavigate}
-                                disabled={isRouteLoading}
+                                variant="ghost"
+                                size="icon"
+                                className="shrink-0 rounded-xl hover:bg-red-500/20 hover:text-red-500"
+                                onClick={handleClose}
                             >
-                                {isRouteLoading ? (
-                                    <>
-                                        <Loader2 className="size-5 animate-spin" />
-                                        Calculating Route...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Navigation className="size-5" />
-                                        Start Navigation
-                                    </>
-                                )}
+                                <X className="size-4" />
                             </Button>
                         </div>
+
+                        {/* Transport Mode Picker */}
+                        <div className="mb-4">
+                            <span className="block text-xs text-muted-foreground uppercase tracking-wider mb-2.5 font-medium">
+                                Travel Mode
+                            </span>
+                            <div className="grid grid-cols-3 gap-2">
+                                {TRANSPORT_MODES.map(({ mode, label, icon: Icon, speed }) => (
+                                    <button
+                                        key={mode}
+                                        onClick={() => setSelectedMode(mode)}
+                                        className={cn(
+                                            "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all duration-200",
+                                            selectedMode === mode
+                                                ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
+                                                : "border-white/10 bg-white/5 text-muted-foreground hover:border-white/20 hover:bg-white/10"
+                                        )}
+                                    >
+                                        <Icon className="size-5" />
+                                        <span className="text-xs font-semibold">{label}</span>
+                                        <span className="text-[10px] opacity-70">{speed}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Navigate Button */}
+                        <Button
+                            className="w-full h-13 text-base font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 shadow-lg shadow-emerald-500/30"
+                            onClick={handleNavigate}
+                            disabled={isRouteLoading}
+                        >
+                            {isRouteLoading ? (
+                                <>
+                                    <Loader2 className="size-5 animate-spin" />
+                                    Calculating Route...
+                                </>
+                            ) : (
+                                <>
+                                    <Navigation className="size-5" />
+                                    Start Navigation
+                                </>
+                            )}
+                        </Button>
                     </div>
                 ) : (
                     // Shelter List View
@@ -355,7 +350,7 @@ export function ShelterPage() {
                         </div>
 
                         {/* Safe bottom padding */}
-                        <div className="h-[calc(var(--safe-bottom)+5rem)]" />
+                        <div className="h-[calc(var(--safe-bottom)+0.5rem)]" />
                     </div>
                 )}
             </div>

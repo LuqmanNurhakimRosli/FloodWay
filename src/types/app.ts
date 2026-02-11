@@ -2,6 +2,8 @@
 
 export type AppScreen = 'welcome' | 'location' | 'prediction' | 'shelters' | 'navigation';
 
+export type TransportMode = 'car' | 'motorcycle' | 'walk';
+
 export interface Coordinates {
     lat: number;
     lng: number;
@@ -50,6 +52,7 @@ export interface Route {
     estimatedTime: number; // minutes
     steps: NavigationStep[];
     path: Coordinates[]; // path points for visualization
+    transportMode: TransportMode;
 }
 
 // App state
@@ -61,4 +64,5 @@ export interface AppState {
     selectedShelter: Shelter | null;
     route: Route | null;
     isLoading: boolean;
+    transportMode: TransportMode;
 }

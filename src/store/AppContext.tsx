@@ -1,6 +1,6 @@
 // Global app store using React Context for state management
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import type { Location, Shelter, DailyPrediction, Route, Coordinates } from '../types/app';
+import type { Location, Shelter, DailyPrediction, Route, Coordinates, TransportMode } from '../types/app';
 import { DEFAULT_POSITION } from '../data/locations';
 import { generateDailyPrediction } from '../utils/predictionGenerator';
 import { calculateRoute } from '../utils/pathfinding';
@@ -11,11 +11,15 @@ interface AppState {
     selectedShelter: Shelter | null;
     route: Route | null;
     userPosition: Coordinates;
+    transportMode: TransportMode;
+    isRouteLoading: boolean;
 }
 
 interface AppContextType extends AppState {
     setLocation: (location: Location) => void;
     setShelter: (shelter: Shelter) => void;
+    setTransportMode: (mode: TransportMode) => void;
+    navigateToShelter: (shelter: Shelter, mode: TransportMode) => Promise<void>;
     clearNavigation: () => void;
     reset: () => void;
 }
@@ -29,6 +33,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         selectedShelter: null,
         route: null,
         userPosition: DEFAULT_POSITION,
+        transportMode: 'car',
+        isRouteLoading: false,
     });
 
     const setLocation = useCallback((location: Location) => {
@@ -41,12 +47,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const setShelter = useCallback((shelter: Shelter) => {
-        const route = calculateRoute(state.userPosition, shelter);
         setState(prev => ({
             ...prev,
             selectedShelter: shelter,
-            route,
         }));
+    }, []);
+
+    const setTransportMode = useCallback((mode: TransportMode) => {
+        setState(prev => ({
+            ...prev,
+            transportMode: mode,
+        }));
+    }, []);
+
+    // Async navigation: fetches real road route from OSRM
+    const navigateToShelter = useCallback(async (shelter: Shelter, mode: TransportMode) => {
+        setState(prev => ({
+            ...prev,
+            selectedShelter: shelter,
+            transportMode: mode,
+            isRouteLoading: true,
+            route: null,
+        }));
+
+        try {
+            const route = await calculateRoute(state.userPosition, shelter, mode);
+            setState(prev => ({
+                ...prev,
+                route,
+                isRouteLoading: false,
+            }));
+        } catch (error) {
+            console.error('Route calculation failed:', error);
+            setState(prev => ({
+                ...prev,
+                isRouteLoading: false,
+            }));
+        }
     }, [state.userPosition]);
 
     const clearNavigation = useCallback(() => {
@@ -54,6 +91,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             ...prev,
             selectedShelter: null,
             route: null,
+            isRouteLoading: false,
         }));
     }, []);
 
@@ -64,6 +102,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
             selectedShelter: null,
             route: null,
             userPosition: DEFAULT_POSITION,
+            transportMode: 'car',
+            isRouteLoading: false,
         });
     }, []);
 
@@ -73,6 +113,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 ...state,
                 setLocation,
                 setShelter,
+                setTransportMode,
+                navigateToShelter,
                 clearNavigation,
                 reset,
             }}

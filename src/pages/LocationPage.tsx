@@ -1,8 +1,11 @@
-// Location Selection Page
+// Location Selection Page with shadcn/Tailwind
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../store';
 import { LOCATIONS } from '../data/locations';
 import type { Location } from '../types/app';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { ArrowLeft, MapPin, ChevronRight, Info } from 'lucide-react';
 
 export function LocationPage() {
     const navigate = useNavigate();
@@ -14,61 +17,60 @@ export function LocationPage() {
     };
 
     return (
-        <div className="page location-page">
+        <div className="min-h-dvh flex flex-col bg-background">
             {/* Header */}
-            <header className="page-header">
-                <button className="btn-back" onClick={() => navigate('/')}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M19 12H5M12 19l-7-7 7-7" />
-                    </svg>
-                </button>
-                <div className="header-content">
-                    <h1>Select Location</h1>
-                    <p>Choose your area for flood predictions</p>
+            <header className="p-6 pt-[calc(1.5rem+var(--safe-top))] bg-card border-b border-border">
+                <Button
+                    variant="secondary"
+                    size="icon"
+                    className="mb-4 rounded-xl"
+                    onClick={() => navigate('/')}
+                >
+                    <ArrowLeft className="size-5" />
+                </Button>
+                <div>
+                    <h1 className="text-2xl font-bold">Select Location</h1>
+                    <p className="text-muted-foreground text-sm">Choose your area for flood predictions</p>
                 </div>
             </header>
 
             {/* Location Cards */}
-            <main className="page-content">
-                <div className="location-list">
+            <main className="flex-1 p-6 overflow-y-auto">
+                <div className="flex flex-col gap-4 max-w-xl mx-auto">
                     {LOCATIONS.map((location, index) => (
-                        <button
+                        <Card
                             key={location.id}
-                            className="location-card"
+                            className="group cursor-pointer bg-card border-border hover:bg-muted hover:border-primary transition-all duration-200 hover:translate-x-1"
                             onClick={() => handleSelectLocation(location)}
                             style={{ animationDelay: `${index * 0.1}s` }}
                         >
-                            <div className="location-icon">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-                                    <circle cx="12" cy="10" r="3" />
-                                </svg>
-                            </div>
-                            <div className="location-info">
-                                <h3>{location.name}</h3>
-                                <span>{location.region}</span>
-                            </div>
-                            <div className="location-arrow">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M9 18l6-6-6-6" />
-                                </svg>
-                            </div>
-                        </button>
+                            <CardContent className="p-5 flex items-center gap-4">
+                                <div className="size-13 flex items-center justify-center bg-primary/15 rounded-xl text-primary shrink-0">
+                                    <MapPin className="size-6" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="text-lg font-semibold truncate">{location.name}</h3>
+                                    <span className="text-sm text-muted-foreground">{location.region}</span>
+                                </div>
+                                <div className="text-muted-foreground group-hover:text-primary transition-colors">
+                                    <ChevronRight className="size-5" />
+                                </div>
+                            </CardContent>
+                        </Card>
                     ))}
                 </div>
 
                 {/* Info Card */}
-                <div className="info-card">
-                    <div className="info-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M12 16v-4M12 8h.01" />
-                        </svg>
-                    </div>
-                    <div className="info-text">
-                        <p>Your location is used to provide accurate flood predictions and find nearby emergency shelters.</p>
-                    </div>
-                </div>
+                <Card className="mt-6 max-w-xl mx-auto bg-primary/10 border-primary/30">
+                    <CardContent className="p-5 flex gap-4">
+                        <div className="text-primary shrink-0">
+                            <Info className="size-6" />
+                        </div>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                            Your location is used to provide accurate flood predictions and find nearby emergency shelters.
+                        </p>
+                    </CardContent>
+                </Card>
             </main>
         </div>
     );
