@@ -11,6 +11,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, MapPin, Clock, X, Navigation, ChevronRight, Star, Shield, Car, Bike, Footprints, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import 'leaflet/dist/leaflet.css';
+import { ForecastOverlay } from '../components/ForecastOverlay';
+import { FloodZoneLayer } from '../components/FloodZoneLayer';
 
 // Custom user icon
 const createUserIcon = () => new L.DivIcon({
@@ -145,6 +147,9 @@ export function ShelterPage() {
                     style={{ width: '100%', height: '100%' }}
                     zoomControl={false}
                 >
+                    {/* Forecast Overlays */}
+                    <FloodZoneLayer />
+
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
                     <Marker position={[userPosition.lat, userPosition.lng]} icon={userIcon} />
@@ -194,6 +199,11 @@ export function ShelterPage() {
                     <span>You</span>
                 </div>
             </header>
+
+            {/* Forecast Stats Overlay - Top Left */}
+            <div className="absolute top-[calc(5.5rem+var(--safe-top))] left-4 z-10 pointer-events-none">
+                <ForecastOverlay />
+            </div>
 
             {/* Bottom Panel */}
             <div className={cn(

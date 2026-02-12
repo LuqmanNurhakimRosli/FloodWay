@@ -33,6 +33,7 @@ export function generateDailyPrediction(simulateDanger: boolean = true): DailyPr
             baseProbability = 70 + Math.random() * 30;
         }
 
+
         const probability = Math.round(baseProbability);
 
         // Determine risk level
