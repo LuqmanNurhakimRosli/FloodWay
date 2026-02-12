@@ -53,6 +53,7 @@ export interface Route {
     steps: NavigationStep[];
     path: Coordinates[]; // path points for visualization
     transportMode: TransportMode;
+    isSafe?: boolean;
 }
 
 // App state

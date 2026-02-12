@@ -1,13 +1,5 @@
-// Real-Road Routing using OSRM (Open Source Routing Machine)
-// Uses OpenStreetMap road data for accurate routes that follow real roads,
-// avoid rivers, and respect road networks.
-//
-// Transport modes:
-//   - car:        OSRM 'driving' profile (~50 km/h urban avg)
-//   - motorcycle: OSRM 'driving' profile (~45 km/h urban avg, can filter through traffic)
-//   - walk:       OSRM 'foot' profile    (~5 km/h avg)
-
-import type { Coordinates, Route, NavigationStep, Shelter, TransportMode } from '../types/app';
+import type { Coordinates, Route, NavigationStep, Shelter, TransportMode, DailyPrediction } from '../types/app';
+import { FLOOD_ZONES } from '../data/floodZones';
 
 // ─── OSRM API Configuration ──────────────────────────────────────────────────
 
@@ -32,6 +24,32 @@ function getAverageSpeed(mode: TransportMode): number {
         case 'walk': return 5;
     }
 }
+
+// ─── Safety Helpers ─────────────────────────────────────────────────────────
+
+/**
+ * Checks if a point is inside a polygon using the Ray Casting algorithm (PNPOLY).
+ */
+function isPointInPolygon(point: Coordinates, polygon: Coordinates[]): boolean {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i].lat, yi = polygon[i].lng;
+        const xj = polygon[j].lat, yj = polygon[j].lng;
+
+        const intersect = ((yi > point.lng) !== (yj > point.lng))
+            && (point.lat < (xj - xi) * (point.lng - yi) / (yj - yi) + xi);
+
+        if (intersect) inside = !inside;
+    }
+    return inside;
+}
+
+/**
+ * Checks if a route path intersects any ACTIVE danger flood zones (Solid Red).
+ * Warning zones (Dotted Red) are considered passable but flagged.
+ * 
+ * Uses segment sampling to ensure no polygons are "skipped" between vertices.
+ */
 
 // ─── OSRM Route Fetching ─────────────────────────────────────────────────────
 
@@ -60,7 +78,7 @@ interface OSRMResponse {
 
 /**
  * Fetch route from OSRM public API.
- * Returns real road-following geometry and turn-by-turn steps.
+ * Returns up to 3 alternative routes to help avoid floods.
  */
 async function fetchOSRMRoute(
     from: Coordinates,
@@ -68,7 +86,8 @@ async function fetchOSRMRoute(
     mode: TransportMode
 ): Promise<OSRMResponse | null> {
     const profile = getOSRMProfile(mode);
-    const url = `${OSRM_BASE}/${profile}/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson&steps=true`;
+    // Request up to 3 alternatives
+    const url = `${OSRM_BASE}/${profile}/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson&steps=true&alternatives=3`;
 
     try {
         const controller = new AbortController();
@@ -274,56 +293,144 @@ function haversineDistance(a: Coordinates, b: Coordinates): number {
     return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
+/**
+ * Calculates the "Center of Hazard" - the average position of all active flood zones.
+ */
+function getHazardCentroid(): Coordinates | null {
+    const activeZones = FLOOD_ZONES;
+    if (activeZones.length === 0) return null;
+
+    let totalLat = 0, totalLng = 0, count = 0;
+    for (const zone of activeZones) {
+        for (const p of zone.path) {
+            totalLat += p.lat;
+            totalLng += p.lng;
+            count++;
+        }
+    }
+    return { lat: totalLat / count, lng: totalLng / count };
+}
+
+/**
+ * Counts how many points/segments along a path intersect any defined flood zones.
+ * This is now strictly synced to what is visible on the map.
+ */
+function getRouteSafetyScore(path: Coordinates[], prediction: DailyPrediction | null): number {
+    if (path.length < 2 || !prediction) return 0;
+
+    let score = 0;
+    const dangerZones = FLOOD_ZONES;
+
+    for (let i = 0; i < path.length - 1; i++) {
+        const p1 = path[i];
+        const p2 = path[i + 1];
+
+        const dist = haversineDistance(p1, p2);
+        const numSamples = Math.max(2, Math.ceil(dist / 0.05)); // 50m precision
+
+        for (let s = 0; s < numSamples; s++) {
+            const t = s / numSamples;
+            const point = {
+                lat: p1.lat + (p2.lat - p1.lat) * t,
+                lng: p1.lng + (p2.lng - p1.lng) * t
+            };
+
+            for (const zone of dangerZones) {
+                if (isPointInPolygon(point, zone.path)) {
+                    score++;
+                    break;
+                }
+            }
+        }
+    }
+    return score;
+}
+
 // ─── Main Route Calculation (Async) ──────────────────────────────────────────
 
 /**
  * Calculate a route from user position to shelter using real road data.
- *
- * Uses OSRM (Open Source Routing Machine) which routes on actual OpenStreetMap
- * road network — respecting roads, rivers, buildings, etc.
- *
- * Falls back to a simple curved path if the API is unavailable.
+ * 
+ * Uses "Cluster-Dodge" logic: identifies hazard centers and generates
+ * repulsion waypoints to force OSRM around blocked areas.
  */
 export async function calculateRoute(
     from: Coordinates,
     to: Shelter,
-    mode: TransportMode = 'car'
+    mode: TransportMode = 'car',
+    prediction: DailyPrediction | null = null
 ): Promise<Route> {
-    // Try OSRM API for real road routing
     const osrmData = await fetchOSRMRoute(from, to.position, mode);
+    let bestRoute: OSRMResponse['routes'][0] | null = null;
+    let bestScore = Infinity;
 
     if (osrmData && osrmData.routes.length > 0) {
-        const osrmRoute = osrmData.routes[0];
-
-        // Convert OSRM geometry to our Coordinates format
-        // OSRM returns [lng, lat], we need { lat, lng }
-        const path: Coordinates[] = osrmRoute.geometry.coordinates.map(
-            ([lng, lat]) => ({ lat, lng })
-        );
-
-        // Parse distance and duration from OSRM
-        const distanceKm = osrmRoute.distance / 1000;
-
-        // For motorcycle, adjust duration slightly (can filter through traffic)
-        let durationMin = osrmRoute.duration / 60;
-        if (mode === 'motorcycle') {
-            durationMin *= 0.85; // 15% faster than car in urban traffic
+        // 1. Initial Check
+        for (const r of osrmData.routes) {
+            const score = getRouteSafetyScore(r.geometry.coordinates.map(([lng, lat]) => ({ lat, lng })), prediction);
+            if (score < bestScore) {
+                bestScore = score;
+                bestRoute = r;
+            }
         }
 
-        // Parse turn-by-turn steps
-        const steps = parseOSRMSteps(osrmRoute);
+        // 2. Cluster-Dodge Detour (if initial routes blocked)
+        if (bestScore > 0 && prediction) {
+            const hazardCenter = getHazardCentroid();
+            if (hazardCenter) {
+                const midLat = (from.lat + to.position.lat) / 2;
+                const midLng = (from.lng + to.position.lng) / 2;
+
+                // Calculate Repulsion Vector (Direction away from Hazard Center)
+                const dLat = midLat - hazardCenter.lat;
+                const dLng = midLng - hazardCenter.lng;
+                const mag = Math.sqrt(dLat * dLat + dLng * dLng) || 1;
+
+                // Generate 2 Dodge waypoints (pushed away from cluster center)
+                const scale = 0.08; // ~8-10km repulsion
+                const dodgeWaypoints: Coordinates[] = [
+                    { lat: midLat + (dLat / mag) * scale, lng: midLng + (dLng / mag) * scale },
+                    { lat: midLat + (dLng / mag) * scale, lng: midLng - (dLat / mag) * scale } // Perpendicular detour
+                ];
+
+                for (const pivot of dodgeWaypoints) {
+                    const detourUrl = `${OSRM_BASE}/${getOSRMProfile(mode)}/${from.lng},${from.lat};${pivot.lng},${pivot.lat};${to.position.lng},${to.position.lat}?overview=full&geometries=geojson&steps=true`;
+                    try {
+                        const pResp = await fetch(detourUrl);
+                        if (pResp.ok) {
+                            const pData: OSRMResponse = await pResp.json();
+                            if (pData.code === 'Ok' && pData.routes.length > 0) {
+                                const pRoute = pData.routes[0];
+                                const pScore = getRouteSafetyScore(pRoute.geometry.coordinates.map(([lng, lat]) => ({ lat, lng })), prediction);
+                                if (pScore < bestScore) {
+                                    bestScore = pScore;
+                                    bestRoute = pRoute;
+                                    if (bestScore === 0) break;
+                                }
+                            }
+                        }
+                    } catch (e) { }
+                }
+            }
+        }
+    }
+
+    if (bestRoute) {
+        const path: Coordinates[] = bestRoute.geometry.coordinates.map(([lng, lat]) => ({ lat, lng }));
+        const distKm = bestRoute.distance / 1000;
+        let durMin = bestRoute.duration / 60;
+        if (mode === 'motorcycle') durMin *= 0.85;
 
         return {
             shelter: to,
-            distance: Math.round(distanceKm * 10) / 10,
-            estimatedTime: Math.max(1, Math.round(durationMin)),
-            steps,
+            distance: Math.round(distKm * 10) / 10,
+            estimatedTime: Math.max(1, Math.round(durMin)),
+            steps: parseOSRMSteps(bestRoute),
             path,
             transportMode: mode,
+            isSafe: bestScore === 0
         };
     }
 
-    // Fallback if OSRM is unavailable
-    console.warn('Using fallback route (OSRM unavailable)');
     return createFallbackRoute(from, to, mode);
 }

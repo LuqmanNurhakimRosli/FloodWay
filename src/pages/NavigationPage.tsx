@@ -10,8 +10,9 @@ import { calculateRoute } from '../utils/pathfinding';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { X, Check, ArrowUp, ArrowDown, ArrowLeft as ArrowLeftIcon, ArrowRight as ArrowRightIcon, Car, Bike, Footprints, Loader2 } from 'lucide-react';
+import { X, Check, ArrowUp, ArrowDown, ArrowLeft as ArrowLeftIcon, ArrowRight as ArrowRightIcon, Car, Bike, Footprints, Loader2, ShieldAlert } from 'lucide-react';
 import type { Route, TransportMode } from '../types/app';
+import { FloodZoneLayer } from '../components/FloodZoneLayer';
 import 'leaflet/dist/leaflet.css';
 
 // User marker - animated pulsing
@@ -273,6 +274,8 @@ export function NavigationPage() {
     const completedPath: [number, number][] = route.path.slice(0, completedIndex + 1).map(p => [p.lat, p.lng]);
     completedPath.push(currentPosition);
 
+    const remainingPath: [number, number][] = [currentPosition, ...(route.path.slice(completedIndex + 1).map(p => [p.lat, p.lng]) as [number, number][])];
+
     // Get direction icon
     const getDirectionIcon = () => {
         const instr = currentInstruction.instruction.toLowerCase();
@@ -301,25 +304,40 @@ export function NavigationPage() {
                         attribution=""
                     />
 
+                    <FloodZoneLayer />
+
                     {/* Full route - blue dashed */}
                     <Polyline
                         positions={fullPath}
                         pathOptions={{
-                            color: '#3B82F6',
+                            color: route.isSafe ? '#3B82F6' : '#EF4444',
                             weight: 6,
                             opacity: 0.5,
                             dashArray: '12, 16'
                         }}
                     />
 
-                    {/* Completed path - green solid */}
+                    {/* Completed path - green solid (or red if unsafe) */}
                     {completedPath.length > 1 && (
                         <Polyline
                             positions={completedPath}
                             pathOptions={{
-                                color: '#10B981',
+                                color: route.isSafe ? '#10B981' : '#EF4444',
                                 weight: 7,
                                 opacity: 1,
+                                lineCap: 'round'
+                            }}
+                        />
+                    )}
+
+                    {/* Remaining path - same logic */}
+                    {remainingPath.length > 1 && (
+                        <Polyline
+                            positions={remainingPath}
+                            pathOptions={{
+                                color: route.isSafe ? '#10B981' : '#EF4444',
+                                weight: 7,
+                                opacity: 0.8,
                                 lineCap: 'round'
                             }}
                         />
@@ -350,7 +368,16 @@ export function NavigationPage() {
 
                 <div className="flex-1 min-w-0">
                     <span className="block text-[10px] text-muted-foreground uppercase tracking-wider">Navigating to</span>
-                    <span className="block text-sm font-semibold truncate">{shelter.name}</span>
+                    <span className="block text-sm font-semibold truncate leading-tight">{shelter.name}</span>
+                    {route.isSafe ? (
+                        <span className="flex items-center gap-1 text-[9px] text-emerald-400 font-bold uppercase tracking-tighter mt-0.5">
+                            <Check className="size-2.5" /> Bypassing Flood Zones
+                        </span>
+                    ) : (
+                        <span className="flex items-center gap-1 text-[9px] text-amber-400 font-bold uppercase tracking-tighter mt-0.5 animate-pulse">
+                            <ShieldAlert className="size-2.5" /> Route Intersects Flood Zone
+                        </span>
+                    )}
                 </div>
 
                 <div className="flex flex-col items-center px-4 py-2 bg-emerald-500 rounded-xl min-w-[54px]">

@@ -28,10 +28,14 @@ export function generateDailyPrediction(simulateDanger: boolean = true): DailyPr
             baseProbability = 10 + Math.random() * 20;
         }
 
-        // Add danger spike if simulating
-        if (simulateDanger && Math.abs(hour - peakHour) <= 2) {
-            baseProbability = 70 + Math.random() * 30;
+        // Add danger spike if simulating - FORCE DANGER for first 4 hours
+        if (simulateDanger && i < 4) {
+            baseProbability = 85 + Math.random() * 15;
+        } else if (simulateDanger && i < 8) {
+            // Force Warning for the following 4 hours
+            baseProbability = 50 + Math.random() * 20;
         }
+
 
         const probability = Math.round(baseProbability);
 

@@ -71,7 +71,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }));
 
         try {
-            const route = await calculateRoute(state.userPosition, shelter, mode);
+            const route = await calculateRoute(state.userPosition, shelter, mode, state.prediction);
             setState(prev => ({
                 ...prev,
                 route,
