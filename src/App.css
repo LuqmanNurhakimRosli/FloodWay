@@ -359,3 +359,21 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* ============================================
+   Flood Zone Tooltip Styles
+   ============================================ */
+.flood-zone-tooltip {
+  background: rgba(15, 23, 42, 0.95) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  padding: 8px 14px !important;
+  font-family: 'Inter', -apple-system, sans-serif !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(12px);
+}
+
+.flood-zone-tooltip::before {
+  border-top-color: rgba(15, 23, 42, 0.95) !important;
+}

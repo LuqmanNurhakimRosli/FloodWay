@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import 'leaflet/dist/leaflet.css';
 import { ForecastOverlay } from '../components/ForecastOverlay';
 import { FloodZoneLayer } from '../components/FloodZoneLayer';
+import { FloodTimelineScrubber } from '../components/FloodTimelineScrubber';
 
 // Custom user icon
 const createUserIcon = () => new L.DivIcon({
@@ -84,6 +85,7 @@ export function ShelterPage() {
     const [selectedShelterId, setSelectedShelterId] = useState<string | null>(null);
     const [animateToShelter, setAnimateToShelter] = useState(false);
     const [selectedMode, setSelectedMode] = useState<TransportMode>(transportMode);
+    const [selectedHourIndex, setSelectedHourIndex] = useState(0);
 
     useEffect(() => {
         if (!selectedLocation) {
@@ -147,8 +149,8 @@ export function ShelterPage() {
                     style={{ width: '100%', height: '100%' }}
                     zoomControl={false}
                 >
-                    {/* Forecast Overlays */}
-                    <FloodZoneLayer />
+                    {/* Forecast Overlays - driven by timeline selection */}
+                    <FloodZoneLayer selectedHourIndex={selectedHourIndex} />
 
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
@@ -185,8 +187,8 @@ export function ShelterPage() {
                 <Button
                     variant="secondary"
                     size="icon"
-                    className="shrink-0 rounded-xl bg-slate-800/95 backdrop-blur-xl border border-white/10 hover:bg-slate-700"
-                    onClick={() => navigate('/prediction')}
+                    className="shrink-0 rounded-xl bg-slate-800/95 backdrop-blur-xl border border-white/10 hover:bg-slate-700 active:scale-95 transition-all"
+                    onClick={() => navigate('/home')}
                 >
                     <ArrowLeft className="size-5" />
                 </Button>
@@ -201,8 +203,25 @@ export function ShelterPage() {
             </header>
 
             {/* Forecast Stats Overlay - Top Left */}
-            <div className="absolute top-[calc(5.5rem+var(--safe-top))] left-4 z-10 pointer-events-none">
-                <ForecastOverlay />
+            {/* Forecast Stats Overlay - Responsive Position */}
+            <div className="absolute top-[calc(4.5rem+var(--safe-top))] left-3 md:top-[calc(5.5rem+var(--safe-top))] md:left-4 z-10 pointer-events-none flex flex-col gap-2 transition-all duration-300">
+                <ForecastOverlay selectedHourIndex={selectedHourIndex} />
+            </div>
+
+            {/* Flood Timeline Scrubber - positioned above bottom panel */}
+            {/* Flood Timeline Scrubber - Premium Floating Container */}
+            <div className={cn(
+                "absolute left-0 right-0 z-10 px-3 md:px-0 flex justify-center transition-all duration-500 pointer-events-none", // Container is transparent to clicks
+                selectedShelter
+                    ? "bottom-[calc(50vh_+_1rem)] md:bottom-8 md:right-[28rem] md:left-auto md:w-[600px]" // Desktop: aligned
+                    : "bottom-[calc(min(50vh,400px)_+_1rem)] md:bottom-8 md:right-[28rem] md:left-auto md:w-[600px]" // Desktop: aligned
+            )}>
+                <div className="w-full max-w-lg pointer-events-auto"> {/* Content captures clicks */}
+                    <FloodTimelineScrubber
+                        selectedHourIndex={selectedHourIndex}
+                        onHourChange={setSelectedHourIndex}
+                    />
+                </div>
             </div>
 
             {/* Bottom Panel */}

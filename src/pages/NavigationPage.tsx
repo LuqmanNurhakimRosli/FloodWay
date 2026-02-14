@@ -119,7 +119,7 @@ function TransportModeLabel({ mode }: { mode: TransportMode }) {
 export function NavigationPage() {
     const navigate = useNavigate();
     const { shelterId } = useParams();
-    const { userPosition, clearNavigation, route: contextRoute, transportMode, isRouteLoading } = useApp();
+    const { userPosition, clearNavigation, route: contextRoute, transportMode, isRouteLoading, prediction } = useApp();
 
     const [localRoute, setLocalRoute] = useState<Route | null>(null);
     const [isLoadingRoute, setIsLoadingRoute] = useState(false);
@@ -132,6 +132,13 @@ export function NavigationPage() {
     // Create icons once
     const userIcon = useMemo(() => createUserIcon(), []);
     const destinationIcon = useMemo(() => createDestinationIcon(), []);
+
+    // Calculate peak risk index for overlay (Show worst-case scenario during navigation)
+    const peakRiskIndex = useMemo(() => {
+        if (!prediction) return 0;
+        const idx = prediction.hourlyPredictions.findIndex(h => h.hour === prediction.peakRiskHour);
+        return idx >= 0 ? idx : 0;
+    }, [prediction]);
 
     // Find shelter
     const shelter = SHELTERS.find(s => s.id === shelterId);
@@ -304,7 +311,7 @@ export function NavigationPage() {
                         attribution=""
                     />
 
-                    <FloodZoneLayer />
+                    <FloodZoneLayer selectedHourIndex={peakRiskIndex} />
 
                     {/* Full route - blue dashed */}
                     <Polyline
@@ -371,7 +378,7 @@ export function NavigationPage() {
                     <span className="block text-sm font-semibold truncate leading-tight">{shelter.name}</span>
                     {route.isSafe ? (
                         <span className="flex items-center gap-1 text-[9px] text-emerald-400 font-bold uppercase tracking-tighter mt-0.5">
-                            <Check className="size-2.5" /> Bypassing Flood Zones
+                            <Check className="size-2.5" /> CH Algorithm System: Safe
                         </span>
                     ) : (
                         <span className="flex items-center gap-1 text-[9px] text-amber-400 font-bold uppercase tracking-tighter mt-0.5 animate-pulse">

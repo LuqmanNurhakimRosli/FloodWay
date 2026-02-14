@@ -1,10 +1,14 @@
 import { useMemo } from 'react';
 import { useApp } from '../store';
 import { Card, CardContent } from '@/components/ui/card';
-import { Thermometer, Droplets, Wind, Clock, TrendingUp } from 'lucide-react';
+import { Thermometer, Droplets, Wind, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export function ForecastOverlay() {
+interface ForecastOverlayProps {
+    selectedHourIndex?: number;
+}
+
+export function ForecastOverlay({ selectedHourIndex = 0 }: ForecastOverlayProps) {
     const { prediction } = useApp();
 
     const weather = useMemo(() => ({
@@ -14,6 +18,9 @@ export function ForecastOverlay() {
     }), []);
 
     if (!prediction) return null;
+
+    const activeHour = prediction.hourlyPredictions[selectedHourIndex] || prediction.hourlyPredictions[0];
+    if (!activeHour) return null;
 
     const getRiskConfig = (level: string) => {
         switch (level) {
@@ -53,7 +60,7 @@ export function ForecastOverlay() {
         }
     };
 
-    const riskConfig = getRiskConfig(prediction.overallRisk);
+    const riskConfig = getRiskConfig(activeHour.riskLevel);
 
     return (
         <div className="flex flex-col gap-1.5 md:gap-2 w-52 md:w-64 pointer-events-auto">
@@ -69,10 +76,10 @@ export function ForecastOverlay() {
                             <div className="relative size-8 md:size-10">
                                 <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                                     <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="12" />
-                                    <circle cx="50" cy="50" r="42" fill="none" stroke="white" strokeWidth="12" strokeLinecap="round" strokeDasharray={`${(prediction.hourlyPredictions[0]?.probability || 0) * 2.64} 264`} />
+                                    <circle cx="50" cy="50" r="42" fill="none" stroke="white" strokeWidth="12" strokeLinecap="round" strokeDasharray={`${(activeHour.probability || 0) * 2.64} 264`} />
                                 </svg>
                                 <div className="absolute inset-0 flex items-center justify-center text-[8px] md:text-[10px] font-black text-white">
-                                    {prediction.hourlyPredictions[0]?.probability || 0}%
+                                    {activeHour.probability || 0}%
                                 </div>
                             </div>
                         </div>
@@ -83,14 +90,16 @@ export function ForecastOverlay() {
                             </div>
                             <div className="flex items-center gap-1 opacity-80">
                                 <TrendingUp className="size-2.5 md:size-3" />
-                                <span className="text-[9px] md:text-[10px] font-medium">Peak at {prediction.peakRiskHour}:00</span>
+                                <span className="text-[9px] md:text-[10px] font-medium">
+                                    {selectedHourIndex === 0 ? `Peak at ${prediction.peakRiskHour}:00` : `Viewing ${activeHour.time}`}
+                                </span>
                             </div>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Weather Stats Row - Restored to dark/neutral glassmorphism */}
+            {/* Weather Stats Row */}
             <div className="grid grid-cols-3 gap-1.5 md:gap-2">
                 {[
                     { icon: Thermometer, val: `${weather.temp}°`, color: 'text-orange-400' },
@@ -105,38 +114,6 @@ export function ForecastOverlay() {
                     </Card>
                 ))}
             </div>
-
-            {/* 24-Hour Forecast - Restored to dark/neutral glassmorphism */}
-            <Card className="bg-slate-900/80 backdrop-blur-md border border-white/5 shadow-lg">
-                <CardContent className="p-2 md:p-2.5">
-                    <div className="flex items-center gap-1 md:gap-1.5 mb-1.5 md:2 opacity-80 px-0.5">
-                        <Clock className="size-2.5 md:size-3 text-white" />
-                        <span className="text-[7px] md:text-[8px] font-bold text-white uppercase tracking-widest">24h Forecast</span>
-                    </div>
-                    <div className="flex gap-1.5 md:gap-2 overflow-x-auto pb-1 scrollbar-hide px-0.5">
-                        {prediction.hourlyPredictions.slice(0, 12).map((hour, index) => {
-                            const getBarColor = (level: string) => {
-                                switch (level) {
-                                    case 'danger': return "bg-red-500";
-                                    case 'warning': return "bg-amber-400";
-                                    default: return "bg-emerald-400";
-                                }
-                            };
-                            return (
-                                <div key={index} className="shrink-0 flex flex-col items-center gap-1 min-w-[20px] md:min-w-[24px]">
-                                    <div className="w-1 md:w-1.5 h-4 md:h-6 bg-white/10 rounded-full flex items-end overflow-hidden">
-                                        <div
-                                            className={cn("w-full rounded-full transition-all duration-1000", getBarColor(hour.riskLevel))}
-                                            style={{ height: `${hour.probability}%` }}
-                                        />
-                                    </div>
-                                    <span className="text-[6px] md:text-[7px] font-medium text-white/60">{hour.time}</span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </CardContent>
-            </Card>
         </div>
     );
 }

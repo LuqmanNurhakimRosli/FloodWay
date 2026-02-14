@@ -30,7 +30,7 @@ function AppLayout() {
         <Route path="/shelters" element={<ShelterPage />} />
         <Route path="/reports" element={<FutureWorkPage />} />
         <Route path="/chat" element={<FutureWorkPage />} />
-        <Route path="/profile" element={<FutureWorkPage />} />
+        {/* <Route path="/profile" element={<FutureWorkPage />} /> */}
 
         {/* Full-screen pages (no bottom nav) */}
         <Route path="/navigation/:shelterId" element={<NavigationPage />} />
@@ -38,6 +38,9 @@ function AppLayout() {
         {/* Legacy redirect */}
         <Route path="/location" element={<Navigate to="/loading" replace />} />
         <Route path="/prediction" element={<Navigate to="/forecast" replace />} />
+        <Route path="/shellter" element={<Navigate to="/shelters" replace />} />
+        <Route path="/sheller" element={<Navigate to="/shelters" replace />} />
+        <Route path="/shelter" element={<Navigate to="/shelters" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
