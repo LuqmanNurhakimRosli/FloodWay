@@ -8,7 +8,7 @@ import { getSheltersWithDistance } from '../data/locations';
 import type { Shelter, TransportMode } from '../types/app';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, MapPin, Clock, X, Navigation, ChevronRight, Star, Shield, Car, Bike, Footprints, Loader2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, X, Navigation, ChevronRight, ChevronLeft, Star, Shield, Car, Bike, Footprints, Loader2, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import 'leaflet/dist/leaflet.css';
 import { ForecastOverlay } from '../components/ForecastOverlay';
@@ -81,11 +81,33 @@ const TRANSPORT_MODES: { mode: TransportMode; label: string; icon: typeof Car; s
 
 export function ShelterPage() {
     const navigate = useNavigate();
-    const { userPosition, selectedLocation, setShelter, navigateToShelter, transportMode, setTransportMode, isRouteLoading } = useApp();
+    const { userPosition, selectedLocation, prediction, setShelter, navigateToShelter, transportMode, setTransportMode, isRouteLoading } = useApp();
     const [selectedShelterId, setSelectedShelterId] = useState<string | null>(null);
     const [animateToShelter, setAnimateToShelter] = useState(false);
     const [selectedMode, setSelectedMode] = useState<TransportMode>(transportMode);
     const [selectedHourIndex, setSelectedHourIndex] = useState(0);
+    const [isPanelVisible, setIsPanelVisible] = useState(true);
+    const [showAlert, setShowAlert] = useState(false);
+
+    // Flood Alert Detection Logic
+    useEffect(() => {
+        if (prediction && prediction.hourlyPredictions.length > 1) {
+            const nextHourRisk = prediction.hourlyPredictions[1].riskLevel;
+            const currentHourRisk = prediction.hourlyPredictions[0].riskLevel;
+
+            // Trigger if current is safe and next is not, or risk level increases
+            if (currentHourRisk === 'safe' && (nextHourRisk === 'warning' || nextHourRisk === 'danger')) {
+                setShowAlert(true);
+
+                // Auto-hide after 10 seconds
+                const timer = setTimeout(() => {
+                    setShowAlert(false);
+                }, 10000);
+
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [prediction]);
 
     useEffect(() => {
         if (!selectedLocation) {
@@ -182,211 +204,235 @@ export function ShelterPage() {
                 </MapContainer>
             </div>
 
-            {/* Header */}
-            <header className="absolute top-0 left-0 right-0 z-10 flex items-center gap-3.5 p-4 pt-[calc(1rem+var(--safe-top))] bg-gradient-to-b from-slate-900/[0.98] via-slate-900/90 to-transparent">
-                <Button
-                    variant="secondary"
-                    size="icon"
-                    className="shrink-0 rounded-xl bg-slate-800/95 backdrop-blur-xl border border-white/10 hover:bg-slate-700 active:scale-95 transition-all"
-                    onClick={() => navigate('/home')}
-                >
-                    <ArrowLeft className="size-5" />
-                </Button>
-                <div className="flex-1">
-                    <h1 className="text-xl font-bold">Emergency Shelters</h1>
-                    <span className="text-xs text-muted-foreground">{shelters.length} locations nearby</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800/95 backdrop-blur-xl rounded-full text-xs text-muted-foreground">
-                    <div className="size-2.5 rounded-full bg-primary" />
-                    <span>You</span>
-                </div>
-            </header>
-
-            {/* Forecast Stats Overlay - Top Left */}
-            {/* Forecast Stats Overlay - Responsive Position */}
-            <div className="absolute top-[calc(4.5rem+var(--safe-top))] left-3 md:top-[calc(5.5rem+var(--safe-top))] md:left-4 z-10 pointer-events-none flex flex-col gap-2 transition-all duration-300">
-                <ForecastOverlay selectedHourIndex={selectedHourIndex} />
-            </div>
-
-            {/* Flood Timeline Scrubber - positioned above bottom panel */}
-            {/* Flood Timeline Scrubber - Premium Floating Container */}
-            <div className={cn(
-                "absolute left-0 right-0 z-10 px-3 md:px-0 flex justify-center transition-all duration-500 pointer-events-none", // Container is transparent to clicks
-                selectedShelter
-                    ? "bottom-[calc(50vh_+_1rem)] md:bottom-8 md:right-[28rem] md:left-auto md:w-[600px]" // Desktop: aligned
-                    : "bottom-[calc(min(50vh,400px)_+_1rem)] md:bottom-8 md:right-[28rem] md:left-auto md:w-[600px]" // Desktop: aligned
-            )}>
-                <div className="w-full max-w-lg pointer-events-auto"> {/* Content captures clicks */}
-                    <FloodTimelineScrubber
-                        selectedHourIndex={selectedHourIndex}
-                        onHourChange={setSelectedHourIndex}
-                    />
-                </div>
-            </div>
-
-            {/* Bottom Panel */}
-            <div className={cn(
-                "absolute bottom-0 left-0 right-0 z-10 bg-background/95 backdrop-blur-xl rounded-t-3xl shadow-2xl border-t border-white/10 transition-all duration-300",
-                selectedShelter ? "h-auto" : "h-[50vh] max-h-[400px]",
-                "md:max-w-md md:left-auto md:right-6 md:bottom-6 md:rounded-3xl md:border md:h-auto md:max-h-[60vh]"
-            )}>
-                {selectedShelter ? (
-                    // Selected Shelter Detail + Transport Mode Picker
-                    <div className="flex flex-col" style={{ maxHeight: 'calc(50vh - 0px)' }}>
-                        {/* Scrollable content area */}
-                        <div className="flex-1 overflow-y-auto overscroll-contain p-5 pb-3">
-                            {/* Shelter Info */}
-                            <div className="flex items-start gap-4 mb-4">
-                                <div className="size-14 flex items-center justify-center bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 rounded-2xl text-2xl shrink-0 border border-emerald-500/20">
-                                    🏥
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h2 className="text-base font-bold mb-1.5 leading-snug">{selectedShelter.name}</h2>
-                                    <div className="flex items-center flex-wrap gap-2 text-xs text-muted-foreground">
-                                        <span className="flex items-center gap-1 bg-muted/50 px-2 py-0.5 rounded-lg">
-                                            <MapPin className="size-3" />
-                                            {selectedShelter.distance} km
-                                        </span>
-                                        <span className="flex items-center gap-1 bg-muted/50 px-2 py-0.5 rounded-lg">
-                                            <Clock className="size-3" />
-                                            ~{getEstimatedTimeForMode(selectedShelter, selectedMode)} min
-                                        </span>
-                                    </div>
-                                </div>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="shrink-0 rounded-xl hover:bg-red-500/20 hover:text-red-500 size-8"
-                                    onClick={handleClose}
-                                >
-                                    <X className="size-4" />
-                                </Button>
-                            </div>
-
-                            {/* Transport Mode Picker */}
-                            <div>
-                                <span className="block text-[10px] text-muted-foreground uppercase tracking-wider mb-2 font-medium">
-                                    Travel Mode
-                                </span>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {TRANSPORT_MODES.map(({ mode, label, icon: Icon, speed }) => (
-                                        <button
-                                            key={mode}
-                                            onClick={() => setSelectedMode(mode)}
-                                            className={cn(
-                                                "flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 transition-all duration-200",
-                                                selectedMode === mode
-                                                    ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
-                                                    : "border-white/10 bg-white/5 text-muted-foreground hover:border-white/20 hover:bg-white/10"
-                                            )}
-                                        >
-                                            <Icon className="size-5" />
-                                            <span className="text-xs font-semibold">{label}</span>
-                                            <span className="text-[10px] opacity-70">{speed}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+            {/* Top Center Flood Alert Notification */}
+            {showAlert && prediction && (
+                <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm animate-in slide-in-from-top-4 duration-500 pointer-events-none">
+                    <div className="bg-red-500/90 backdrop-blur-xl border border-red-400/30 rounded-2xl p-4 shadow-2xl shadow-red-900/40 flex items-center gap-4 pointer-events-auto">
+                        <div className="size-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                            <AlertTriangle className="size-6 text-white" />
                         </div>
-
-                        {/* Fixed Navigate Button - always visible above bottom nav */}
-                        <div className="px-5 pt-2 pb-[calc(1rem+4rem+var(--safe-bottom))] bg-gradient-to-t from-background via-background to-transparent">
-                            <Button
-                                className="w-full h-12 text-base font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 shadow-lg shadow-emerald-500/30 rounded-xl"
-                                onClick={handleNavigate}
-                                disabled={isRouteLoading}
-                            >
-                                {isRouteLoading ? (
-                                    <>
-                                        <Loader2 className="size-5 animate-spin" />
-                                        Calculating Route...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Navigation className="size-5" />
-                                        Start Navigation
-                                    </>
-                                )}
-                            </Button>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-sm font-bold text-white leading-tight">Flood Warning</h3>
+                            <p className="text-[10px] text-red-50 font-medium opacity-90">
+                                Flood expected in 1 hour at {prediction.hourlyPredictions[1].time}. Please move to higher ground.
+                            </p>
                         </div>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 rounded-lg text-white hover:bg-white/20 shrink-0"
+                            onClick={() => setShowAlert(false)}
+                        >
+                            <X className="size-4" />
+                        </Button>
                     </div>
-                ) : (
-                    // Shelter List View
-                    <div className="flex flex-col h-full">
-                        {/* Drag Handle */}
-                        <div className="flex justify-center pt-3 pb-2">
-                            <div className="w-10 h-1 bg-white/20 rounded-full" />
+                </div>
+            )}
+
+            {/* Side Panel / Bottom Sheet Layout */}
+            <div className={cn(
+                // Base: Hidden/Visible transition
+                "fixed z-20 transition-all duration-500 ease-in-out pointer-events-none flex",
+                // Mobile: Bottom Sheet logic
+                "inset-x-0 bottom-0 top-auto h-[45vh] md:h-full",
+                // Desktop: Side Panel logic
+                "md:inset-y-0 md:left-0 md:right-auto md:w-[400px] md:top-0",
+                isPanelVisible
+                    ? "translate-y-0 md:translate-x-0"
+                    : "translate-y-full md:translate-x-[-100%]"
+            )}>
+                {/* Content Container */}
+                <div className="w-full h-full bg-slate-900/95 backdrop-blur-xl border-t md:border-t-0 md:border-r border-white/10 rounded-t-[2.5rem] md:rounded-none flex flex-col pointer-events-auto shadow-2xl overflow-hidden">
+                    {/* Drag Handle (Mobile Only) */}
+                    <div className="md:hidden w-12 h-1.5 bg-white/20 rounded-full mx-auto my-3 shrink-0" />
+
+                    {/* Header */}
+                    <header className="flex items-center gap-3.5 px-5 pb-4 md:p-5 border-b border-white/5">
+                        <div className="flex-1">
+                            <h1 className="text-lg md:text-xl font-bold tracking-tight">Emergency Shelters</h1>
+                            <span className="text-[10px] md:text-xs text-muted-foreground">{shelters.length} locations nearby</span>
+                        </div>
+                        {/* Mobile Hide Button */}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="md:hidden size-10 rounded-xl"
+                            onClick={() => setIsPanelVisible(false)}
+                        >
+                            <X className="size-5" />
+                        </Button>
+                    </header>
+
+                    {/* Scrollable Content Area */}
+                    <div className="flex-1 overflow-y-auto overscroll-contain pb-[calc(1rem+var(--safe-bottom))] scrollbar-thin scrollbar-thumb-white/10">
+                        {/* 1. Forecast Overlay Context */}
+                        <div className="px-5 py-4 border-b border-white/5 bg-white/5">
+                            <span className="block text-[10px] text-muted-foreground uppercase tracking-widest mb-3 font-semibold">Flood Risk Forecast</span>
+                            <ForecastOverlay selectedHourIndex={selectedHourIndex} />
                         </div>
 
-                        {/* Header */}
-                        <div className="flex justify-between items-center px-5 pb-3 border-b border-white/5">
-                            <div className="flex items-center gap-2">
-                                <Shield className="size-5 text-emerald-500" />
-                                <h3 className="text-lg font-semibold">Nearby Shelters</h3>
-                            </div>
-                            <span className="text-xs text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-full">{shelters.length} found</span>
+                        {/* 2. Timeline Scrubber */}
+                        <div className="px-5 py-6 border-b border-white/5">
+                            <span className="block text-[10px] text-muted-foreground uppercase tracking-widest mb-4 font-semibold">Interactive Timeline</span>
+                            <FloodTimelineScrubber
+                                selectedHourIndex={selectedHourIndex}
+                                onHourChange={setSelectedHourIndex}
+                            />
                         </div>
 
-                        {/* Scrollable Shelter List */}
-                        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-2.5" style={{ maxHeight: 'calc(50vh - 100px)' }}>
-                            {shelters.map((shelter, i) => (
-                                <Card
-                                    key={shelter.id}
-                                    className={cn(
-                                        "group cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
-                                        i === 0
-                                            ? "border-emerald-500/50 bg-gradient-to-r from-emerald-500/10 to-emerald-600/5"
-                                            : "bg-card/80 hover:bg-muted/80 hover:border-primary/50"
-                                    )}
-                                    onClick={() => handleShelterClick(shelter)}
-                                >
-                                    <CardContent className="p-4 flex items-center gap-4">
-                                        {/* Rank Badge */}
-                                        <div className={cn(
-                                            "relative size-11 flex items-center justify-center rounded-xl text-sm font-bold shrink-0",
-                                            i === 0
-                                                ? "bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30"
-                                                : "bg-muted text-muted-foreground"
-                                        )}>
-                                            {i === 0 && (
-                                                <Star className="absolute -top-1.5 -right-1.5 size-4 text-amber-400 fill-amber-400 drop-shadow" />
-                                            )}
-                                            {i + 1}
-                                        </div>
+                        {/* 3. Shelter List / Detail */}
+                        <div className="px-5 py-5">
+                            {selectedShelter ? (
+                                <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold text-emerald-500">Selected Shelter</span>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="size-8 rounded-lg hover:bg-red-500/10 hover:text-red-500"
+                                            onClick={handleClose}
+                                        >
+                                            <X className="size-4" />
+                                        </Button>
+                                    </div>
 
-                                        {/* Shelter Info */}
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="text-sm font-semibold mb-1.5 truncate">{shelter.name}</h4>
-                                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                                <span className="flex items-center gap-1">
-                                                    <MapPin className="size-3" />
-                                                    {shelter.distance} km
-                                                </span>
-                                                <span className="flex items-center gap-1">
-                                                    <Clock className="size-3" />
-                                                    ~{shelter.estimatedTime} min
-                                                </span>
+                                    <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4">
+                                        <div className="flex items-start gap-4 mb-4">
+                                            <div className="size-14 flex items-center justify-center bg-emerald-500/20 rounded-2xl text-2xl shrink-0 border border-emerald-500/20">🏥</div>
+                                            <div className="flex-1 min-w-0">
+                                                <h2 className="text-base font-bold mb-2 leading-tight">{selectedShelter.name}</h2>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground bg-white/5 px-2 py-0.5 rounded-lg border border-white/5">
+                                                        <MapPin className="size-3" /> {selectedShelter.distance} km
+                                                    </span>
+                                                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground bg-white/5 px-2 py-0.5 rounded-lg border border-white/5">
+                                                        <Clock className="size-3" /> ~{getEstimatedTimeForMode(selectedShelter, selectedMode)} min
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        {/* Arrow */}
-                                        <div className={cn(
-                                            "size-9 flex items-center justify-center rounded-xl transition-all shrink-0",
-                                            i === 0
-                                                ? "bg-emerald-500/20 text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white"
-                                                : "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white"
-                                        )}>
-                                            <ChevronRight className="size-4" />
+                                        <div className="space-y-3">
+                                            <span className="block text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Travel Mode</span>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {TRANSPORT_MODES.map(({ mode, label, icon: Icon }) => (
+                                                    <button
+                                                        key={mode}
+                                                        onClick={() => setSelectedMode(mode)}
+                                                        className={cn(
+                                                            "flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all",
+                                                            selectedMode === mode
+                                                                ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
+                                                                : "border-white/5 bg-white/5 text-muted-foreground hover:bg-white/10"
+                                                        )}
+                                                    >
+                                                        <Icon className="size-5" />
+                                                        <span className="text-[10px] font-bold">{label}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
+                                    </div>
 
-                        {/* Safe bottom padding */}
-                        <div className="h-[calc(var(--safe-bottom)+5rem)]" />
+                                    <Button
+                                        className="w-full h-12 text-base font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-900/40 border border-emerald-400/20"
+                                        onClick={handleNavigate}
+                                        disabled={isRouteLoading}
+                                    >
+                                        {isRouteLoading ? (
+                                            <><Loader2 className="size-5 animate-spin mr-2" />Calculating...</>
+                                        ) : (
+                                            <><Navigation className="size-5 mr-2" />Start Navigation</>
+                                        )}
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="space-y-2.5">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold flex items-center gap-2">
+                                            <Shield className="size-3.5 text-emerald-500" />
+                                            Available Shelters
+                                        </span>
+                                        <span className="text-[10px] font-bold py-0.5 px-2 bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/20">
+                                            {shelters.length} Total
+                                        </span>
+                                    </div>
+                                    <div className="space-y-2.5">
+                                        {shelters.map((shelter, i) => (
+                                            <Card
+                                                key={shelter.id}
+                                                className={cn(
+                                                    "cursor-pointer border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all",
+                                                    i === 0 && "border-emerald-500/30 bg-emerald-500/5"
+                                                )}
+                                                onClick={() => handleShelterClick(shelter)}
+                                            >
+                                                <CardContent className="p-4 flex items-center gap-4">
+                                                    <div className={cn(
+                                                        "size-10 flex items-center justify-center rounded-xl text-xs font-black shrink-0 relative",
+                                                        i === 0 ? "bg-emerald-500 text-white shadow-lg shadow-emerald-900/50" : "bg-slate-800 text-slate-400"
+                                                    )}>
+                                                        {i === 0 && <Star className="absolute -top-1 -right-1 size-3 text-amber-400 fill-amber-400" />}
+                                                        {i + 1}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="text-xs font-bold truncate mb-1">{shelter.name}</h4>
+                                                        <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                                                            <span>{shelter.distance} km</span>
+                                                            <span className="opacity-40">•</span>
+                                                            <span>~{shelter.estimatedTime} min</span>
+                                                        </div>
+                                                    </div>
+                                                    <ChevronRight className="size-4 text-white/20" />
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                )}
+                </div>
+
+                {/* Vertical Toggle Handle (Desktop) */}
+                <div className="hidden md:flex items-center w-0 overflow-visible relative h-full">
+                    <div
+                        className="absolute left-0 top-1/2 -translate-y-1/2 bg-slate-900/95 backdrop-blur-xl border border-white/10 border-l-0 p-1.5 rounded-r-xl pointer-events-auto cursor-pointer shadow-2xl hover:bg-slate-800 transition-all group"
+                        onClick={() => setIsPanelVisible(!isPanelVisible)}
+                    >
+                        {isPanelVisible ? (
+                            <ChevronLeft className="size-5 text-white/50 group-hover:text-white transition-colors" />
+                        ) : (
+                            <ChevronRight className="size-5 text-white/50 group-hover:text-white transition-colors" />
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Mobile Fab to Show Panel */}
+            {!isPanelVisible && (
+                <Button
+                    className="absolute bottom-24 right-4 z-30 size-12 rounded-full bg-emerald-600 shadow-xl text-white animate-in zoom-in-50 duration-300 md:hidden"
+                    onClick={() => setIsPanelVisible(true)}
+                >
+                    <Shield className="size-6" />
+                </Button>
+            )}
+
+            {/* Floating UI: Back Button (Top Left) */}
+            <Button
+                variant="secondary"
+                size="icon"
+                className="absolute top-4 left-4 z-10 size-10 rounded-full bg-slate-900/90 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-slate-800 text-white"
+                onClick={() => navigate('/home')}
+            >
+                <ArrowLeft className="size-5" />
+            </Button>
+
+            {/* User Position Badge - Top Right (Visible on Desktop/Mobile) */}
+            <div className="absolute top-4 right-4 z-10 flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-full text-[9px] md:text-[10px] font-bold text-white/80">
+                <div className="size-1.5 md:size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                <span>ME (KLCC)</span>
             </div>
         </div>
     );
