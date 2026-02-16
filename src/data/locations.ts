@@ -27,6 +27,42 @@ export const LOCATIONS: Location[] = [
         name: 'Shah Alam',
         region: 'Selangor',
         position: { lat: 3.0733, lng: 101.5185 }
+    },
+    {
+        id: 'kajang',
+        name: 'Kajang',
+        region: 'Selangor',
+        position: { lat: 2.9927, lng: 101.7909 }
+    },
+    {
+        id: 'seri-kembangan',
+        name: 'Seri Kembangan',
+        region: 'Selangor',
+        position: { lat: 3.0227, lng: 101.7061 }
+    },
+    {
+        id: 'sungai-buloh',
+        name: 'Sungai Buloh',
+        region: 'Selangor',
+        position: { lat: 3.2104, lng: 101.5583 }
+    },
+    {
+        id: 'klang',
+        name: 'Klang',
+        region: 'Selangor',
+        position: { lat: 3.0333, lng: 101.4500 }
+    },
+    {
+        id: 'batu-caves',
+        name: 'Batu Caves',
+        region: 'Selangor',
+        position: { lat: 3.2372, lng: 101.6840 }
+    },
+    {
+        id: 'puchong',
+        name: 'Puchong',
+        region: 'Selangor',
+        position: { lat: 3.0253, lng: 101.6178 }
     }
 ];
 
@@ -56,6 +92,56 @@ export const SHELTERS: Shelter[] = [
         id: 'shelter-5',
         name: 'Dewan Orang Ramai Taman Gemilang',
         position: { lat: 2.8145, lng: 101.7317 }
+    },
+    {
+        id: 'shelter-6',
+        name: 'SS15 Town Hall, Subang Jaya',
+        position: { lat: 3.0784, lng: 101.5891 }
+    },
+    {
+        id: 'shelter-7',
+        name: 'SMK Puchong Utama 1',
+        position: { lat: 2.9841, lng: 101.6166 }
+    },
+    {
+        id: 'shelter-8',
+        name: 'SJK (C) Yu Hua, Kajang',
+        position: { lat: 2.9926, lng: 101.7915 }
+    },
+    {
+        id: 'shelter-9',
+        name: 'Hulu Langat Community Hall',
+        position: { lat: 3.1114, lng: 101.7820 }
+    },
+    {
+        id: 'shelter-10',
+        name: 'Ulu Klang Community Hall',
+        position: { lat: 3.2014, lng: 101.7533 }
+    },
+    {
+        id: 'shelter-11',
+        name: 'Rawang Town Hall',
+        position: { lat: 3.3211, lng: 101.5772 }
+    },
+    {
+        id: 'shelter-12',
+        name: 'Seksyen U5 Community Hall, PJ',
+        position: { lat: 3.1415, lng: 101.5455 }
+    },
+    {
+        id: 'shelter-13',
+        name: 'Sri Petaling Community Hall',
+        position: { lat: 3.0645, lng: 101.6881 }
+    },
+    {
+        id: 'shelter-14',
+        name: 'Wangsa Maju PPS',
+        position: { lat: 3.2045, lng: 101.7333 }
+    },
+    {
+        id: 'shelter-15',
+        name: 'Gombak Community Hall',
+        position: { lat: 3.2433, lng: 101.6888 }
     }
 ];
 

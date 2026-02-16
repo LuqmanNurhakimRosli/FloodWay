@@ -121,5 +121,71 @@ export const FLOOD_ZONES: FloodZone[] = [
             { lat: 3.100, lng: 101.520 }, { lat: 3.110, lng: 101.530 }, { lat: 3.105, lng: 101.540 },
             { lat: 3.090, lng: 101.535 }, { lat: 3.095, lng: 101.525 }
         ]
+    },
+
+    // --- KAJANG ---
+    {
+        id: 'kj-zone-1',
+        name: 'Sungai Jelok Basin',
+        regionId: 'kajang',
+        path: [
+            { lat: 2.995, lng: 101.785 }, { lat: 3.000, lng: 101.790 }, { lat: 2.990, lng: 101.800 },
+            { lat: 2.985, lng: 101.795 }, { lat: 2.988, lng: 101.788 }
+        ]
+    },
+
+    // --- SERI KEMBANGAN ---
+    {
+        id: 'sk-zone-1',
+        name: 'Sungai Kuyoh / The Mines',
+        regionId: 'seri-kembangan',
+        path: [
+            { lat: 3.020, lng: 101.700 }, { lat: 3.030, lng: 101.710 }, { lat: 3.025, lng: 101.715 },
+            { lat: 3.015, lng: 101.710 }, { lat: 3.018, lng: 101.702 }
+        ]
+    },
+
+    // --- SUNGAI BULOH ---
+    {
+        id: 'sb-zone-1',
+        name: 'Kampung Ulu Sungai Buloh',
+        regionId: 'sungai-buloh',
+        path: [
+            { lat: 3.210, lng: 101.550 }, { lat: 3.220, lng: 101.560 }, { lat: 3.215, lng: 101.570 },
+            { lat: 3.200, lng: 101.565 }, { lat: 3.205, lng: 101.555 }
+        ]
+    },
+
+    // --- KLANG ---
+    {
+        id: 'klang-zone-1',
+        name: 'Taman Sri Muda',
+        regionId: 'klang',
+        path: [
+            { lat: 3.030, lng: 101.440 }, { lat: 3.040, lng: 101.450 }, { lat: 3.035, lng: 101.460 },
+            { lat: 3.025, lng: 101.455 }, { lat: 3.028, lng: 101.445 }
+        ]
+    },
+
+    // --- BATU CAVES ---
+    {
+        id: 'bc-zone-1',
+        name: 'Taman Pinggiran Batu Caves',
+        regionId: 'batu-caves',
+        path: [
+            { lat: 3.235, lng: 101.680 }, { lat: 3.245, lng: 101.690 }, { lat: 3.240, lng: 101.700 },
+            { lat: 3.230, lng: 101.695 }, { lat: 3.232, lng: 101.685 }
+        ]
+    },
+
+    // --- PUCHONG ---
+    {
+        id: 'pu-zone-1',
+        name: 'IOI Mall / Bandar Puteri',
+        regionId: 'puchong',
+        path: [
+            { lat: 3.020, lng: 101.610 }, { lat: 3.030, lng: 101.620 }, { lat: 3.025, lng: 101.630 },
+            { lat: 3.015, lng: 101.625 }, { lat: 3.018, lng: 101.615 }
+        ]
     }
 ];

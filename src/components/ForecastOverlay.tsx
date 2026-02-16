@@ -63,7 +63,7 @@ export function ForecastOverlay({ selectedHourIndex = 0 }: ForecastOverlayProps)
     const riskConfig = getRiskConfig(activeHour.riskLevel);
 
     return (
-        <div className="flex flex-col gap-1.5 md:gap-2 w-52 md:w-64 pointer-events-auto">
+        <div className="flex flex-col gap-1.5 md:gap-3 w-full pointer-events-auto">
             {/* Main Risk Card - Colored by risk */}
             <Card className={cn(
                 "overflow-hidden border-0 shadow-xl backdrop-blur-md transition-all duration-500",
