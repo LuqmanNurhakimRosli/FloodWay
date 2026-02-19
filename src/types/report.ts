@@ -62,6 +62,23 @@ export interface AIVerificationResult {
     anomalies: string[];
     crossRefStatus: 'CONSISTENT' | 'MISMATCH' | 'UNKNOWN';
     summary: string; // human-readable AI verdict
+    rawAiResponse?: Record<string, unknown>; // raw Gemini JSON for demo visibility
+    apiDurationMs?: number; // how long the API call took
+}
+
+// ── Human Review Pipeline ──
+export const HumanReviewStatus = {
+    PENDING: 'PENDING',
+    APPROVED: 'APPROVED',
+    OVERRIDDEN: 'OVERRIDDEN', // moderator overrides AI rejection
+    REJECTED: 'REJECTED',
+} as const;
+export type HumanReviewStatus = (typeof HumanReviewStatus)[keyof typeof HumanReviewStatus];
+
+export interface HumanReview {
+    status: HumanReviewStatus;
+    reviewedAt: string | null; // ISO-8601
+    moderatorNote: string | null;
 }
 
 export interface FloodReport {
@@ -71,7 +88,16 @@ export interface FloodReport {
     description: string;
     autoTags: AutoTags;
     aiResult: AIVerificationResult | null;
+    humanReview: HumanReview; // dual verification layer 2
     createdAt: string;
+}
+
+// Helper: is a report fully verified (both AI + Human)?
+export function isFullyVerified(report: FloodReport): boolean {
+    const aiOk = report.aiResult?.status === VerificationStatus.VERIFIED;
+    const humanOk = report.humanReview.status === HumanReviewStatus.APPROVED
+        || report.humanReview.status === HumanReviewStatus.OVERRIDDEN;
+    return aiOk || humanOk;
 }
 
 export type AppScreen = 'MAP' | 'EMERGENCY' | 'VERIFICATION' | 'REPORT';

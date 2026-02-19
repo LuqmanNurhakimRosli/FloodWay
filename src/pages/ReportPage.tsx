@@ -1,16 +1,17 @@
 import { useState, useCallback } from 'react';
 import type { AIVerificationResult, AutoTags, ReportFormOutput } from '../types/report';
-import { ReportCategory, VerificationStatus } from '../types/report';
+import { ReportCategory, VerificationStatus, HumanReviewStatus } from '../types/report';
 import type { FloodReport } from '../types/report';
 
 import EmergencyMode from '../components/report/EmergencyMode';
 import AIVerification from '../components/report/AIVerification';
 import ReportForm from '../components/report/ReportForm';
+import ModeratorPanel from '../components/report/ModeratorPanel';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { useApp } from '../store';
 import '../components/report/report.css';
 
-type ReportScreen = 'LIST' | 'EMERGENCY' | 'VERIFICATION' | 'REPORT';
+type ReportScreen = 'LIST' | 'EMERGENCY' | 'VERIFICATION' | 'REPORT' | 'MODERATOR';
 
 export function ReportPage() {
     const [screen, setScreen] = useState<ReportScreen>('LIST');
@@ -20,7 +21,7 @@ export function ReportPage() {
     // Pending report being verified
     const [pendingReport, setPendingReport] = useState<Omit<
         FloodReport,
-        'id' | 'aiResult' | 'createdAt'
+        'id' | 'aiResult' | 'humanReview' | 'createdAt'
     > | null>(null);
 
     // ── Transitions ──
@@ -59,6 +60,11 @@ export function ReportPage() {
                     description: pendingReport.description,
                     autoTags: pendingReport.autoTags,
                     aiResult: result,
+                    humanReview: {
+                        status: HumanReviewStatus.PENDING,
+                        reviewedAt: null,
+                        moderatorNote: null,
+                    },
                     createdAt: new Date().toISOString(),
                 };
                 addFloodReport(newReport);
@@ -92,6 +98,7 @@ export function ReportPage() {
                 <ReportListScreen
                     reports={floodReports}
                     onActivateEmergency={handleActivateEmergency}
+                    onOpenModerator={() => setScreen('MODERATOR')}
                 />
             )}
 
@@ -122,17 +129,51 @@ export function ReportPage() {
                     onCancel={() => setScreen('LIST')}
                 />
             )}
+
+            {screen === 'MODERATOR' && (
+                <ModeratorPanel
+                    onBack={() => setScreen('LIST')}
+                />
+            )}
         </>
     );
+}
+
+// ── Helper: Get pipeline status label ──
+function getPipelineStatus(report: FloodReport) {
+    const aiStatus = report.aiResult?.status;
+    const humanStatus = report.humanReview.status;
+
+    if (humanStatus === HumanReviewStatus.APPROVED) {
+        return { label: '✅ Fully Verified', className: 'pipeline-approved', phase: 3 };
+    }
+    if (humanStatus === HumanReviewStatus.OVERRIDDEN) {
+        return { label: '✅ Override Approved', className: 'pipeline-overridden', phase: 3 };
+    }
+    if (humanStatus === HumanReviewStatus.REJECTED) {
+        return { label: '❌ Rejected by Moderator', className: 'pipeline-rejected', phase: 3 };
+    }
+
+    // Human review pending
+    if (aiStatus === VerificationStatus.VERIFIED) {
+        return { label: '⏳ Awaiting Human Review', className: 'pipeline-pending', phase: 2 };
+    }
+    if (aiStatus === VerificationStatus.UNVERIFIED) {
+        return { label: '⏳ Escalated to Moderator', className: 'pipeline-escalated', phase: 2 };
+    }
+
+    return { label: '🔄 Processing', className: 'pipeline-processing', phase: 1 };
 }
 
 // ── Report List / Overview Screen ──
 function ReportListScreen({
     reports,
     onActivateEmergency,
+    onOpenModerator,
 }: {
     reports: FloodReport[];
     onActivateEmergency: () => void;
+    onOpenModerator: () => void;
 }) {
     return (
         <div className="report-list-screen">
@@ -143,14 +184,39 @@ function ReportListScreen({
                         Community <span>Sentinel</span>
                     </h1>
                     <p className="report-list-subtitle">
-                        AI-verified flood reports from the community
+                        Dual AI + Human verified flood reports
                     </p>
                 </div>
-                <div className="report-count-badge">
-                    <span className="report-count-dot" />
-                    {reports.length} Reports
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button
+                        className="moderator-access-btn"
+                        onClick={onOpenModerator}
+                        id="moderator-panel-btn"
+                        title="Open Moderator Panel"
+                    >
+                        🔑
+                    </button>
+                    <div className="report-count-badge">
+                        <span className="report-count-dot" />
+                        {reports.length} Reports
+                    </div>
                 </div>
             </header>
+
+            {/* Pipeline Legend */}
+            {reports.length > 0 && (
+                <div className="pipeline-legend">
+                    <span className="pipeline-legend-item">
+                        <span className="pipeline-dot dot-ai" /> AI Analyzed
+                    </span>
+                    <span className="pipeline-legend-item">
+                        <span className="pipeline-dot dot-pending" /> Human Pending
+                    </span>
+                    <span className="pipeline-legend-item">
+                        <span className="pipeline-dot dot-approved" /> Fully Verified
+                    </span>
+                </div>
+            )}
 
             {/* Content */}
             <div className="report-list-content">
@@ -164,13 +230,13 @@ function ReportListScreen({
                     <div className="report-list-grid">
                         {reports.map((report) => {
                             const isFlood = report.aiResult?.waterDetected === true;
-                            const isVerified = report.aiResult?.status === VerificationStatus.VERIFIED;
                             const confidence = report.aiResult?.confidence ?? 0;
                             const depth = report.aiResult?.depthEstimate || 'N/A';
                             const time = new Date(report.createdAt).toLocaleTimeString([], {
                                 hour: '2-digit',
                                 minute: '2-digit',
                             });
+                            const pipeline = getPipelineStatus(report);
 
                             return (
                                 <div
@@ -202,16 +268,37 @@ function ReportListScreen({
                                             {report.description || 'No description provided.'}
                                         </p>
                                         <div className="report-card-footer">
-                                            <span className={`report-card-status ${isVerified ? 'verified' : 'not-verified'}`}>
-                                                {isVerified ? '✅ Verified!' : '❌ Not Verified'}
+                                            <span className={`report-card-status ${report.aiResult?.status === VerificationStatus.VERIFIED ? 'verified' : 'not-verified'}`}>
+                                                {report.aiResult?.status === VerificationStatus.VERIFIED ? '✅ AI Verified' : '❌ AI Not Verified'}
                                             </span>
                                             <span className="report-card-depth">
                                                 Depth: {depth}
                                             </span>
                                         </div>
-                                        <div className="report-card-humanreview">
-                                            🤖+👤 {isVerified ? 'AI Verified · Human review pending' : 'Escalated to human moderator'}
+
+                                        {/* 3-Phase Pipeline Status */}
+                                        <div className="report-pipeline-tracker">
+                                            <div className="pipeline-phases">
+                                                <div className={`pipeline-phase ${pipeline.phase >= 1 ? 'active' : ''}`}>
+                                                    <span className="pipeline-phase-dot">📷</span>
+                                                    <span className="pipeline-phase-label">Submitted</span>
+                                                </div>
+                                                <div className="pipeline-connector" />
+                                                <div className={`pipeline-phase ${pipeline.phase >= 2 ? 'active' : ''}`}>
+                                                    <span className="pipeline-phase-dot">🤖</span>
+                                                    <span className="pipeline-phase-label">AI</span>
+                                                </div>
+                                                <div className="pipeline-connector" />
+                                                <div className={`pipeline-phase ${pipeline.phase >= 3 ? 'active' : ''}`}>
+                                                    <span className="pipeline-phase-dot">👤</span>
+                                                    <span className="pipeline-phase-label">Human</span>
+                                                </div>
+                                            </div>
+                                            <div className={`pipeline-status-badge ${pipeline.className}`}>
+                                                {pipeline.label}
+                                            </div>
                                         </div>
+
                                         <div className="report-card-location">
                                             📍 {report.autoTags.lat.toFixed(4)}, {report.autoTags.lng.toFixed(4)}
                                         </div>
@@ -238,7 +325,7 @@ function ReportListScreen({
             {/* Bottom hint */}
             <div className="report-list-hint">
                 <span className="report-hint-dot" />
-                Reports appear on the Shelter map with flood zones
+                Fully verified reports appear on the Shelter map
             </div>
         </div>
     );

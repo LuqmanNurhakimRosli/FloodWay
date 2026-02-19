@@ -122,7 +122,11 @@ export function HomePage() {
 
     const cfg = statusConfig[status];
     const actionItems = hasDanger ? ACTION_ITEMS_DANGER : ACTION_ITEMS_SAFE;
-    const verifiedReportCount = floodReports.filter(r => r.aiResult?.waterDetected).length;
+    const verifiedReportCount = floodReports.filter(r => {
+        const aiOk = r.aiResult?.status === 'VERIFIED';
+        const humanOk = r.humanReview?.status === 'APPROVED' || r.humanReview?.status === 'OVERRIDDEN';
+        return aiOk || humanOk;
+    }).length;
 
     return (
         <div className="min-h-dvh flex flex-col bg-slate-950 font-sans text-slate-100 overflow-x-hidden selection:bg-blue-500/30 pb-24">

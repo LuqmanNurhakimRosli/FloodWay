@@ -1,7 +1,7 @@
 // Global app store using React Context for state management
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import type { Location, Shelter, DailyPrediction, Route, Coordinates, TransportMode } from '../types/app';
-import type { FloodReport } from '../types/report';
+import type { FloodReport, HumanReview } from '../types/report';
 import { DEFAULT_POSITION } from '../data/locations';
 import { generateDailyPrediction } from '../utils/predictionGenerator';
 import { calculateRoute } from '../utils/pathfinding';
@@ -28,6 +28,8 @@ interface AppContextType extends AppState {
     // Flood report actions
     addFloodReport: (report: FloodReport) => void;
     clearFloodReports: () => void;
+    // Human review actions
+    updateHumanReview: (reportId: string, review: HumanReview) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -124,6 +126,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }));
     }, []);
 
+    // Human review: moderator approves/rejects a report
+    const updateHumanReview = useCallback((reportId: string, review: HumanReview) => {
+        console.log('👤 [Moderator] Review updated:', { reportId, review });
+        setState(prev => ({
+            ...prev,
+            floodReports: prev.floodReports.map(r =>
+                r.id === reportId ? { ...r, humanReview: review } : r
+            ),
+        }));
+    }, []);
+
     const reset = useCallback(() => {
         setState({
             selectedLocation: null,
@@ -149,6 +162,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 reset,
                 addFloodReport,
                 clearFloodReports,
+                updateHumanReview,
             }}
         >
             {children}

@@ -398,16 +398,142 @@
     color: var(--accent-red);
 }
 
-.report-card-humanreview {
-    font-size: 0.65rem;
-    font-weight: 600;
-    color: var(--accent-cyan);
-    background: rgba(6, 182, 212, 0.08);
-    border: 1px solid rgba(6, 182, 212, 0.15);
-    border-radius: 8px;
-    padding: 4px 10px;
+/* ── Pipeline Tracker (3-Phase Visual) ── */
+.report-pipeline-tracker {
+    margin: 8px 0;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+}
+
+.pipeline-phases {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
     margin-bottom: 8px;
+}
+
+.pipeline-phase {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    opacity: 0.35;
+    transition: opacity 0.3s;
+}
+
+.pipeline-phase.active {
+    opacity: 1;
+}
+
+.pipeline-phase-dot {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.pipeline-phase-label {
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.pipeline-phase.active .pipeline-phase-label {
+    color: var(--text-secondary);
+}
+
+.pipeline-connector {
+    width: 24px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0 4px;
+    margin-bottom: 14px;
+}
+
+.pipeline-status-badge {
     text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 8px;
+}
+
+.pipeline-approved {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.pipeline-overridden {
+    background: rgba(6, 182, 212, 0.1);
+    color: #06b6d4;
+    border: 1px solid rgba(6, 182, 212, 0.2);
+}
+
+.pipeline-rejected {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.pipeline-pending {
+    background: rgba(251, 191, 36, 0.1);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.pipeline-escalated {
+    background: rgba(249, 115, 22, 0.1);
+    color: #f97316;
+    border: 1px solid rgba(249, 115, 22, 0.2);
+}
+
+.pipeline-processing {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ── Pipeline Legend ── */
+.pipeline-legend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 8px 20px;
+    border-bottom: 1px solid var(--border-glass);
+}
+
+.pipeline-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.pipeline-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.pipeline-dot.dot-ai {
+    background: #6366f1;
+}
+
+.pipeline-dot.dot-pending {
+    background: #fbbf24;
+}
+
+.pipeline-dot.dot-approved {
+    background: #22c55e;
 }
 
 .report-card-location {

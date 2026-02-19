@@ -10,12 +10,13 @@ const STATUS_MESSAGES = [
     '📏 Estimating flood depth...',
     '📍 Cross-referencing GPS location...',
     '🧠 Running anomaly detection...',
+    '☁️ Sending to Gemini 1.5 Flash...',
     '👤 Queuing for human review...',
     '✅ Finalizing verification...',
 ];
 
 interface AIVerificationProps {
-    report: Omit<FloodReport, 'id' | 'aiResult' | 'createdAt'>;
+    report: Omit<FloodReport, 'id' | 'aiResult' | 'humanReview' | 'createdAt'>;
     onComplete: (result: AIVerificationResult) => void;
     onRetry: () => void;
 }
@@ -24,6 +25,7 @@ export default function AIVerification({ report, onComplete, onRetry }: AIVerifi
     const [phase, setPhase] = useState<'scanning' | 'result'>('scanning');
     const [statusIdx, setStatusIdx] = useState(0);
     const [result, setResult] = useState<AIVerificationResult | null>(null);
+    const [showRawJson, setShowRawJson] = useState(false);
 
     // Cycle status messages
     useEffect(() => {
@@ -51,8 +53,6 @@ export default function AIVerification({ report, onComplete, onRetry }: AIVerifi
         if (c >= 50) return 'var(--accent-yellow)';
         return 'var(--accent-red)';
     };
-
-
 
     return (
         <div className="ai-verification">
@@ -96,6 +96,14 @@ export default function AIVerification({ report, onComplete, onRetry }: AIVerifi
                     </div>
 
                     <div className="ai-result-summary">{result.summary}</div>
+
+                    {/* API Duration Badge */}
+                    {result.apiDurationMs && (
+                        <div className="ai-api-badge">
+                            <span className="ai-api-icon">⚡</span>
+                            <span>Analyzed in <strong>{(result.apiDurationMs / 1000).toFixed(1)}s</strong> by Gemini 1.5 Flash</span>
+                        </div>
+                    )}
 
                     {/* Dual Verification Notice */}
                     <div className="ai-dual-notice">
@@ -152,7 +160,25 @@ export default function AIVerification({ report, onComplete, onRetry }: AIVerifi
                         )}
                     </div>
 
-
+                    {/* Raw AI Response (Demo Feature) */}
+                    {result.rawAiResponse && (
+                        <div className="ai-raw-section">
+                            <button
+                                className="ai-raw-toggle"
+                                onClick={() => setShowRawJson(!showRawJson)}
+                                id="toggle-raw-json-btn"
+                            >
+                                <span className="ai-raw-toggle-icon">{showRawJson ? '▼' : '▶'}</span>
+                                <span>Raw Gemini API Response</span>
+                                <span className="ai-raw-badge">LIVE</span>
+                            </button>
+                            {showRawJson && (
+                                <pre className="ai-raw-json">
+                                    {JSON.stringify(result.rawAiResponse, null, 2)}
+                                </pre>
+                            )}
+                        </div>
+                    )}
 
                     {/* Actions */}
                     <div className="ai-result-actions">

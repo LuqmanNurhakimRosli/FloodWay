@@ -234,3 +234,88 @@
 .result-btn-retry:hover {
     transform: translateY(-2px);
 }
+
+/* ── API Duration Badge ── */
+.ai-api-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: var(--radius-md);
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    font-size: 11px;
+    color: var(--text-secondary);
+    max-width: 380px;
+}
+
+.ai-api-icon {
+    font-size: 14px;
+}
+
+.ai-api-badge strong {
+    color: #818cf8;
+}
+
+/* ── Raw AI Response Section ── */
+.ai-raw-section {
+    width: 100%;
+    max-width: 380px;
+    margin-top: 4px;
+}
+
+.ai-raw-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font-base);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ai-raw-toggle:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+}
+
+.ai-raw-toggle-icon {
+    font-size: 8px;
+    color: var(--text-muted);
+}
+
+.ai-raw-badge {
+    margin-left: auto;
+    font-size: 8px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    letter-spacing: 0.1em;
+    animation: status-blink 2s ease-in-out infinite;
+}
+
+.ai-raw-json {
+    margin-top: 8px;
+    padding: 14px;
+    border-radius: var(--radius-md);
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 10px;
+    line-height: 1.6;
+    color: #a5f3fc;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 200px;
+    overflow-y: auto;
+}

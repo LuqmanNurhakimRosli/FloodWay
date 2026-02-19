@@ -1,11 +1,12 @@
 /**
- * FloodReportLayer — renders verified flood reports as markers + circles on a Leaflet map.
- * Designed to be placed inside a <MapContainer>.
+ * FloodReportLayer — renders FULLY VERIFIED flood reports on a Leaflet map.
+ * Only reports that passed BOTH AI + Human review are shown (dual verification).
  */
 import { Fragment } from 'react';
 import { Marker, Popup, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import { useApp } from '../store';
+import { isFullyVerified, HumanReviewStatus } from '../types/report';
 
 // Pulse marker icon for flood reports
 const createReportMarkerIcon = (isFlood: boolean) => new L.DivIcon({
@@ -25,14 +26,18 @@ const createReportMarkerIcon = (isFlood: boolean) => new L.DivIcon({
 export function FloodReportLayer() {
     const { floodReports } = useApp();
 
-    if (floodReports.length === 0) return null;
+    // Only show reports that are FULLY verified (AI + Human)
+    const verifiedReports = floodReports.filter(isFullyVerified);
+
+    if (verifiedReports.length === 0) return null;
 
     return (
         <>
-            {floodReports.map((report) => {
+            {verifiedReports.map((report) => {
                 const isFlood = report.aiResult?.waterDetected === true;
                 const severity = report.aiResult?.depthEstimate || 'Unknown';
                 const confidence = report.aiResult?.confidence ?? 0;
+                const isOverridden = report.humanReview.status === HumanReviewStatus.OVERRIDDEN;
 
                 return (
                     <Fragment key={report.id}>
@@ -101,11 +106,30 @@ export function FloodReportLayer() {
                                         alignItems: 'center',
                                     }}>
                                         <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#10b981' }}>
-                                            ✅ Verified ({confidence}%)
+                                            ✅ {isOverridden ? 'Human Override' : 'Fully Verified'} ({confidence}%)
                                         </span>
                                         <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'rgba(255,255,255,0.4)' }}>
                                             Depth: {severity}
                                         </span>
+                                    </div>
+                                    {/* Dual verification badge */}
+                                    <div style={{
+                                        marginTop: '8px',
+                                        padding: '4px 8px',
+                                        borderRadius: '6px',
+                                        background: 'rgba(34, 197, 94, 0.1)',
+                                        border: '1px solid rgba(34, 197, 94, 0.2)',
+                                        fontSize: '0.6rem',
+                                        fontWeight: 700,
+                                        color: '#22c55e',
+                                        textAlign: 'center',
+                                    }}>
+                                        🤖+👤 Dual Verified
+                                        {report.humanReview.moderatorNote && (
+                                            <span style={{ display: 'block', fontWeight: 400, marginTop: '2px', opacity: 0.8 }}>
+                                                "{report.humanReview.moderatorNote}"
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </Popup>
@@ -131,3 +155,4 @@ export function FloodReportLayer() {
         </>
     );
 }
+
