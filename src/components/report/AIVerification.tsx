@@ -10,6 +10,7 @@ const STATUS_MESSAGES = [
     '📏 Estimating flood depth...',
     '📍 Cross-referencing GPS location...',
     '🧠 Running anomaly detection...',
+    '👤 Queuing for human review...',
     '✅ Finalizing verification...',
 ];
 
@@ -66,7 +67,7 @@ export default function AIVerification({ report, onComplete, onRetry }: AIVerifi
                     </div>
                     <div className="ai-status-text">{STATUS_MESSAGES[statusIdx]}</div>
                     <div className="ai-substatus">
-                        Multimodal Verification Pipeline active
+                        Dual Verification Pipeline: AI + Human Review
                     </div>
                 </>
             )}
@@ -89,12 +90,24 @@ export default function AIVerification({ report, onComplete, onRetry }: AIVerifi
                                 : 'rejected'
                             }`}
                     >
-                        {result.status === VerificationStatus.VERIFIED && 'Verified by AI'}
-                        {result.status === VerificationStatus.UNVERIFIED && 'Unverified Report'}
-                        {result.status === VerificationStatus.REJECTED && 'Report Rejected'}
+                        {result.status === VerificationStatus.VERIFIED && '✅ Verified!'}
+                        {result.status === VerificationStatus.UNVERIFIED && '⚠️ Not Verified'}
+                        {result.status === VerificationStatus.REJECTED && '❌ Not Verified'}
                     </div>
 
                     <div className="ai-result-summary">{result.summary}</div>
+
+                    {/* Dual Verification Notice */}
+                    <div className="ai-dual-notice">
+                        <span className="ai-dual-icon">🤖 + 👤</span>
+                        <span>
+                            {result.status === VerificationStatus.VERIFIED
+                                ? 'AI Verified — Queued for human moderator confirmation.'
+                                : result.status === VerificationStatus.REJECTED
+                                    ? 'AI flagged as invalid — Pending human moderator review.'
+                                    : 'Low confidence — Escalated to human moderator for review.'}
+                        </span>
+                    </div>
 
                     {/* Details */}
                     <div className="ai-details-card">

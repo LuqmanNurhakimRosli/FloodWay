@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import type { AIVerificationResult, AutoTags, ReportFormOutput } from '../types/report';
 import { ReportCategory, VerificationStatus } from '../types/report';
 import type { FloodReport } from '../types/report';
+
 import EmergencyMode from '../components/report/EmergencyMode';
 import AIVerification from '../components/report/AIVerification';
 import ReportForm from '../components/report/ReportForm';
@@ -163,6 +164,7 @@ function ReportListScreen({
                     <div className="report-list-grid">
                         {reports.map((report) => {
                             const isFlood = report.aiResult?.waterDetected === true;
+                            const isVerified = report.aiResult?.status === VerificationStatus.VERIFIED;
                             const confidence = report.aiResult?.confidence ?? 0;
                             const depth = report.aiResult?.depthEstimate || 'N/A';
                             const time = new Date(report.createdAt).toLocaleTimeString([], {
@@ -200,12 +202,15 @@ function ReportListScreen({
                                             {report.description || 'No description provided.'}
                                         </p>
                                         <div className="report-card-footer">
-                                            <span className="report-card-status">
-                                                ✅ AI Verified
+                                            <span className={`report-card-status ${isVerified ? 'verified' : 'not-verified'}`}>
+                                                {isVerified ? '✅ Verified!' : '❌ Not Verified'}
                                             </span>
                                             <span className="report-card-depth">
                                                 Depth: {depth}
                                             </span>
+                                        </div>
+                                        <div className="report-card-humanreview">
+                                            🤖+👤 {isVerified ? 'AI Verified · Human review pending' : 'Escalated to human moderator'}
                                         </div>
                                         <div className="report-card-location">
                                             📍 {report.autoTags.lat.toFixed(4)}, {report.autoTags.lng.toFixed(4)}
