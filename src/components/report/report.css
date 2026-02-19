@@ -1,0 +1,493 @@
+/* ── FloodWay Community Sentinel: Design System ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    /* ─ Palette ─ */
+    --bg-primary: #0a0e1a;
+    --bg-secondary: #111827;
+    --bg-card: rgba(17, 24, 39, 0.85);
+    --bg-glass: rgba(255, 255, 255, 0.06);
+    --bg-glass-hover: rgba(255, 255, 255, 0.1);
+    --border-glass: rgba(255, 255, 255, 0.1);
+    --border-glass-bright: rgba(255, 255, 255, 0.18);
+
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+
+    --accent-blue: #3b82f6;
+    --accent-cyan: #06b6d4;
+    --accent-green: #22c55e;
+    --accent-yellow: #f5c542;
+    --accent-orange: #ff9800;
+    --accent-red: #ef4444;
+    --accent-magenta: #e040fb;
+    --accent-critical: #ff1744;
+
+    --gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    --gradient-red-alert: linear-gradient(135deg, #ef4444, #dc2626, #b91c1c);
+    --gradient-verified: linear-gradient(135deg, #22c55e, #16a34a);
+    --gradient-unverified: linear-gradient(135deg, #f5c542, #d97706);
+    --gradient-rejected: linear-gradient(135deg, #ef4444, #dc2626);
+
+    /* ─ Typography ─ */
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    /* ─ Spacing ─ */
+    /* Re-defining these only if not present, but for safety in this module we rely on them */
+    /* --radius-sm: 8px; */
+    /* --radius-md: 12px; */
+    /* --radius-lg: 16px; */
+    /* --radius-xl: 24px; */
+    /* --radius-full: 9999px; */
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+    --shadow-glow-red: 0 0 30px rgba(239, 68, 68, 0.4), 0 0 60px rgba(239, 68, 68, 0.2);
+    --shadow-glow-green: 0 0 20px rgba(34, 197, 94, 0.3);
+}
+
+/* ── Animations ── */
+@keyframes pulse-red {
+
+    0%,
+    100% {
+        box-shadow: var(--shadow-glow-red);
+        transform: scale(1);
+    }
+
+    50% {
+        box-shadow: 0 0 50px rgba(239, 68, 68, 0.6), 0 0 100px rgba(239, 68, 68, 0.3);
+        transform: scale(1.05);
+    }
+}
+
+@keyframes radar-sweep {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slide-in-right {
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes scale-in {
+    from {
+        opacity: 0;
+        transform: scale(0.6);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+@keyframes status-blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
+}
+
+/* ── Utility Classes ── */
+.glass {
+    background: var(--bg-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-md);
+}
+
+.glass-bright {
+    background: var(--bg-glass-hover);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-glass-bright);
+    border-radius: var(--radius-md);
+}
+
+/* ── Report List / Overview Screen ── */
+.report-list-screen {
+    position: relative;
+    min-height: 100vh;
+    background: var(--gradient-hero);
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 80px;
+    /* space for bottom nav */
+}
+
+.report-list-header {
+    padding: 24px 20px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--border-glass);
+    background: rgba(10, 14, 26, 0.7);
+    backdrop-filter: blur(12px);
+}
+
+.report-list-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    color: var(--text-primary);
+}
+
+.report-list-title span {
+    color: var(--accent-red);
+    font-weight: 400;
+    opacity: 0.8;
+}
+
+.report-list-subtitle {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-weight: 500;
+}
+
+.report-count-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glass);
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+}
+
+.report-count-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent-cyan);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent-cyan);
+    animation: status-blink 2s ease-in-out infinite;
+}
+
+.report-list-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* ── Empty State ── */
+.report-list-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 80px 20px;
+    opacity: 0.6;
+}
+
+.report-empty-icon {
+    font-size: 3.5rem;
+    margin-bottom: 16px;
+    animation: float 3s ease-in-out infinite;
+}
+
+.report-list-empty h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.report-list-empty p {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    max-width: 260px;
+}
+
+/* ── Report Card Grid ── */
+.report-list-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.report-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    animation: slide-up 0.4s ease-out;
+}
+
+.report-card:hover {
+    border-color: var(--border-glass-bright);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.report-card.flood {
+    border-left: 3px solid var(--accent-red);
+}
+
+.report-card.warning {
+    border-left: 3px solid var(--accent-yellow);
+}
+
+/* ── Card Image ── */
+.report-card-image {
+    width: 100%;
+    height: 160px;
+    position: relative;
+    overflow: hidden;
+}
+
+.report-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.85);
+}
+
+.report-card-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 4px 12px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+/* ── Card Body ── */
+.report-card-body {
+    padding: 14px 16px;
+}
+
+.report-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.report-card-time {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.report-card-confidence {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--accent-green);
+    background: rgba(34, 197, 94, 0.1);
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.report-card-desc {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 10px;
+    font-style: italic;
+}
+
+.report-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.report-card-status {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent-green);
+}
+
+.report-card-depth {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.report-card-location {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    padding-top: 6px;
+    border-top: 1px solid var(--border-glass);
+}
+
+/* ── FAB ── */
+.report-list-fab-area {
+    position: fixed;
+    bottom: 90px;
+    right: 24px;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.report-list-fab {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--gradient-red-alert);
+    border: none;
+    font-size: 1.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.25), 0 10px 30px rgba(239, 68, 68, 0.4);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: pulse-red 2s ease-in-out infinite;
+}
+
+.report-list-fab:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.35), 0 15px 40px rgba(239, 68, 68, 0.5);
+}
+
+.report-list-fab:active {
+    transform: scale(0.95);
+}
+
+.report-list-fab-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.5);
+    padding: 3px 10px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ── Bottom Hint ── */
+.report-list-hint {
+    position: fixed;
+    bottom: 70px;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 20px;
+    background: rgba(10, 14, 26, 0.85);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border-glass);
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.report-hint-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent-green);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent-green);
+    animation: status-blink 2s ease-in-out infinite;
+}
+
+/* ── Desktop responsive ── */
+@media (min-width: 768px) {
+    .report-list-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 20px;
+    }
+
+    .report-card-image {
+        height: 200px;
+    }
+
+    .report-list-content {
+        padding: 24px 32px;
+    }
+}

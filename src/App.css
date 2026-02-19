@@ -377,3 +377,103 @@ body {
 .flood-zone-tooltip::before {
   border-top-color: rgba(15, 23, 42, 0.95) !important;
 }
+
+/* ============================================
+   Flood Report Markers (Community Sentinel)
+   ============================================ */
+.flood-report-marker-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.flood-report-marker {
+  width: 44px;
+  height: 44px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flood-report-pin {
+  width: 36px;
+  height: 36px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 2.5px solid;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+.flood-report-marker.is-flood .flood-report-pin {
+  border-color: #ef4444;
+  background: rgba(69, 10, 10, 0.95);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+}
+
+.flood-report-marker.is-warning .flood-report-pin {
+  border-color: #f59e0b;
+  background: rgba(69, 26, 3, 0.95);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+}
+
+.flood-report-pin span {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.flood-report-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  z-index: 1;
+  animation: floodReportPulse 2s ease-out infinite;
+}
+
+.flood-report-marker.is-flood .flood-report-pulse {
+  background: rgba(239, 68, 68, 0.4);
+}
+
+.flood-report-marker.is-warning .flood-report-pulse {
+  background: rgba(245, 158, 11, 0.4);
+}
+
+@keyframes floodReportPulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+}
+
+/* Flood Report Popup */
+.flood-report-popup .leaflet-popup-content-wrapper {
+  background: rgba(15, 23, 42, 0.96) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  color: white !important;
+  padding: 0 !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
+}
+
+.flood-report-popup .leaflet-popup-content {
+  margin: 0 !important;
+  width: auto !important;
+}
+
+.flood-report-popup .leaflet-popup-tip {
+  background: rgba(15, 23, 42, 0.96) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}

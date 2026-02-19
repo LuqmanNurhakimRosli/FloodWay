@@ -68,7 +68,7 @@ export const LOCATIONS: Location[] = [
 
 // Shelter locations
 export const SHELTERS: Shelter[] = [
-    {
+    { 
         id: 'shelter-1',
         name: 'SJK (T) Saraswathy',
         position: { lat: 3.1099, lng: 101.6968 }

@@ -1,0 +1,199 @@
+/* ── ReportCard ── */
+.report-card {
+    width: 280px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    box-shadow: var(--shadow-md);
+    animation: slide-up 0.4s ease;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.report-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.report-card-thumb {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    display: block;
+    background: var(--bg-secondary);
+}
+
+.report-card-thumb-placeholder {
+    width: 100%;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    font-size: 40px;
+    opacity: 0.3;
+}
+
+.report-card-body {
+    padding: 14px;
+}
+
+.report-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.report-card-category {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.report-card-category-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.report-card-status {
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+.report-card-status.verified {
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--accent-green);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.report-card-status.unverified {
+    background: rgba(245, 197, 66, 0.15);
+    color: var(--accent-yellow);
+    border: 1px solid rgba(245, 197, 66, 0.3);
+}
+
+.report-card-status.rejected {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--accent-red);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.report-card-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.report-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.report-card-confidence {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ── Expanded Detail ── */
+.report-detail-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fade-in 0.2s ease;
+}
+
+.report-detail {
+    width: 100%;
+    max-width: 440px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: var(--radius-lg);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-glass);
+    box-shadow: var(--shadow-lg);
+    animation: scale-in 0.3s ease;
+}
+
+.report-detail-gallery {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 8px;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+}
+
+.report-detail-gallery::-webkit-scrollbar {
+    height: 4px;
+}
+
+.report-detail-gallery::-webkit-scrollbar-thumb {
+    background: var(--border-glass-bright);
+    border-radius: 4px;
+}
+
+.report-detail-img {
+    flex: 0 0 100%;
+    width: 100%;
+    scroll-snap-align: center;
+    max-height: 260px;
+    object-fit: cover;
+}
+
+.report-detail-body {
+    padding: 20px;
+}
+
+.report-detail-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.report-detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.report-detail-tag {
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-glass);
+    background: var(--bg-glass);
+    font-size: 11px;
+    color: var(--text-muted);
+}

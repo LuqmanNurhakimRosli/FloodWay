@@ -7,6 +7,7 @@ import { PredictionPage } from './pages/PredictionPage';
 import { ShelterPage } from './pages/ShelterPage';
 import { NavigationPage } from './pages/NavigationPage';
 import { FutureWorkPage } from './pages/FutureWorkPage';
+import { ReportPage } from './pages/ReportPage';
 import { BottomNav } from './components/BottomNav';
 import './App.css';
 
@@ -28,7 +29,7 @@ function AppLayout() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/forecast" element={<PredictionPage />} />
         <Route path="/shelters" element={<ShelterPage />} />
-        <Route path="/reports" element={<FutureWorkPage />} />
+        <Route path="/reports" element={<ReportPage />} />
         <Route path="/chat" element={<FutureWorkPage />} />
         {/* <Route path="/profile" element={<FutureWorkPage />} /> */}
 

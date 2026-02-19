@@ -1,6 +1,7 @@
 // Global app store using React Context for state management
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import type { Location, Shelter, DailyPrediction, Route, Coordinates, TransportMode } from '../types/app';
+import type { FloodReport } from '../types/report';
 import { DEFAULT_POSITION } from '../data/locations';
 import { generateDailyPrediction } from '../utils/predictionGenerator';
 import { calculateRoute } from '../utils/pathfinding';
@@ -13,6 +14,8 @@ interface AppState {
     userPosition: Coordinates;
     transportMode: TransportMode;
     isRouteLoading: boolean;
+    // Flood reports from Community Sentinel
+    floodReports: FloodReport[];
 }
 
 interface AppContextType extends AppState {
@@ -22,6 +25,9 @@ interface AppContextType extends AppState {
     navigateToShelter: (shelter: Shelter, mode: TransportMode) => Promise<void>;
     clearNavigation: () => void;
     reset: () => void;
+    // Flood report actions
+    addFloodReport: (report: FloodReport) => void;
+    clearFloodReports: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -35,6 +41,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         userPosition: DEFAULT_POSITION,
         transportMode: 'car',
         isRouteLoading: false,
+        floodReports: [],
     });
 
     const setLocation = useCallback((location: Location) => {
@@ -95,6 +102,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }));
     }, []);
 
+    // Flood report actions
+    const addFloodReport = useCallback((report: FloodReport) => {
+        console.log('📌 [Store] Adding flood report:', {
+            id: report.id,
+            lat: report.autoTags.lat,
+            lng: report.autoTags.lng,
+            waterDetected: report.aiResult?.waterDetected,
+            confidence: report.aiResult?.confidence,
+        });
+        setState(prev => ({
+            ...prev,
+            floodReports: [report, ...prev.floodReports],
+        }));
+    }, []);
+
+    const clearFloodReports = useCallback(() => {
+        setState(prev => ({
+            ...prev,
+            floodReports: [],
+        }));
+    }, []);
+
     const reset = useCallback(() => {
         setState({
             selectedLocation: null,
@@ -104,6 +133,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             userPosition: DEFAULT_POSITION,
             transportMode: 'car',
             isRouteLoading: false,
+            floodReports: [],
         });
     }, []);
 
@@ -117,6 +147,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 navigateToShelter,
                 clearNavigation,
                 reset,
+                addFloodReport,
+                clearFloodReports,
             }}
         >
             {children}

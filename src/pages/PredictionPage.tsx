@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useApp } from '../store';
+import { LOCATIONS } from '../data/locations';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,15 +12,16 @@ import { cn } from '@/lib/utils';
 
 export function PredictionPage() {
     const navigate = useNavigate();
-    const { selectedLocation, prediction } = useApp();
+    const { selectedLocation, prediction, setLocation } = useApp();
     const [selectedHourIndex, setSelectedHourIndex] = useState(0);
 
-    // Redirect if no location selected
+    // Auto-select Kuala Lumpur if no location is set (e.g. page refresh)
     useEffect(() => {
-        if (!selectedLocation || !prediction) {
-            navigate('/home');
+        if (!selectedLocation) {
+            const defaultLoc = LOCATIONS.find(l => l.id === 'kuala-lumpur') || LOCATIONS[0];
+            setLocation(defaultLoc);
         }
-    }, [selectedLocation, prediction, navigate]);
+    }, [selectedLocation, setLocation]);
 
     if (!selectedLocation || !prediction) return null;
 

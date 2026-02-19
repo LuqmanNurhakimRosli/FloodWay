@@ -1,0 +1,485 @@
+/* ── EmergencyMode ── */
+.emergency-mode {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    background: radial-gradient(circle at center, #1f2937 0%, #000000 100%);
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    animation: fade-in 0.3s ease-out;
+}
+
+/* ── Info Panel (Header) ── */
+.emergency-info-panel {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.emergency-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.emergency-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: var(--accent-red);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+}
+
+.emergency-title-pulse {
+    width: 8px;
+    height: 8px;
+    background: var(--accent-red);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--accent-red);
+    animation: pulse-red 1.5s infinite;
+}
+
+.emergency-cancel {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-secondary);
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.emergency-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: white;
+}
+
+/* ── Auto Tags ── */
+.auto-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.auto-tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+}
+
+/* ── Main Scrollable Content ── */
+.emergency-evidence-layer {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 0 0 100px 0;
+    /* Space for bottom bar */
+}
+
+/* ── Visual Area (Camera/Preview) ── */
+.emergency-visual-area {
+    width: 100%;
+    background: #000;
+    position: relative;
+    aspect-ratio: 4/3;
+    /* Mobile friendly default */
+    max-height: 50vh;
+    overflow: hidden;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+/* SELECTION Mode */
+.emergency-selection {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 20px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.8));
+}
+
+.selection-prompt {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.selection-buttons {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 480px;
+    justify-content: center;
+}
+
+.selection-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-primary);
+}
+
+.selection-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    border-color: var(--accent-blue);
+}
+
+.selection-icon {
+    font-size: 2.5rem;
+}
+
+.selection-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* CAMERA Mode */
+.emergency-camera-view {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: black;
+}
+
+.camera-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.camera-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 30px;
+    pointer-events: none;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent 30%);
+}
+
+.capture-btn {
+    pointer-events: auto;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: white;
+    border: 4px solid rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 0 4px white, 0 0 20px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: transform 0.1s;
+}
+
+.capture-btn:active {
+    transform: scale(0.95);
+}
+
+.back-btn-floating {
+    pointer-events: auto;
+    position: absolute;
+    bottom: 40px;
+    left: 30px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+/* PREVIEW Mode */
+.photo-preview-container {
+    width: 100%;
+    height: 100%;
+    background: #111;
+    display: flex;
+}
+
+.preview-grid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    /* Make it a horizontal carousel */
+}
+
+.preview-item {
+    flex: 0 0 100%;
+    /* Full width by default */
+    width: 100%;
+    height: 100%;
+    scroll-snap-align: center;
+    position: relative;
+}
+
+.preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    /* Show full image without cropping */
+    background: #000;
+}
+
+.delete-photo-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    z-index: 10;
+}
+
+.preview-index-badge {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: white;
+}
+
+.add-more-card {
+    position: absolute;
+    top: 50%;
+    right: 16px;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 5;
+    font-size: 1.5rem;
+}
+
+.add-more-card:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.add-more-label {
+    display: none;
+}
+
+/* Hide label for compact design */
+
+/* ── Briefing Panel ── */
+.emergency-briefing-panel {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.briefing-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--accent-cyan);
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.desc-input {
+    width: 100%;
+    min-height: 100px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+    resize: none;
+    transition: all 0.2s;
+}
+
+.desc-input:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Submit Bar ── */
+.submit-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    background: rgba(10, 14, 26, 0.9);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 100;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--gradient-red-alert);
+    border: none;
+    border-radius: var(--radius-md);
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+    transition: transform 0.2s;
+}
+
+.submit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(239, 68, 68, 0.6);
+}
+
+.submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--text-muted);
+    box-shadow: none;
+}
+
+/* ── Mobile Queries (Desktop Mode) ── */
+@media (min-width: 768px) {
+    .emergency-mode {
+        align-items: center;
+        justify-content: center;
+        /* Center centrally */
+        padding: 40px;
+        background: radial-gradient(circle at center, #111827 20%, #000 100%);
+    }
+
+    .emergency-evidence-layer {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        grid-template-rows: auto 1fr auto;
+        /* 
+           Grid Areas:
+           Left: Visual Area (Row 1-3)
+           Right: Info (Row 1), Briefing (Row 2), Submit (Row 3)
+        */
+        width: 100%;
+        max-width: 900px;
+        /* Much wider */
+        height: 600px;
+        /* Fixed height dashboard feel */
+        background: #111;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    /* Column 1: Visual Area (Left) */
+    .emergency-visual-area {
+        grid-column: 1 / 2;
+        grid-row: 1 / -1;
+        /* Fill entire left side */
+        height: 100%;
+        max-height: none;
+        border-bottom: none;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        aspect-ratio: auto;
+        /* Remove mobile aspect ratio */
+    }
+
+    /* Column 2: Info (Top Right) */
+    .emergency-info-panel {
+        grid-column: 2 / 3;
+        grid-row: 1 / 2;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        background: transparent;
+    }
+
+    /* Column 2: Briefing (Middle Right) */
+    .emergency-briefing-panel {
+        grid-column: 2 / 3;
+        grid-row: 2 / 3;
+        padding: 24px;
+        overflow-y: auto;
+    }
+
+    .desc-input {
+        min-height: 150px;
+        /* Taller input on desktop */
+    }
+
+    /* Column 2: Submit (Bottom Right) */
+    .submit-bar {
+        position: static;
+        grid-column: 2 / 3;
+        grid-row: 3 / 4;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+}

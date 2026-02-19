@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useApp } from '../store';
-import { getSheltersWithDistance } from '../data/locations';
+import { getSheltersWithDistance, LOCATIONS } from '../data/locations';
 import type { Shelter, TransportMode } from '../types/app';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,6 +14,7 @@ import 'leaflet/dist/leaflet.css';
 import { ForecastOverlay } from '../components/ForecastOverlay';
 import { FloodZoneLayer } from '../components/FloodZoneLayer';
 import { FloodTimelineScrubber } from '../components/FloodTimelineScrubber';
+import { FloodReportLayer } from '../components/FloodReportLayer';
 
 // Custom user icon
 const createUserIcon = () => new L.DivIcon({
@@ -81,7 +82,7 @@ const TRANSPORT_MODES: { mode: TransportMode; label: string; icon: typeof Car; s
 
 export function ShelterPage() {
     const navigate = useNavigate();
-    const { userPosition, selectedLocation, prediction, setShelter, navigateToShelter, transportMode, setTransportMode, isRouteLoading } = useApp();
+    const { userPosition, selectedLocation, prediction, setShelter, navigateToShelter, transportMode, setTransportMode, isRouteLoading, setLocation } = useApp();
     const [selectedShelterId, setSelectedShelterId] = useState<string | null>(null);
     const [animateToShelter, setAnimateToShelter] = useState(false);
     const [selectedMode, setSelectedMode] = useState<TransportMode>(transportMode);
@@ -109,11 +110,13 @@ export function ShelterPage() {
         }
     }, [prediction]);
 
+    // Auto-select Kuala Lumpur if no location is set (e.g. page refresh)
     useEffect(() => {
         if (!selectedLocation) {
-            navigate('/home');
+            const defaultLoc = LOCATIONS.find(l => l.id === 'kuala-lumpur') || LOCATIONS[0];
+            setLocation(defaultLoc);
         }
-    }, [selectedLocation, navigate]);
+    }, [selectedLocation, setLocation]);
 
     const shelters = useMemo(() => getSheltersWithDistance(userPosition), [userPosition]);
     const userIcon = useMemo(() => createUserIcon(), []);
@@ -152,7 +155,8 @@ export function ShelterPage() {
         ? [[userPosition.lat, userPosition.lng], [selectedShelter.position.lat, selectedShelter.position.lng]]
         : [];
 
-    if (!selectedLocation) return null;
+    // While auto-selecting location, show nothing briefly
+    if (!selectedLocation || !prediction) return null;
 
     // Estimated time for selected mode
     const getEstimatedTimeForMode = (shelter: Shelter, mode: TransportMode) => {
@@ -198,6 +202,9 @@ export function ShelterPage() {
                             eventHandlers={{ click: () => handleShelterClick(shelter) }}
                         />
                     ))}
+
+                    {/* Flood Report Markers from Community Sentinel */}
+                    <FloodReportLayer />
 
                     <FitBounds positions={allPositions} />
                     <MapController center={mapCenter} shouldAnimate={animateToShelter} />
