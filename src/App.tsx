@@ -3,7 +3,6 @@ import { AppProvider } from './store';
 import { WelcomePage } from './pages/WelcomePage';
 import { LoadingPage } from './pages/LoadingPage';
 import { HomePage } from './pages/HomePage';
-import { PredictionPage } from './pages/PredictionPage';
 import { ShelterPage } from './pages/ShelterPage';
 import { NavigationPage } from './pages/NavigationPage';
 import { FutureWorkPage } from './pages/FutureWorkPage';
@@ -12,7 +11,7 @@ import { BottomNav } from './components/BottomNav';
 import './App.css';
 
 // Pages that should show the bottom navigation
-const BOTTOM_NAV_PAGES = ['/home', '/forecast', '/shelters', '/reports', '/chat', '/profile'];
+const BOTTOM_NAV_PAGES = ['/home', '/shelters', '/reports', '/chat', '/profile'];
 
 function AppLayout() {
   const location = useLocation();
@@ -27,7 +26,6 @@ function AppLayout() {
 
         {/* Main App (with bottom nav) */}
         <Route path="/home" element={<HomePage />} />
-        <Route path="/forecast" element={<PredictionPage />} />
         <Route path="/shelters" element={<ShelterPage />} />
         <Route path="/reports" element={<ReportPage />} />
         <Route path="/chat" element={<FutureWorkPage />} />
@@ -38,7 +36,6 @@ function AppLayout() {
 
         {/* Legacy redirect */}
         <Route path="/location" element={<Navigate to="/loading" replace />} />
-        <Route path="/prediction" element={<Navigate to="/forecast" replace />} />
         <Route path="/shellter" element={<Navigate to="/shelters" replace />} />
         <Route path="/sheller" element={<Navigate to="/shelters" replace />} />
         <Route path="/shelter" element={<Navigate to="/shelters" replace />} />

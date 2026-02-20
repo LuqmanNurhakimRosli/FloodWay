@@ -242,11 +242,11 @@ export function ShelterPage() {
                 "fixed z-20 transition-all duration-500 ease-in-out pointer-events-none flex",
                 // Mobile: Bottom Sheet logic
                 "inset-x-0 bottom-0 top-auto h-[45vh] md:h-full",
-                // Desktop: Side Panel logic
+                // Desktop: Side Panel logic - fixed width, slides in/out
                 "md:inset-y-0 md:left-0 md:right-auto md:w-[400px] md:top-0",
                 isPanelVisible
                     ? "translate-y-0 md:translate-x-0"
-                    : "translate-y-full md:translate-x-[-100%]"
+                    : "translate-y-full md:-translate-x-full"
             )}>
                 {/* Content Container */}
                 <div className="w-full h-full bg-slate-900/95 backdrop-blur-xl border-t md:border-t-0 md:border-r border-white/10 rounded-t-[2.5rem] md:rounded-none flex flex-col pointer-events-auto shadow-2xl overflow-hidden">
@@ -271,7 +271,7 @@ export function ShelterPage() {
                     </header>
 
                     {/* Scrollable Content Area */}
-                    <div className="flex-1 overflow-y-auto overscroll-contain pb-[calc(1rem+var(--safe-bottom))] scrollbar-thin scrollbar-thumb-white/10">
+                    <div className="flex-1 overflow-y-auto overscroll-contain pb-[calc(1rem+var(--safe-bottom))] md:pb-18 scrollbar-thin scrollbar-thumb-white/10">
                         {/* 1. Forecast Overlay Context */}
                         <div className="px-5 py-4 border-b border-white/5 bg-white/5">
                             <span className="block text-[10px] text-muted-foreground uppercase tracking-widest mb-3 font-semibold">Flood Risk Forecast</span>
@@ -400,20 +400,27 @@ export function ShelterPage() {
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {/* Vertical Toggle Handle (Desktop) */}
-                <div className="hidden md:flex items-center w-0 overflow-visible relative h-full">
-                    <div
-                        className="absolute left-0 top-1/2 -translate-y-1/2 bg-slate-900/95 backdrop-blur-xl border border-white/10 border-l-0 p-1.5 rounded-r-xl pointer-events-auto cursor-pointer shadow-2xl hover:bg-slate-800 transition-all group"
-                        onClick={() => setIsPanelVisible(!isPanelVisible)}
-                    >
-                        {isPanelVisible ? (
-                            <ChevronLeft className="size-5 text-white/50 group-hover:text-white transition-colors" />
-                        ) : (
-                            <ChevronRight className="size-5 text-white/50 group-hover:text-white transition-colors" />
-                        )}
-                    </div>
-                </div>
+            {/* Desktop Toggle Handle — OUTSIDE the panel so it's always visible */}
+            <div
+                className={cn(
+                    "hidden md:flex fixed top-1/2 -translate-y-1/2 z-30",
+                    "transition-all duration-500 ease-in-out",
+                    isPanelVisible ? "left-[400px]" : "left-0"
+                )}
+            >
+                <button
+                    className="flex items-center justify-center bg-slate-900/95 backdrop-blur-xl border border-white/10 border-l-0 w-7 h-16 rounded-r-xl shadow-2xl hover:bg-slate-800 transition-colors group cursor-pointer"
+                    onClick={() => setIsPanelVisible(!isPanelVisible)}
+                    aria-label={isPanelVisible ? 'Close panel' : 'Open panel'}
+                >
+                    {isPanelVisible ? (
+                        <ChevronLeft className="size-4 text-white/50 group-hover:text-white transition-colors" />
+                    ) : (
+                        <ChevronRight className="size-4 text-white/50 group-hover:text-white transition-colors" />
+                    )}
+                </button>
             </div>
 
             {/* Mobile Fab to Show Panel */}

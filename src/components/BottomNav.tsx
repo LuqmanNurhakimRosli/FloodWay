@@ -1,6 +1,6 @@
 // Bottom Navigation - Mobile bottom tab bar
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Building2, MapPin, MessageCircle, User } from 'lucide-react';
+import { Home, Building2, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const tabs = [
@@ -19,8 +19,7 @@ export function BottomNav() {
         <nav className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-xl border-t border-white/10 pb-[var(--safe-bottom)]">
             <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-4">
                 {tabs.map((tab) => {
-                    const isActive = location.pathname === tab.path ||
-                        (tab.path === '/home' && location.pathname === '/forecast');
+                    const isActive = location.pathname === tab.path;
                     const Icon = tab.icon;
 
                     return (

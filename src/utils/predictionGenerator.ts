@@ -32,6 +32,11 @@ export function generateDailyPrediction(simulateDanger: boolean = true): DailyPr
                 probability = 80 + Math.floor(Math.random() * 15); // High probability > 70
                 riskLevel = 'danger';
             }
+            // Yellow (Warning) at 12-13 (12:00 - 13:00)
+            else if (hour >= 12 && hour <= 13) {
+                probability = 50 + Math.floor(Math.random() * 15); // Medium probability
+                riskLevel = 'warning';
+            }
             // Normal/Safe times
             else {
                 probability = 10 + Math.floor(Math.random() * 20); // Low probability

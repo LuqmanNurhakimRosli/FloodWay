@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useApp } from '../store';
 import { Card, CardContent } from '@/components/ui/card';
-import { Thermometer, Droplets, Wind, TrendingUp } from 'lucide-react';
+import { Thermometer, Droplets, Wind, TrendingUp, Timer } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ForecastOverlayProps {
@@ -98,6 +98,53 @@ export function ForecastOverlay({ selectedHourIndex = 0 }: ForecastOverlayProps)
                     </div>
                 </CardContent>
             </Card>
+
+            {/* Time to Flood Prediction Card */}
+            {(() => {
+                const nextFloodIndex = prediction.hourlyPredictions.findIndex(p => p.riskLevel === 'warning' || p.riskLevel === 'danger');
+                if (nextFloodIndex !== -1 && prediction.hourlyPredictions[nextFloodIndex].riskLevel !== 'safe') {
+                    const nextFlood = prediction.hourlyPredictions[nextFloodIndex];
+                    // Assume index 0 is "now"
+                    const hoursUntil = Math.max(0, nextFloodIndex);
+                    const isDanger = nextFlood.riskLevel === 'danger';
+
+                    return (
+                        <Card className={cn(
+                            "border-0 shadow-lg backdrop-blur-md animate-in slide-in-from-left-4 duration-500",
+                            isDanger ? "bg-red-500/10 border-red-500/20" : "bg-amber-500/10 border-amber-500/20"
+                        )}>
+                            <CardContent className="p-2 md:p-3 flex items-center gap-3">
+                                <div className={cn(
+                                    "size-8 md:size-10 rounded-full flex items-center justify-center shrink-0",
+                                    isDanger ? "bg-red-500 text-white" : "bg-amber-500 text-white"
+                                )}>
+                                    <Timer className="size-4 md:size-5" />
+                                </div>
+                                <div>
+                                    <div className={cn(
+                                        "text-[10px] md:text-xs font-bold uppercase tracking-wider mb-0.5",
+                                        isDanger ? "text-red-400" : "text-amber-400"
+                                    )}>
+                                        {hoursUntil === 0 ? "Flood Imminent" : "Time to Impact"}
+                                    </div>
+                                    <div className="text-sm md:text-base font-bold text-white flex items-baseline gap-1">
+                                        {hoursUntil === 0 ? (
+                                            <span>Happening Now</span>
+                                        ) : (
+                                            <>
+                                                <span>{hoursUntil}</span>
+                                                <span className="text-[10px] md:text-xs font-medium opacity-70">hours</span>
+                                                <span className="text-[10px] md:text-xs font-medium opacity-50 ml-1">({nextFlood.time})</span>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    );
+                }
+                return null;
+            })()}
 
             {/* Weather Stats Row */}
             <div className="grid grid-cols-3 gap-1.5 md:gap-2">

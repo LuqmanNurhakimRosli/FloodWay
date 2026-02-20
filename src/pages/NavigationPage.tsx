@@ -225,7 +225,7 @@ export function NavigationPage() {
 
     const handleArrived = useCallback(() => {
         clearNavigation();
-        navigate('/prediction');
+        navigate('/home');
     }, [clearNavigation, navigate]);
 
     // Loading state
