@@ -93,11 +93,27 @@ export interface FloodReport {
 }
 
 // Helper: is a report fully verified (both AI + Human)?
+// Rules:
+//   - APPROVED: both AI must be VERIFIED *and* human must APPROVE → show on map
+//   - OVERRIDDEN: moderator manually overrides AI rejection → show on map
+//   - REJECTED (human): never show, even if AI passed
+//   - PENDING (human): not yet reviewed → don't show
 export function isFullyVerified(report: FloodReport): boolean {
-    const aiOk = report.aiResult?.status === VerificationStatus.VERIFIED;
-    const humanOk = report.humanReview.status === HumanReviewStatus.APPROVED
-        || report.humanReview.status === HumanReviewStatus.OVERRIDDEN;
-    return aiOk || humanOk;
+    const humanStatus = report.humanReview.status;
+
+    // Human explicitly overrode (approved despite AI rejection) → always show
+    if (humanStatus === HumanReviewStatus.OVERRIDDEN) return true;
+
+    // Human rejected → never show, regardless of AI result
+    if (humanStatus === HumanReviewStatus.REJECTED) return false;
+
+    // Human approved → also require AI to have passed
+    if (humanStatus === HumanReviewStatus.APPROVED) {
+        return report.aiResult?.status === VerificationStatus.VERIFIED;
+    }
+
+    // Human is still PENDING → don't show yet
+    return false;
 }
 
 export type AppScreen = 'MAP' | 'EMERGENCY' | 'VERIFICATION' | 'REPORT';
