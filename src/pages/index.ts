@@ -1,7 +1,9 @@
-export { WelcomePage } from './WelcomePage';
+export { LoginPage } from './WelcomePage';
 export { LoadingPage } from './LoadingPage';
 export { LocationPage } from './LocationPage';
 export { HomePage } from './HomePage';
 export { ShelterPage } from './ShelterPage';
 export { NavigationPage } from './NavigationPage';
 export { FutureWorkPage } from './FutureWorkPage';
+export { SignUpPage } from './SignUpPage';
+export { ProfilePage } from './ProfilePage';

@@ -182,8 +182,8 @@
     background: var(--gradient-hero);
     display: flex;
     flex-direction: column;
-    padding-bottom: 80px;
-    /* space for bottom nav */
+    /* Extra padding: bottom nav (~64px) + hint bar (~40px) + FAB (~80px) + safe area */
+    padding-bottom: calc(180px + env(safe-area-inset-bottom, 0px));
 }
 
 .report-list-header {
@@ -546,7 +546,7 @@
 /* ── FAB ── */
 .report-list-fab-area {
     position: fixed;
-    bottom: 90px;
+    bottom: calc(116px + env(safe-area-inset-bottom, 0px));
     right: 24px;
     z-index: 30;
     display: flex;
@@ -595,7 +595,7 @@
 /* ── Bottom Hint ── */
 .report-list-hint {
     position: fixed;
-    bottom: 70px;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
     left: 0;
     right: 0;
     z-index: 20;

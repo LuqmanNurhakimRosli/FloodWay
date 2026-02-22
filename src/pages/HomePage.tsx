@@ -11,6 +11,7 @@ import {
     Timer, AlertOctagon, Zap, CheckCircle2, Eye
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { UserAvatar } from '../components/UserAvatar';
 
 // ── AI Action Script (Smart Checklist) ──
 const ACTION_ITEMS_DANGER = [
@@ -139,22 +140,25 @@ export function HomePage() {
             )} />
 
             {/* Header */}
-            <header className="px-6 pt-[calc(1.5rem+var(--safe-top))] pb-4 sticky top-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-white/5">
+            <header className="px-5 pt-[calc(1rem+var(--safe-top))] pb-3 sticky top-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-white/5">
                 <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                            FloodWay
-                            <span className="relative flex h-2 w-2">
-                                <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", cfg.dotPing)}></span>
-                                <span className={cn("relative inline-flex rounded-full h-2 w-2", cfg.dotColor)}></span>
-                            </span>
-                        </h1>
-                        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Intelligence Dashboard</p>
+                    <div className="flex items-center gap-2.5">
+                        <div>
+                            <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                                FloodWay
+                                <span className="relative flex h-2 w-2">
+                                    <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", cfg.dotPing)}></span>
+                                    <span className={cn("relative inline-flex rounded-full h-2 w-2", cfg.dotColor)}></span>
+                                </span>
+                            </h1>
+                            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Intelligence Dashboard</p>
+                        </div>
+                        <Badge variant="outline" className="hidden sm:flex bg-slate-900/50 text-slate-300 border-white/10 px-2.5 py-1 gap-1.5 backdrop-blur-md shadow-sm text-[10px]">
+                            <MapPin className="size-3 text-blue-400" />
+                            {selectedLocation?.name || 'Kuala Lumpur'}
+                        </Badge>
                     </div>
-                    <Badge variant="outline" className="bg-slate-900/50 text-slate-300 border-white/10 px-3 py-1 gap-1.5 transition-colors backdrop-blur-md shadow-sm">
-                        <MapPin className="size-3 text-blue-400" />
-                        {selectedLocation?.name || 'Kuala Lumpur'}
-                    </Badge>
+                    <UserAvatar />
                 </div>
             </header>
 
