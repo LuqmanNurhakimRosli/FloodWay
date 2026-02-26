@@ -1,6 +1,6 @@
 // Bottom Navigation - Mobile bottom tab bar with user profile tab
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Building2, MapPin, User } from 'lucide-react';
+import { Home, Building2, MapPin, User, Waves } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -8,6 +8,7 @@ const tabs = [
     { path: '/home', icon: Home, label: 'Home' },
     { path: '/shelters', icon: Building2, label: 'Shelter' },
     { path: '/reports', icon: MapPin, label: 'Reports' },
+    { path: '/simulation', icon: Waves, label: 'Simulate' },
     { path: '/profile', icon: User, label: 'Profile' },
 ];
 

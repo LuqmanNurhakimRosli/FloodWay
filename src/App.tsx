@@ -11,11 +11,12 @@ import { ShelterPage } from './pages/ShelterPage';
 import { NavigationPage } from './pages/NavigationPage';
 import { FutureWorkPage } from './pages/FutureWorkPage';
 import { ReportPage } from './pages/ReportPage';
+import { SimulationPage } from './pages/SimulationPage';
 import { BottomNav } from './components/BottomNav';
 import './App.css';
 
 // Pages that should show the bottom navigation
-const BOTTOM_NAV_PAGES = ['/home', '/shelters', '/reports', '/chat', '/profile'];
+const BOTTOM_NAV_PAGES = ['/home', '/shelters', '/reports', '/simulation', '/profile'];
 
 // Guard: redirect unauthenticated users to login
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -70,7 +71,7 @@ function AppLayout() {
         <Route path="/home" element={<RequireAuth><HomePage /></RequireAuth>} />
         <Route path="/shelters" element={<RequireAuth><ShelterPage /></RequireAuth>} />
         <Route path="/reports" element={<RequireAuth><ReportPage /></RequireAuth>} />
-        <Route path="/chat" element={<RequireAuth><FutureWorkPage /></RequireAuth>} />
+        <Route path="/simulation" element={<RequireAuth><SimulationPage /></RequireAuth>} />
         <Route path="/profile" element={<RequireAuth><ProfilePage /></RequireAuth>} />
 
         {/* Full-screen pages (auth required) */}
