@@ -6,22 +6,20 @@ import { useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, Droplets, AlertTriangle, CheckCircle, Info,
     Activity, Wind, Thermometer, Settings2, RotateCcw, Layers, Eye, Gauge,
+    X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// ─── Keyframe animations (scoped to this component) ──────────────
+// ─── Keyframe animations ─────────────────────────────────────────
 const SIM_KEYFRAMES = `
-  @keyframes simBadgePulse { 0%,100%{opacity:1} 50%{opacity:0.65} }
-  @keyframes simRainFall   { from{background-position:0 0} to{background-position:0 32px} }
-  @keyframes simGaugeShimmer { 0%,100%{opacity:.28} 50%{opacity:.95} }
-  @keyframes simBlinkCrit  { 0%,100%{background:rgba(239,68,68,0.08)} 50%{background:rgba(239,68,68,0.20)} }
-  @keyframes simRotateBadge{ 0%,100%{opacity:1} 50%{opacity:0.70} }
+  @keyframes simBadgePulse  { 0%,100%{opacity:1} 50%{opacity:0.65} }
+  @keyframes simRainFall    { from{background-position:0 0} to{background-position:0 32px} }
+  @keyframes simGaugeShimmer{ 0%,100%{opacity:.28} 50%{opacity:.95} }
+  @keyframes simBlinkCrit   { 0%,100%{background:rgba(239,68,68,0.08)} 50%{background:rgba(239,68,68,0.20)} }
 `;
 
-// ─── Types ────────────────────────────────────────────────────────
 type FloodLevel = 'normal' | 'medium' | 'high';
 
-// ─── Config ───────────────────────────────────────────────────────
 const FLOOD_CONFIG = {
     normal: {
         label: 'Normal', emoji: '☀️',
@@ -72,11 +70,11 @@ const FLOOD_CONFIG = {
         particleCount: 200, waterLevel: '4.2m', gaugeWidth: '90%',
         levelActiveBg: 'rgba(239,68,68,0.10)', levelActiveBorder: 'rgba(248,113,113,0.30)',
         levelActiveText: '#fca5a5',
-        levelActiveShadow: '0 0 20px rgba(216, 156, 156, 0.12),0 6px 14px rgba(0,0,0,0.4)',
+        levelActiveShadow: '0 0 20px rgba(216,156,156,0.12),0 6px 14px rgba(0,0,0,0.4)',
     },
 };
 
-// ─── 3D: City Model ───────────────────────────────────────────────
+// ─── 3D Components ────────────────────────────────────────────────
 function CityModel() {
     const { scene } = useGLTF('/city.glb');
     const cloned = useMemo(() => {
@@ -84,12 +82,10 @@ function CityModel() {
         c.traverse((child) => {
             if ((child as THREE.Mesh).isMesh) {
                 const mesh = child as THREE.Mesh;
-                mesh.castShadow = true;
-                mesh.receiveShadow = true;
+                mesh.castShadow = true; mesh.receiveShadow = true;
                 const applyMat = (m: THREE.Material) => {
                     const mat = (m as THREE.MeshStandardMaterial).clone();
-                    mat.roughness = 0.4; mat.metalness = 0.25;
-                    return mat;
+                    mat.roughness = 0.4; mat.metalness = 0.25; return mat;
                 };
                 if (Array.isArray(mesh.material)) mesh.material = mesh.material.map(applyMat);
                 else if (mesh.material) mesh.material = applyMat(mesh.material);
@@ -97,21 +93,15 @@ function CityModel() {
         });
         return c;
     }, [scene]);
-    return (
-        <group position={[0, -3, 0]} scale={[0.7, 0.7, 0.7]}>
-            <primitive object={cloned} />
-        </group>
-    );
+    return <group position={[0, -3, 0]} scale={[0.7, 0.7, 0.7]}><primitive object={cloned} /></group>;
 }
 
-// ─── 3D: Water ───────────────────────────────────────────────────
 function WaterPlane({ level }: { level: FloodLevel }) {
     const meshRef = useRef<THREE.Mesh>(null);
-    const matRef = useRef<THREE.ShaderMaterial>(null);
+    const matRef  = useRef<THREE.ShaderMaterial>(null);
     const cfg = FLOOD_CONFIG[level];
     const currentY = useRef(-12);
     const clockRef = useRef(0);
-
     const shader = useMemo(() => ({
         uniforms: {
             uTime: { value: 0 }, uColor: { value: cfg.color.clone() },
@@ -119,40 +109,34 @@ function WaterPlane({ level }: { level: FloodLevel }) {
         },
         vertexShader: `
       uniform float uTime,uWaveH,uSpeed; varying vec2 vUv; varying float vElev;
-      void main(){
-        vUv=uv; vec3 p=position;
+      void main(){ vUv=uv; vec3 p=position;
         float w1=sin(p.x*1.6+uTime*uSpeed)*uWaveH;
         float w2=sin(p.z*1.3+uTime*uSpeed*0.75+1.5)*uWaveH*0.6;
         float w3=cos((p.x+p.z)*0.9+uTime*uSpeed*1.4)*uWaveH*0.35;
         p.y+=w1+w2+w3; vElev=(w1+w2+w3)/(uWaveH*2.0);
-        gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0);
-      }`,
+        gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0); }`,
         fragmentShader: `
       uniform vec3 uColor; uniform float uOpacity,uTime; varying vec2 vUv; varying float vElev;
-      void main(){
-        vec3 deep=uColor*0.55; vec3 shallow=uColor*1.5+vec3(0.0,0.12,0.35);
+      void main(){ vec3 deep=uColor*0.55; vec3 shallow=uColor*1.5+vec3(0.0,0.12,0.35);
         float foam=smoothstep(0.45,0.92,vElev);
         vec3 col=mix(deep,shallow,vElev*0.5+0.5);
         col=mix(col,vec3(0.82,0.92,1.0),foam*0.6);
         col+=sin(vUv.y*40.0+uTime*0.5)*0.015;
-        gl_FragColor=vec4(col,uOpacity*(0.82+foam*0.18));
-      }`,
+        gl_FragColor=vec4(col,uOpacity*(0.82+foam*0.18)); }`,
         transparent: true, side: THREE.DoubleSide, depthWrite: false,
     }), []);
-
     useFrame((_, dt) => {
         if (!meshRef.current || !matRef.current) return;
         clockRef.current += dt;
         currentY.current = THREE.MathUtils.lerp(currentY.current, cfg.targetY, dt * 1.4);
         meshRef.current.position.y = currentY.current;
         const m = matRef.current;
-        m.uniforms.uTime.value = clockRef.current;
+        m.uniforms.uTime.value    = clockRef.current;
         m.uniforms.uOpacity.value = THREE.MathUtils.lerp(m.uniforms.uOpacity.value, cfg.opacity, dt * 1.8);
         m.uniforms.uColor.value.lerp(cfg.color, dt * 2.5);
-        m.uniforms.uWaveH.value = THREE.MathUtils.lerp(m.uniforms.uWaveH.value, cfg.waveHeight, dt * 1.5);
-        m.uniforms.uSpeed.value = THREE.MathUtils.lerp(m.uniforms.uSpeed.value, cfg.waveSpeed, dt * 1.5);
+        m.uniforms.uWaveH.value   = THREE.MathUtils.lerp(m.uniforms.uWaveH.value, cfg.waveHeight, dt * 1.5);
+        m.uniforms.uSpeed.value   = THREE.MathUtils.lerp(m.uniforms.uSpeed.value, cfg.waveSpeed, dt * 1.5);
     });
-
     return (
         <mesh ref={meshRef} position={[0, -12, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
             <planeGeometry args={[32, 32, 96, 96]} />
@@ -161,15 +145,13 @@ function WaterPlane({ level }: { level: FloodLevel }) {
     );
 }
 
-// ─── 3D: Rain ────────────────────────────────────────────────────
 function RainSystem({ level }: { level: FloodLevel }) {
     const count = FLOOD_CONFIG[level].particleCount;
-    const ref = useRef<THREE.InstancedMesh>(null);
+    const ref   = useRef<THREE.InstancedMesh>(null);
     const dummy = useMemo(() => new THREE.Object3D(), []);
-    const pos = useMemo<[number, number, number][]>(() =>
+    const pos   = useMemo<[number, number, number][]>(() =>
         Array.from({ length: 200 }, () => [(Math.random() - 0.5) * 26, Math.random() * 20, (Math.random() - 0.5) * 26]), []);
     const speeds = useMemo(() => pos.map(() => 0.08 + Math.random() * 0.18), [pos]);
-
     useFrame(() => {
         if (!ref.current) return;
         ref.current.count = count;
@@ -182,7 +164,6 @@ function RainSystem({ level }: { level: FloodLevel }) {
         }
         ref.current.instanceMatrix.needsUpdate = true;
     });
-
     return (
         <instancedMesh ref={ref} args={[undefined, undefined, 200]}>
             <cylinderGeometry args={[1, 1, 1, 4]} />
@@ -191,9 +172,8 @@ function RainSystem({ level }: { level: FloodLevel }) {
     );
 }
 
-// ─── 3D: Debris ──────────────────────────────────────────────────
 function FloatingDebris({ level }: { level: FloodLevel }) {
-    const cfg = FLOOD_CONFIG[level];
+    const cfg   = FLOOD_CONFIG[level];
     const items = useMemo(() =>
         Array.from({ length: 10 }, (_, i) => ({
             id: i, x: (Math.random() - 0.5) * 20, z: (Math.random() - 0.5) * 20,
@@ -224,7 +204,6 @@ function FloatingDebris({ level }: { level: FloodLevel }) {
     );
 }
 
-// ─── 3D: Pulse Ring ──────────────────────────────────────────────
 function PulseRing({ level }: { level: FloodLevel }) {
     const ref = useRef<THREE.Mesh>(null);
     const cfg = FLOOD_CONFIG[level];
@@ -244,7 +223,6 @@ function PulseRing({ level }: { level: FloodLevel }) {
     );
 }
 
-// ─── 3D: Atmosphere ──────────────────────────────────────────────
 function Atmosphere({ level }: { level: FloodLevel }) {
     const { scene } = useThree();
     const cfg = FLOOD_CONFIG[level];
@@ -255,35 +233,22 @@ function Atmosphere({ level }: { level: FloodLevel }) {
     return null;
 }
 
-// ─── 3D: Dynamic Lights ──────────────────────────────────────────
 function DynamicLights({ level }: { level: FloodLevel }) {
-    const keyRef = useRef<THREE.PointLight>(null);
+    const keyRef  = useRef<THREE.PointLight>(null);
     const fillRef = useRef<THREE.PointLight>(null);
-
     useFrame((_, dt) => {
         if (!keyRef.current || !fillRef.current) return;
-
-        // In High: warm amber-white (illuminates), Medium/Normal: cool blue
-        const keyColor = level === 'high' ? '#ffc060'
-            : level === 'medium' ? '#6688ff' : '#4466ff';
-        const keyInt = level === 'high' ? 2.8
-            : level === 'medium' ? 1.2 : 0.5;
-
+        const keyColor = level === 'high' ? '#ffc060' : level === 'medium' ? '#6688ff' : '#4466ff';
+        const keyInt   = level === 'high' ? 2.8 : level === 'medium' ? 1.2 : 0.5;
         keyRef.current.intensity = THREE.MathUtils.lerp(keyRef.current.intensity, keyInt, dt * 1.5);
         keyRef.current.color.lerp(new THREE.Color(keyColor), dt * 2);
-
-        // Blue fill gets stronger in High to counteract fog
         const fillInt = level === 'high' ? 1.8 : level === 'medium' ? 1.0 : 0.7;
         fillRef.current.intensity = THREE.MathUtils.lerp(fillRef.current.intensity, fillInt, dt * 1.5);
     });
-
     return (
         <>
-            {/* Key: amber-white in High, blue in Normal/Medium */}
-            <pointLight ref={keyRef} position={[-8, 8, -8]} intensity={0.5} color="#4466ff" distance={38} />
-            {/* Fill: cool blue, extra bright in High mode */}
-            <pointLight ref={fillRef} position={[8, 5, 8]} intensity={0.7} color="#99ccff" distance={32} />
-            {/* Overhead white fill — makes roof & top floors visible at distance */}
+            <pointLight ref={keyRef}  position={[-8, 8, -8]} intensity={0.5} color="#4466ff" distance={38} />
+            <pointLight ref={fillRef} position={[8, 5, 8]}   intensity={0.7} color="#99ccff" distance={32} />
             <pointLight position={[0, 16, 0]}
                 intensity={level === 'high' ? 1.4 : level === 'medium' ? 0.6 : 0.3}
                 color="#ffffff" distance={28} />
@@ -291,7 +256,6 @@ function DynamicLights({ level }: { level: FloodLevel }) {
     );
 }
 
-// ─── Full 3D Scene ────────────────────────────────────────────────
 function Scene({ level, showWater, showRain, showDebris }: {
     level: FloodLevel; showWater: boolean; showRain: boolean; showDebris: boolean;
 }) {
@@ -316,15 +280,15 @@ function Scene({ level, showWater, showRain, showDebris }: {
                     <CityModel />
                 </Float>
             </Suspense>
-            {showWater && <WaterPlane level={level} />}
-            {showRain && <RainSystem level={level} />}
+            {showWater  && <WaterPlane level={level} />}
+            {showRain   && <RainSystem level={level} />}
             {showDebris && <FloatingDebris level={level} />}
             <PulseRing level={level} />
         </>
     );
 }
 
-// ─── Animated Counter ─────────────────────────────────────────────
+// ─── UI Atoms ─────────────────────────────────────────────────────
 function AnimCounter({ value, unit }: { value: number; unit: string }) {
     const [disp, setDisp] = useState(0);
     useEffect(() => {
@@ -341,7 +305,6 @@ function AnimCounter({ value, unit }: { value: number; unit: string }) {
     return <>{disp}{unit}</>;
 }
 
-// ─── Section Header ──────────────────────────────────────────────
 function SectionTitle({ icon, label, right }: { icon: React.ReactNode; label: string; right?: React.ReactNode }) {
     return (
         <div className="flex items-center gap-1.5 text-[0.58rem] font-bold uppercase tracking-[0.1em] text-slate-500">
@@ -350,40 +313,33 @@ function SectionTitle({ icon, label, right }: { icon: React.ReactNode; label: st
     );
 }
 
-// ─── Gauge ───────────────────────────────────────────────────────
 const GAUGE_GRADIENTS: Record<FloodLevel, string> = {
     normal: 'linear-gradient(90deg,#064e3b,#22c55e)',
     medium: 'linear-gradient(90deg,#78350f,#f59e0b,#fde68a)',
-    high: 'linear-gradient(90deg,#7f1d1d,#ef4444,#fca5a5)',
+    high:   'linear-gradient(90deg,#7f1d1d,#ef4444,#fca5a5)',
 };
+
 function FloodGauge({ level, cfg }: { level: FloodLevel; cfg: typeof FLOOD_CONFIG['normal'] }) {
     return (
         <div className="flex flex-col gap-1.5">
             <div style={{ position: 'relative', height: 8, background: 'rgba(255,255,255,0.055)', borderRadius: 8, overflow: 'visible' }}>
-                {/* fill */}
                 <div style={{
                     height: '100%', borderRadius: 8,
-                    background: GAUGE_GRADIENTS[level],
-                    width: cfg.gaugeWidth,
-                    transition: 'width 1.2s cubic-bezier(0.34,1.1,0.64,1)',
-                    position: 'relative',
+                    background: GAUGE_GRADIENTS[level], width: cfg.gaugeWidth,
+                    transition: 'width 1.2s cubic-bezier(0.34,1.1,0.64,1)', position: 'relative',
                 }}>
-                    {/* shimmer tip */}
                     <span style={{
                         position: 'absolute', right: 0, top: 0, bottom: 0, width: 5,
                         background: 'rgba(255,255,255,0.6)', borderRadius: '0 8px 8px 0',
                         animation: 'simGaugeShimmer 2s ease-in-out infinite',
                     }} />
                 </div>
-                {/* pin */}
                 <span style={{
                     position: 'absolute', top: -4, left: cfg.gaugeWidth,
                     width: 16, height: 16, borderRadius: '50%', background: 'white',
-                    border: '2.5px solid rgba(255,255,255,0.35)',
-                    transform: 'translateX(-50%)',
-                    boxShadow: '0 0 10px rgba(255,255,255,0.55)',
+                    border: '2.5px solid rgba(255,255,255,0.35)', transform: 'translateX(-50%)',
+                    boxShadow: '0 0 10px rgba(255,255,255,0.55)', display: 'block',
                     transition: 'left 1.2s cubic-bezier(0.34,1.1,0.64,1)',
-                    display: 'block',
                 }} />
             </div>
             <div className="flex justify-between text-[0.55rem] tracking-wide" style={{ opacity: 0.85 }}>
@@ -395,9 +351,8 @@ function FloodGauge({ level, cfg }: { level: FloodLevel; cfg: typeof FLOOD_CONFI
     );
 }
 
-// ─── Status Banner ────────────────────────────────────────────────
 function StatusBanner({ level, cfg }: { level: FloodLevel; cfg: typeof FLOOD_CONFIG['normal'] }) {
-    const style: CSSProperties = {
+    const s: CSSProperties = {
         display: 'flex', alignItems: 'flex-start', gap: 8,
         padding: '9px 12px', borderRadius: 10,
         fontSize: '0.67rem', lineHeight: 1.5, fontWeight: 500,
@@ -409,19 +364,16 @@ function StatusBanner({ level, cfg }: { level: FloodLevel; cfg: typeof FLOOD_CON
         transition: 'all 0.5s',
     };
     return (
-        <div style={style}>
+        <div style={s}>
             <Info size={12} style={{ flexShrink: 0, marginTop: 1 }} />
             <span>{cfg.statusMsg}</span>
         </div>
     );
 }
 
-// ─── Level Button ─────────────────────────────────────────────────
-function LevelBtn({ l, active, onClick }: {
-    l: FloodLevel; active: boolean; onClick: () => void;
-}) {
+function LevelBtn({ l, active, onClick }: { l: FloodLevel; active: boolean; onClick: () => void }) {
     const cfg = FLOOD_CONFIG[l];
-    const baseStyle: CSSProperties = {
+    const s: CSSProperties = {
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
         padding: '11px 6px', borderRadius: 13, width: '100%',
         border: `1px solid ${active ? cfg.levelActiveBorder : 'rgba(255,255,255,0.06)'}`,
@@ -433,7 +385,7 @@ function LevelBtn({ l, active, onClick }: {
         transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
     };
     return (
-        <button style={baseStyle} onClick={onClick}
+        <button style={s} onClick={onClick}
             onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)'; }}
             onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)'; }}
         >
@@ -446,23 +398,18 @@ function LevelBtn({ l, active, onClick }: {
     );
 }
 
-// ─── Toggle Button ────────────────────────────────────────────────
-function ToggleBtn({ label, icon, on, onClick }: {
-    label: string; icon: string; on: boolean; onClick: () => void;
-}) {
+function ToggleBtn({ label, icon, on, onClick }: { label: string; icon: string; on: boolean; onClick: () => void }) {
     return (
         <button onClick={onClick} className={cn(
             'flex flex-1 items-center justify-center gap-1.5 rounded-[9px] py-[7px] text-[0.67rem] font-semibold transition-all',
-            on
-                ? 'bg-sky-500/10 border border-sky-400/28 text-sky-300'
-                : 'bg-white/[0.025] border border-white/[0.06] text-slate-500'
+            on ? 'bg-sky-500/10 border border-sky-400/[.28] text-sky-300'
+               : 'bg-white/[0.025] border border-white/[0.06] text-slate-500'
         )}>
             <span>{icon}</span><span>{label}</span>
         </button>
     );
 }
 
-// ─── Stat Row ────────────────────────────────────────────────────
 function StatRow({ icon, iconColor, label, value }: {
     icon: React.ReactNode; iconColor: string; label: string; value: React.ReactNode;
 }) {
@@ -480,11 +427,12 @@ function StatRow({ icon, iconColor, label, value }: {
 // ─── Main Page ────────────────────────────────────────────────────
 export function SimulationPage() {
     const navigate = useNavigate();
-    const [level, setLevel] = useState<FloodLevel>('normal');
-    const [demoMode, setDemoMode] = useState(false);
-    const [showWater, setShowWater] = useState(true);
-    const [showRain, setShowRain] = useState(true);
+    const [level,      setLevel]      = useState<FloodLevel>('normal');
+    const [demoMode,   setDemoMode]   = useState(false);
+    const [showWater,  setShowWater]  = useState(true);
+    const [showRain,   setShowRain]   = useState(true);
     const [showDebris, setShowDebris] = useState(true);
+    const [showPanel,  setShowPanel]  = useState(false);
     const cfg = FLOOD_CONFIG[level];
 
     useEffect(() => {
@@ -495,77 +443,146 @@ export function SimulationPage() {
         return () => clearInterval(iv);
     }, [demoMode]);
 
-    // ── shared styles ──
-    const panelBg = 'rgba(8,19,31,0.98)';
-    const bgMain = '#03080f';
-    const border = 'rgba(56,120,210,0.15)';
+    // Auto-close panel in demo mode
+    useEffect(() => { if (demoMode) setShowPanel(false); }, [demoMode]);
+
+    const border  = 'rgba(56,120,210,0.15)';
     const borderS = 'rgba(255,255,255,0.06)';
+    const bgPanel = 'rgba(8,19,31,0.98)';
+
+    // ── Control content (shared by sidebar + mobile sheet) ──────────
+    const Controls = () => (
+        <>
+            {/* Status badge */}
+            <div className="flex items-center gap-3 p-3 rounded-2xl border transition-all"
+                style={{ background: cfg.riskBg, borderColor: cfg.riskBorder }}>
+                {level === 'normal'
+                    ? <CheckCircle size={18} style={{ color: cfg.riskColor, flexShrink: 0 }} />
+                    : <AlertTriangle size={18} style={{ color: cfg.riskColor, flexShrink: 0 }} />}
+                <div>
+                    <p className="text-[0.9rem] font-extrabold leading-tight" style={{ color: cfg.riskColor }}>{cfg.riskLabel}</p>
+                    <p className="text-[0.56rem] font-semibold text-slate-500 uppercase tracking-wider">Current Status</p>
+                </div>
+            </div>
+
+            <hr style={{ border: 'none', borderTop: `1px solid ${border}` }} />
+
+            {/* Level picker */}
+            <div className="flex flex-col gap-2">
+                <SectionTitle icon={<Layers size={12} />} label="Flood Level" />
+                <div className="grid grid-cols-3 gap-2">
+                    {(['normal', 'medium', 'high'] as FloodLevel[]).map(l => (
+                        <LevelBtn key={l} l={l} active={level === l}
+                            onClick={() => { setLevel(l); setDemoMode(false); }} />
+                    ))}
+                </div>
+            </div>
+
+            {/* Status message */}
+            <StatusBanner level={level} cfg={cfg} />
+
+            <hr style={{ border: 'none', borderTop: `1px solid ${border}` }} />
+
+            {/* Gauge */}
+            <div className="flex flex-col gap-2">
+                <SectionTitle icon={<Gauge size={12} />} label="Water Level"
+                    right={<span className="text-[0.82rem] font-extrabold tabular-nums transition-all"
+                        style={{ color: cfg.riskColor }}>{cfg.waterLevel}</span>} />
+                <FloodGauge level={level} cfg={cfg} />
+            </div>
+
+            <hr style={{ border: 'none', borderTop: `1px solid ${border}` }} />
+
+            {/* Metrics */}
+            <div className="flex flex-col gap-2">
+                <SectionTitle icon={<Activity size={12} />} label="Live Metrics" />
+                <div className="flex flex-col gap-1">
+                    <StatRow icon={<Droplets size={14} />} iconColor="#60a5fa" label="Rainfall"
+                        value={<AnimCounter value={cfg.rainfall} unit=" mm/h" />} />
+                    <StatRow icon={<Wind size={14} />} iconColor="#22d3ee" label="Wind" value={cfg.windSpeed} />
+                    <StatRow icon={<Thermometer size={14} />} iconColor="#f59e0b" label="Temp" value={cfg.temp} />
+                </div>
+            </div>
+
+            <hr style={{ border: 'none', borderTop: `1px solid ${border}` }} />
+
+            {/* Scene layers */}
+            <div className="flex flex-col gap-2">
+                <SectionTitle icon={<Eye size={12} />} label="Scene Layers" />
+                <div className="flex gap-1.5">
+                    <ToggleBtn label="Water"  icon="💧" on={showWater}  onClick={() => setShowWater(!showWater)}   />
+                    <ToggleBtn label="Rain"   icon="🌧" on={showRain}   onClick={() => setShowRain(!showRain)}     />
+                    <ToggleBtn label="Debris" icon="🪵" on={showDebris} onClick={() => setShowDebris(!showDebris)} />
+                </div>
+            </div>
+
+            <hr style={{ border: 'none', borderTop: `1px solid ${border}` }} />
+
+            {/* Demo cycle */}
+            <button onClick={() => setDemoMode(!demoMode)} className={cn(
+                'flex items-center justify-center gap-2 w-full py-2.5 rounded-[11px] border text-[0.7rem] font-semibold transition-all',
+                demoMode
+                    ? 'bg-blue-500/[0.12] border-blue-400/[0.35] text-blue-300'
+                    : 'bg-white/[0.025] border-white/[0.06] text-slate-500 hover:bg-blue-500/10 hover:border-blue-400/30 hover:text-blue-300'
+            )}>
+                <Settings2 size={13} />
+                {demoMode ? 'Stop Demo Cycle' : 'Start Demo Cycle'}
+            </button>
+        </>
+    );
 
     return (
         <>
-            {/* Inject keyframe animations */}
             <style>{SIM_KEYFRAMES}</style>
 
-            {/* ══ ROOT ══ */}
+            {/* ══ PAGE ROOT ══ */}
             <div style={{
                 display: 'flex', flexDirection: 'column',
-                height: 'calc(100dvh - 64px)',   /* leave room for bottom nav */
-                background: bgMain,
-                color: '#e8f0ff',
-                fontFamily: 'Inter,system-ui,sans-serif',
-                overflow: 'hidden',
+                height: 'calc(100dvh - 64px)',   /* above bottom nav */
+                background: '#03080f', color: '#e8f0ff',
+                fontFamily: 'Inter,system-ui,sans-serif', overflow: 'hidden',
             }}>
-
-                {/* ── MOBILE / TABLET TOP BAR ── */}
-                <header style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '11px 16px',
-                    background: 'rgba(3,8,15,0.97)',
-                    backdropFilter: 'blur(24px) saturate(180%)',
-                    borderBottom: `1px solid ${border}`,
-                    flexShrink: 0, zIndex: 40,
-                }}
-                    className="lg:hidden"
+                {/* ── MOBILE TOPBAR ── */}
+                <header className="lg:hidden flex items-center gap-2.5 px-4 py-2.5 shrink-0"
+                    style={{ background: 'rgba(3,8,15,0.97)', backdropFilter: 'blur(24px) saturate(180%)', borderBottom: `1px solid ${border}` }}
                 >
-                    <button className="flex items-center justify-center w-[34px] h-[34px] rounded-[10px] border transition-all"
-                        style={{ background: 'rgba(255,255,255,0.04)', borderColor: borderS, color: '#4a6080' }}
-                        onClick={() => navigate('/home')}
-                    >
-                        <ArrowLeft size={17} />
+                    <button onClick={() => navigate('/home')}
+                        className="flex items-center justify-center w-8 h-8 rounded-[9px] border transition-all"
+                        style={{ background: 'rgba(255,255,255,0.04)', borderColor: borderS, color: '#4a6080' }}>
+                        <ArrowLeft size={16} />
                     </button>
-                    <div className="flex items-center gap-2 flex-1 text-[0.9rem] font-bold tracking-tight">
-                        <Droplets size={18} className="text-sky-400" />
-                        <span>Flood Simulation</span>
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <Droplets size={16} className="text-sky-400 shrink-0" />
+                        <span className="text-[0.85rem] font-bold tracking-tight truncate">Flood Simulation</span>
+                        <span className="shrink-0 px-2 py-0.5 rounded-full text-[0.58rem] font-bold uppercase tracking-wide"
+                            style={{ background: cfg.riskBg, color: cfg.riskColor, border: `1px solid ${cfg.riskBorder}` }}>
+                            {cfg.riskLabel}
+                        </span>
                     </div>
-                    <button
-                        className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.65rem] font-bold uppercase tracking-wide border transition-all',
-                            demoMode ? 'bg-blue-500/15 border-blue-400/40 text-blue-300' : 'bg-white/[0.03] border-white/[0.06] text-slate-500')}
-                        onClick={() => setDemoMode(!demoMode)}
-                    >
-                        <Activity size={12} />{demoMode ? 'Live' : 'Demo'}
+                    <button onClick={() => setDemoMode(!demoMode)} className={cn(
+                        'shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[0.6rem] font-bold uppercase tracking-wide border transition-all',
+                        demoMode ? 'bg-blue-500/15 border-blue-400/40 text-blue-300' : 'bg-white/[0.03] border-white/[0.06] text-slate-500')}>
+                        <Activity size={11} />{demoMode ? 'Live' : 'Demo'}
                     </button>
                 </header>
 
                 {/* ══ BODY ══ */}
                 <div className="flex flex-col lg:flex-row flex-1 overflow-hidden min-h-0">
 
-                    {/* ────────── SIDEBAR (desktop only) ─────────────────── */}
+                    {/* ── DESKTOP SIDEBAR ── */}
                     <aside className="hidden lg:flex flex-col shrink-0 overflow-y-auto overflow-x-hidden"
                         style={{
                             width: 292, minWidth: 292, height: '100%',
-                            background: `linear-gradient(180deg, ${panelBg} 0%, rgba(11,27,45,0.98) 100%)`,
+                            background: `linear-gradient(180deg, ${bgPanel} 0%, rgba(11,27,45,0.98) 100%)`,
                             borderRight: `1px solid ${border}`,
                             scrollbarWidth: 'thin', scrollbarColor: 'rgba(59,130,246,0.22) transparent',
                         }}
                     >
-                        {/* Sidebar header */}
                         <div className="flex items-center gap-2.5 px-4 py-[18px] shrink-0"
-                            style={{ borderBottom: `1px solid ${border}`, background: 'rgba(3,8,15,0.45)' }}
-                        >
-                            <button className="flex items-center justify-center w-[32px] h-[32px] rounded-[9px] border transition-all"
-                                style={{ background: 'rgba(255,255,255,0.04)', borderColor: borderS, color: '#4a6080' }}
-                                onClick={() => navigate('/home')}
-                            >
+                            style={{ borderBottom: `1px solid ${border}`, background: 'rgba(3,8,15,0.45)' }}>
+                            <button onClick={() => navigate('/home')}
+                                className="flex items-center justify-center w-8 h-8 rounded-[9px] border transition-all"
+                                style={{ background: 'rgba(255,255,255,0.04)', borderColor: borderS, color: '#4a6080' }}>
                                 <ArrowLeft size={15} />
                             </button>
                             <div className="flex items-center gap-2">
@@ -576,107 +593,18 @@ export function SimulationPage() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Risk badge */}
-                        <div className="mx-3.5 mt-3.5" style={{
-                            display: 'flex', alignItems: 'center', gap: 11,
-                            padding: '12px 14px', borderRadius: 14,
-                            background: cfg.riskBg,
-                            border: `1px solid ${cfg.riskBorder}`,
-                            transition: 'all 0.4s',
-                        }}>
-                            {level === 'normal'
-                                ? <CheckCircle size={16} style={{ color: cfg.riskColor, flexShrink: 0 }} />
-                                : <AlertTriangle size={16} style={{ color: cfg.riskColor, flexShrink: 0 }} />}
-                            <div>
-                                <p style={{ fontSize: '0.9rem', fontWeight: 800, letterSpacing: '-0.025em', color: cfg.riskColor, lineHeight: 1.1 }}>
-                                    {cfg.riskLabel}
-                                </p>
-                                <p className="text-[0.56rem] font-semibold text-slate-500 uppercase tracking-[0.07em] mt-0.5">Current Status</p>
-                            </div>
-                        </div>
-
-                        {/* ── Flood Level ── */}
-                        <div className="px-3.5 pt-3.5 flex flex-col gap-2">
-                            <SectionTitle icon={<Layers size={12} />} label="Flood Level" />
-                            <div className="grid grid-cols-3 gap-2">
-                                {(['normal', 'medium', 'high'] as FloodLevel[]).map(l => (
-                                    <LevelBtn key={l} l={l} active={level === l}
-                                        onClick={() => { setLevel(l); setDemoMode(false); }} />
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* ── Status ── */}
-                        <div className="px-3.5 pt-3">
-                            <StatusBanner level={level} cfg={cfg} />
-                        </div>
-
-                        {/* ── Water Level Gauge ── */}
-                        <div className="px-3.5 pt-3.5 flex flex-col gap-2">
-                            <SectionTitle icon={<Gauge size={12} />} label="Water Level"
-                                right={<span style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '-0.025em', color: cfg.riskColor, transition: 'color 0.4s' }}>{cfg.waterLevel}</span>} />
-                            <FloodGauge level={level} cfg={cfg} />
-                        </div>
-
-                        {/* ── Live Metrics ── */}
-                        <div className="px-3.5 pt-3.5 flex flex-col gap-2">
-                            <SectionTitle icon={<Activity size={12} />} label="Live Metrics" />
-                            <div className="flex flex-col gap-1">
-                                <StatRow icon={<Droplets size={14} />} iconColor="#60a5fa" label="Rainfall"
-                                    value={<AnimCounter value={cfg.rainfall} unit=" mm/h" />} />
-                                <StatRow icon={<Wind size={14} />} iconColor="#22d3ee" label="Wind" value={cfg.windSpeed} />
-                                <StatRow icon={<Thermometer size={14} />} iconColor="#f59e0b" label="Temp" value={cfg.temp} />
-                            </div>
-                        </div>
-
-                        {/* ── Scene Layers ── */}
-                        <div className="px-3.5 pt-3.5 flex flex-col gap-2">
-                            <SectionTitle icon={<Eye size={12} />} label="Scene Layers" />
-                            <div className="flex gap-1.5">
-                                <ToggleBtn label="Water" icon="💧" on={showWater} onClick={() => setShowWater(!showWater)} />
-                                <ToggleBtn label="Rain" icon="🌧" on={showRain} onClick={() => setShowRain(!showRain)} />
-                                <ToggleBtn label="Debris" icon="🪵" on={showDebris} onClick={() => setShowDebris(!showDebris)} />
-                            </div>
-                        </div>
-
-                        {/* ── Demo ── */}
-                        <div className="px-3.5 pt-4 pb-4 mt-2" style={{ borderTop: `1px solid ${border}` }}>
-                            <button
-                                className={cn('flex items-center justify-center gap-2 w-full py-2.5 rounded-[11px] border text-[0.7rem] font-semibold transition-all',
-                                    demoMode
-                                        ? 'bg-blue-500/12 border-blue-400/35 text-blue-300'
-                                        : 'bg-white/[0.025] border-white/[0.06] text-slate-500 hover:bg-blue-500/10 hover:border-blue-400/30 hover:text-blue-300'
-                                )}
-                                onClick={() => setDemoMode(!demoMode)}
-                            >
-                                <Settings2 size={13} />
-                                {demoMode ? 'Stop Demo Cycle' : 'Start Demo Cycle'}
-                            </button>
+                        <div className="flex flex-col gap-3 px-3.5 pt-3.5 pb-5">
+                            <Controls />
                         </div>
                     </aside>
 
-                    {/* ────────── 3D VIEWPORT ──────────────────────────────── */}
-                    <div className="relative flex-1 min-h-0 overflow-hidden" style={{ background: bgMain }}>
-                        {/* Hint */}
-                        <div className="absolute bottom-3.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full z-10 pointer-events-none text-[0.6rem] text-slate-500"
-                            style={{ background: 'rgba(3,8,15,0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.07)' }}
-                        >
-                            <RotateCcw size={11} /> <span>Drag • Scroll zoom • Right-drag pan</span>
-                        </div>
+                    {/* ── 3D VIEWPORT ── */}
+                    <div className="relative flex-1 min-h-0 overflow-hidden" style={{ background: '#03080f' }}>
 
-                        {/* Mobile risk overlay */}
-                        <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full z-10 pointer-events-none text-[0.67rem] font-bold uppercase tracking-wide lg:hidden"
-                            style={{
-                                background: cfg.riskBg,
-                                border: `1px solid ${cfg.riskBorder}`,
-                                color: cfg.riskColor,
-                                backdropFilter: 'blur(16px)',
-                                animation: 'simBadgePulse 2s ease-in-out infinite',
-                            }}
-                        >
-                            {level === 'normal' ? <CheckCircle size={11} /> : <AlertTriangle size={11} />}
-                            {cfg.riskLabel}
+                        {/* Drag hint */}
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full z-10 pointer-events-none text-[0.6rem] text-slate-500 whitespace-nowrap"
+                            style={{ background: 'rgba(3,8,15,0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                            <RotateCcw size={11} /> Drag • Scroll zoom • Right-drag pan
                         </div>
 
                         {/* Desktop corner stats */}
@@ -686,15 +614,14 @@ export function SimulationPage() {
                                 { icon: <Wind size={11} className="text-cyan-400" />, val: cfg.windSpeed },
                                 { icon: <span className="text-[11px]">💧</span>, val: cfg.waterLevel, col: cfg.riskColor },
                             ].map((c, i) => (
-                                <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] text-[0.67rem] font-semibold text-slate-400 tabular-nums"
-                                    style={{ background: 'rgba(3,8,15,0.75)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.07)', color: c.col }}
-                                >
+                                <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] text-[0.67rem] font-semibold tabular-nums"
+                                    style={{ background: 'rgba(3,8,15,0.75)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.07)', color: c.col ?? '#8aa8cc' }}>
                                     {c.icon}{c.val}
                                 </div>
                             ))}
                         </div>
 
-                        {/* CSS rain veil */}
+                        {/* Rain veil */}
                         {level !== 'normal' && (
                             <div className="absolute inset-0 pointer-events-none z-[5]" style={{
                                 opacity: level === 'high' ? 0.65 : 0.35,
@@ -703,6 +630,29 @@ export function SimulationPage() {
                                 animation: 'simRainFall 0.12s linear infinite',
                             }} />
                         )}
+
+                        {/* ── MOBILE FAB ── tap to open the sheet */}
+                        <button
+                            className="lg:hidden absolute z-20 active:scale-95"
+                            style={{
+                                bottom: 14, right: 14,
+                                display: 'flex', alignItems: 'center', gap: 8,
+                                padding: '10px 16px', borderRadius: 20,
+                                background: 'rgba(6,14,26,0.92)',
+                                backdropFilter: 'blur(20px)',
+                                border: `1px solid ${cfg.riskBorder}`,
+                                color: cfg.riskColor,
+                                boxShadow: `0 8px 28px rgba(0,0,0,0.55), 0 0 0 1px ${cfg.riskBorder}`,
+                                fontSize: '0.78rem', fontWeight: 700,
+                                transition: 'all 0.22s',
+                            }}
+                            onClick={() => setShowPanel(true)}
+                        >
+                            {level === 'normal' ? <CheckCircle size={14} /> : <AlertTriangle size={14} />}
+                            <span>{cfg.riskLabel}</span>
+                            <span style={{ opacity: 0.35, fontSize: '0.7rem' }}>·</span>
+                            <Settings2 size={13} style={{ opacity: 0.55 }} />
+                        </button>
 
                         <Canvas shadows dpr={[1, 1.8]}
                             camera={{ position: [28, 12, 28], fov: 48, near: 0.1, far: 300 }}
@@ -715,50 +665,70 @@ export function SimulationPage() {
                                 autoRotate={false} makeDefault />
                         </Canvas>
                     </div>
+                </div>
+            </div>
 
-                    {/* ────────── MOBILE BOTTOM CONTROLS ──────────────────── */}
-                    <div className="flex flex-col gap-2.5 px-3.5 pt-3 lg:hidden"
-                        style={{
-                            paddingBottom: 'calc(64px + 16px)',
-                            background: 'rgba(3,8,15,0.98)',
-                            backdropFilter: 'blur(24px) saturate(180%)',
-                            borderTop: `1px solid ${border}`,
-                            flexShrink: 0,
-                        }}
-                    >
-                        {/* Level buttons */}
-                        <div className="grid grid-cols-3 gap-2">
-                            {(['normal', 'medium', 'high'] as FloodLevel[]).map(l => (
-                                <LevelBtn key={l} l={l} active={level === l}
-                                    onClick={() => { setLevel(l); setDemoMode(false); }} />
-                            ))}
+            {/* ══ MOBILE BOTTOM SHEET (fixed, outside root) ══ */}
+
+            {/* Backdrop */}
+            <div onClick={() => setShowPanel(false)}
+                className="lg:hidden fixed inset-0 z-[60]"
+                style={{
+                    background: 'rgba(0,0,0,0.7)',
+                    backdropFilter: 'blur(4px)',
+                    opacity: showPanel ? 1 : 0,
+                    pointerEvents: showPanel ? 'auto' : 'none',
+                    transition: 'opacity 0.3s',
+                }}
+            />
+
+            {/* Drawer */}
+            <div className="lg:hidden fixed left-0 right-0 z-[70] flex flex-col"
+                style={{
+                    bottom: 64,                     /* sits flush above bottom nav */
+                    maxHeight: 'calc(80vh - 64px)',
+                    borderRadius: '24px 24px 0 0',
+                    background: 'rgba(5,12,23,0.97)',
+                    backdropFilter: 'blur(32px) saturate(200%)',
+                    border: `1px solid ${border}`,
+                    borderBottom: 'none',
+                    boxShadow: '0 -12px 48px rgba(0,0,0,0.7)',
+                    transform: showPanel ? 'translateY(0)' : 'translateY(108%)',
+                    transition: 'transform 0.38s cubic-bezier(0.32,0.72,0,1)',
+                }}
+            >
+                {/* Pill handle */}
+                <div className="flex justify-center pt-3 pb-2 shrink-0">
+                    <div className="w-10 h-1 rounded-full bg-white/20" />
+                </div>
+
+                {/* Sheet header */}
+                <div className="flex items-center justify-between px-4 pb-3 shrink-0"
+                    style={{ borderBottom: `1px solid ${border}` }}>
+                    <div className="flex items-center gap-2.5">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-xl"
+                            style={{ background: cfg.riskBg, border: `1px solid ${cfg.riskBorder}` }}>
+                            {level === 'normal'
+                                ? <CheckCircle size={15} style={{ color: cfg.riskColor }} />
+                                : <AlertTriangle size={15} style={{ color: cfg.riskColor }} />}
                         </div>
-
-                        {/* Gauge */}
-                        <div className="flex flex-col gap-1.5">
-                            <div className="flex justify-between text-[0.64rem] text-slate-500 uppercase tracking-wide">
-                                <span>Water Level</span>
-                                <span style={{ color: cfg.riskColor, fontWeight: 800 }}>{cfg.waterLevel}</span>
-                            </div>
-                            <FloodGauge level={level} cfg={cfg} />
+                        <div>
+                            <p className="text-[0.88rem] font-extrabold tracking-tight text-slate-100 leading-none">Simulation Config</p>
+                            <p className="text-[0.56rem] text-slate-500 uppercase tracking-wider mt-0.5">KL Digital Twin • {cfg.label} Mode</p>
                         </div>
-
-                        {/* Stats row */}
-                        <div className="flex justify-around">
-                            {[
-                                { icon: <Droplets size={12} className="text-blue-400" />, val: <AnimCounter value={cfg.rainfall} unit=" mm/h" /> },
-                                { icon: <Wind size={12} className="text-cyan-400" />, val: cfg.windSpeed },
-                                { icon: <Thermometer size={12} className="text-amber-400" />, val: cfg.temp },
-                            ].map((s, i) => (
-                                <div key={i} className="flex items-center gap-1.5 text-[0.72rem] font-semibold text-slate-400">
-                                    {s.icon}{s.val}
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Status */}
-                        <StatusBanner level={level} cfg={cfg} />
                     </div>
+                    <button onClick={() => setShowPanel(false)}
+                        className="flex items-center justify-center w-8 h-8 rounded-full transition-all hover:bg-white/10"
+                        style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${borderS}`, color: '#4a6080' }}>
+                        <X size={14} />
+                    </button>
+                </div>
+
+                {/* Scrollable body */}
+                <div className="flex flex-col gap-3 px-4 py-4 overflow-y-auto"
+                    style={{ overscrollBehavior: 'contain', scrollbarWidth: 'none' }}>
+                    <Controls />
+                    <div className="h-2" />     {/* breathing room at end */}
                 </div>
             </div>
         </>
