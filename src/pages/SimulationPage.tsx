@@ -1,3 +1,112 @@
+/**
+ * ╔══════════════════════════════════════════════════════════════════════════════╗
+ * ║              FloodWay — Flood Simulation Page (KL Digital Twin)             ║
+ * ║                      Layer 4: Flood Visualization Engine                    ║
+ * ╚══════════════════════════════════════════════════════════════════════════════╝
+ *
+ * ┌─────────────────────────────────────────────────────────────────────────────┐
+ * │                        MODEL ADVANCEMENT FLOW                               │
+ * └─────────────────────────────────────────────────────────────────────────────┘
+ *
+ * The visualization engine answers one key user question:
+ *   "What does a flood actually LOOK LIKE at different severity levels?"
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  v1.0 — 2D Static Risk Map                                        [RETIRED]
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Tech:    Leaflet coloured circles / heatmap overlay
+ *  Problem: ✗ Abstract — users can't relate a circle colour to
+ *             real physical water depth
+ *           ✗ No spatial scale or sense of immersive danger
+ *           ✗ Zero emotional impact → users underestimate risk
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  v2.0 — Animated 2D Risk Timeline                                 [RETIRED]
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Tech:    React SVG bars + FloodTimeline.tsx + FloodTimelineScrubber.tsx
+ *  Upgrade: ✓ Shows time-based risk progression (24-hour view)
+ *           ✓ Color-coded bars (green → amber → red)
+ *  Problem: ✗ Still abstract — "80% probability" means nothing
+ *             to someone who has never seen a 1.5m flood
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  v3.0 — 3D WebGL City Simulation — KL Digital Twin          ← CURRENT (HERE)
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Tech:    React Three Fiber + Three.js + custom GLSL shaders
+ *
+ *  Scene Components:
+ *  ┌─────────────────┬───────────────────────────────────────────────────────┐
+ *  │ CityModel       │ Loads public/city.glb (Blender export) via useGLTF.  │
+ *  │                 │ Clones scene, applies PBR materials (roughness 0.4,  │
+ *  │                 │ metalness 0.25), casts/receives shadows.             │
+ *  ├─────────────────┼───────────────────────────────────────────────────────┤
+ *  │ WaterPlane      │ Custom ShaderMaterial with GLSL:                     │
+ *  │                 │  • Vertex: 3-layer sine waves for realistic motion   │
+ *  │                 │  • Fragment: deep/shallow color gradient + foam      │
+ *  │                 │  All uniforms (Y, opacity, color, wave H/speed)      │
+ *  │                 │  lerp smoothly between flood levels each frame.      │
+ *  ├─────────────────┼───────────────────────────────────────────────────────┤
+ *  │ RainSystem      │ InstancedMesh of 200 cylinders. Each frame, Y pos   │
+ *  │                 │ decremented by gravity, reset at top when OOB.      │
+ *  │                 │ Count toggled live between 0 / 80 / 200.            │
+ *  ├─────────────────┼───────────────────────────────────────────────────────┤
+ *  │ FloatingDebris  │ 10 box meshes orbit + bob on the water surface.     │
+ *  │                 │ Only visible when opacity > 0.25 (active flood).    │
+ *  ├─────────────────┼───────────────────────────────────────────────────────┤
+ *  │ PulseRing       │ Ring geometry expands + fades → danger signal.      │
+ *  ├─────────────────┼───────────────────────────────────────────────────────┤
+ *  │ Atmosphere      │ FogExp2 + scene background color per flood level.   │
+ *  ├─────────────────┼───────────────────────────────────────────────────────┤
+ *  │ DynamicLights   │ PointLight refs lerp color/intensity per frame.     │
+ *  └─────────────────┴───────────────────────────────────────────────────────┘
+ *
+ *  Flood Levels:
+ *    Normal  (☀️) → waterY: -12  | opacity: 0    | rain: 0   drops
+ *    Medium  (🌧️) → waterY: -1.8 | opacity: 0.62 | rain: 80  drops
+ *    High    (🌊) → waterY:  2.8 | opacity: 0.80 | rain: 200 drops
+ *
+ *  UI Pattern:
+ *    Desktop → persistent sidebar (292px) with all controls
+ *    Mobile  → 3D viewport full-screen + bottom-sheet drawer
+ *              opened by the centered pill FAB at bottom
+ *
+ *  Key upgrade over v2:
+ *    ✓ Visceral, immersive understanding of flood depth
+ *    ✓ Real-time WebGL — interactive camera (drag/zoom/pan)
+ *    ✓ Builds visual flood literacy BEFORE an emergency
+ *    ✓ Demo Cycle auto-sequences levels for kiosk/showcase
+ *    ✗ City model is generic (not GPS-anchored to user's street)
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  v4.0 — GPS-Anchored Street-Level Simulation                     [PLANNED]
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Tech:  Three.js + Mapbox 3D Tiles or CesiumJS
+ *  Logic: Load real 3D tiles of the USER's GPS location
+ *         + overlay flood level from LSTM prediction (Layer 1 v3.0)
+ *  Key:   "This is YOUR street at 1.5m flood depth"
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  v5.0 — Augmented Reality Flood Overlay                    [FUTURE VISION]
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Tech:  WebXR API + ARCore / ARKit device support
+ *  Logic: Live camera feed + device depth estimation
+ *         → render predicted water level on real-world view
+ *  Key:   User points camera at road → sees a blue waterline
+ *         rising on the wall of their own house
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Summary Timeline:
+ *
+ *  PAST                   NOW                         FUTURE
+ *  ──────────────────────────────────────────────────────────────────▶
+ *  2D Map ──► 2D Timeline ──► 3D WebGL [HERE] ──► GPS 3D ──► AR Cam
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * @module SimulationPage
+ * @version 3.0.0
+ * @author  Luqman Nurhakim
+ */
+
 import { useRef, useState, useEffect, Suspense, useMemo, type CSSProperties } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Environment, ContactShadows, Float } from '@react-three/drei';
@@ -98,7 +207,7 @@ function CityModel() {
 
 function WaterPlane({ level }: { level: FloodLevel }) {
     const meshRef = useRef<THREE.Mesh>(null);
-    const matRef  = useRef<THREE.ShaderMaterial>(null);
+    const matRef = useRef<THREE.ShaderMaterial>(null);
     const cfg = FLOOD_CONFIG[level];
     const currentY = useRef(-12);
     const clockRef = useRef(0);
@@ -131,11 +240,11 @@ function WaterPlane({ level }: { level: FloodLevel }) {
         currentY.current = THREE.MathUtils.lerp(currentY.current, cfg.targetY, dt * 1.4);
         meshRef.current.position.y = currentY.current;
         const m = matRef.current;
-        m.uniforms.uTime.value    = clockRef.current;
+        m.uniforms.uTime.value = clockRef.current;
         m.uniforms.uOpacity.value = THREE.MathUtils.lerp(m.uniforms.uOpacity.value, cfg.opacity, dt * 1.8);
         m.uniforms.uColor.value.lerp(cfg.color, dt * 2.5);
-        m.uniforms.uWaveH.value   = THREE.MathUtils.lerp(m.uniforms.uWaveH.value, cfg.waveHeight, dt * 1.5);
-        m.uniforms.uSpeed.value   = THREE.MathUtils.lerp(m.uniforms.uSpeed.value, cfg.waveSpeed, dt * 1.5);
+        m.uniforms.uWaveH.value = THREE.MathUtils.lerp(m.uniforms.uWaveH.value, cfg.waveHeight, dt * 1.5);
+        m.uniforms.uSpeed.value = THREE.MathUtils.lerp(m.uniforms.uSpeed.value, cfg.waveSpeed, dt * 1.5);
     });
     return (
         <mesh ref={meshRef} position={[0, -12, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -147,9 +256,9 @@ function WaterPlane({ level }: { level: FloodLevel }) {
 
 function RainSystem({ level }: { level: FloodLevel }) {
     const count = FLOOD_CONFIG[level].particleCount;
-    const ref   = useRef<THREE.InstancedMesh>(null);
+    const ref = useRef<THREE.InstancedMesh>(null);
     const dummy = useMemo(() => new THREE.Object3D(), []);
-    const pos   = useMemo<[number, number, number][]>(() =>
+    const pos = useMemo<[number, number, number][]>(() =>
         Array.from({ length: 200 }, () => [(Math.random() - 0.5) * 26, Math.random() * 20, (Math.random() - 0.5) * 26]), []);
     const speeds = useMemo(() => pos.map(() => 0.08 + Math.random() * 0.18), [pos]);
     useFrame(() => {
@@ -173,7 +282,7 @@ function RainSystem({ level }: { level: FloodLevel }) {
 }
 
 function FloatingDebris({ level }: { level: FloodLevel }) {
-    const cfg   = FLOOD_CONFIG[level];
+    const cfg = FLOOD_CONFIG[level];
     const items = useMemo(() =>
         Array.from({ length: 10 }, (_, i) => ({
             id: i, x: (Math.random() - 0.5) * 20, z: (Math.random() - 0.5) * 20,
@@ -234,12 +343,12 @@ function Atmosphere({ level }: { level: FloodLevel }) {
 }
 
 function DynamicLights({ level }: { level: FloodLevel }) {
-    const keyRef  = useRef<THREE.PointLight>(null);
+    const keyRef = useRef<THREE.PointLight>(null);
     const fillRef = useRef<THREE.PointLight>(null);
     useFrame((_, dt) => {
         if (!keyRef.current || !fillRef.current) return;
         const keyColor = level === 'high' ? '#ffc060' : level === 'medium' ? '#6688ff' : '#4466ff';
-        const keyInt   = level === 'high' ? 2.8 : level === 'medium' ? 1.2 : 0.5;
+        const keyInt = level === 'high' ? 2.8 : level === 'medium' ? 1.2 : 0.5;
         keyRef.current.intensity = THREE.MathUtils.lerp(keyRef.current.intensity, keyInt, dt * 1.5);
         keyRef.current.color.lerp(new THREE.Color(keyColor), dt * 2);
         const fillInt = level === 'high' ? 1.8 : level === 'medium' ? 1.0 : 0.7;
@@ -247,8 +356,8 @@ function DynamicLights({ level }: { level: FloodLevel }) {
     });
     return (
         <>
-            <pointLight ref={keyRef}  position={[-8, 8, -8]} intensity={0.5} color="#4466ff" distance={38} />
-            <pointLight ref={fillRef} position={[8, 5, 8]}   intensity={0.7} color="#99ccff" distance={32} />
+            <pointLight ref={keyRef} position={[-8, 8, -8]} intensity={0.5} color="#4466ff" distance={38} />
+            <pointLight ref={fillRef} position={[8, 5, 8]} intensity={0.7} color="#99ccff" distance={32} />
             <pointLight position={[0, 16, 0]}
                 intensity={level === 'high' ? 1.4 : level === 'medium' ? 0.6 : 0.3}
                 color="#ffffff" distance={28} />
@@ -280,8 +389,8 @@ function Scene({ level, showWater, showRain, showDebris }: {
                     <CityModel />
                 </Float>
             </Suspense>
-            {showWater  && <WaterPlane level={level} />}
-            {showRain   && <RainSystem level={level} />}
+            {showWater && <WaterPlane level={level} />}
+            {showRain && <RainSystem level={level} />}
             {showDebris && <FloatingDebris level={level} />}
             <PulseRing level={level} />
         </>
@@ -316,7 +425,7 @@ function SectionTitle({ icon, label, right }: { icon: React.ReactNode; label: st
 const GAUGE_GRADIENTS: Record<FloodLevel, string> = {
     normal: 'linear-gradient(90deg,#064e3b,#22c55e)',
     medium: 'linear-gradient(90deg,#78350f,#f59e0b,#fde68a)',
-    high:   'linear-gradient(90deg,#7f1d1d,#ef4444,#fca5a5)',
+    high: 'linear-gradient(90deg,#7f1d1d,#ef4444,#fca5a5)',
 };
 
 function FloodGauge({ level, cfg }: { level: FloodLevel; cfg: typeof FLOOD_CONFIG['normal'] }) {
@@ -403,7 +512,7 @@ function ToggleBtn({ label, icon, on, onClick }: { label: string; icon: string; 
         <button onClick={onClick} className={cn(
             'flex flex-1 items-center justify-center gap-1.5 rounded-[9px] py-[7px] text-[0.67rem] font-semibold transition-all',
             on ? 'bg-sky-500/10 border border-sky-400/[.28] text-sky-300'
-               : 'bg-white/[0.025] border border-white/[0.06] text-slate-500'
+                : 'bg-white/[0.025] border border-white/[0.06] text-slate-500'
         )}>
             <span>{icon}</span><span>{label}</span>
         </button>
@@ -427,12 +536,12 @@ function StatRow({ icon, iconColor, label, value }: {
 // ─── Main Page ────────────────────────────────────────────────────
 export function SimulationPage() {
     const navigate = useNavigate();
-    const [level,      setLevel]      = useState<FloodLevel>('normal');
-    const [demoMode,   setDemoMode]   = useState(false);
-    const [showWater,  setShowWater]  = useState(true);
-    const [showRain,   setShowRain]   = useState(true);
+    const [level, setLevel] = useState<FloodLevel>('normal');
+    const [demoMode, setDemoMode] = useState(false);
+    const [showWater, setShowWater] = useState(true);
+    const [showRain, setShowRain] = useState(true);
     const [showDebris, setShowDebris] = useState(true);
-    const [showPanel,  setShowPanel]  = useState(false);
+    const [showPanel, setShowPanel] = useState(false);
     const cfg = FLOOD_CONFIG[level];
 
     useEffect(() => {
@@ -446,7 +555,7 @@ export function SimulationPage() {
     // Auto-close panel in demo mode
     useEffect(() => { if (demoMode) setShowPanel(false); }, [demoMode]);
 
-    const border  = 'rgba(56,120,210,0.15)';
+    const border = 'rgba(56,120,210,0.15)';
     const borderS = 'rgba(255,255,255,0.06)';
     const bgPanel = 'rgba(8,19,31,0.98)';
 
@@ -510,8 +619,8 @@ export function SimulationPage() {
             <div className="flex flex-col gap-2">
                 <SectionTitle icon={<Eye size={12} />} label="Scene Layers" />
                 <div className="flex gap-1.5">
-                    <ToggleBtn label="Water"  icon="💧" on={showWater}  onClick={() => setShowWater(!showWater)}   />
-                    <ToggleBtn label="Rain"   icon="🌧" on={showRain}   onClick={() => setShowRain(!showRain)}     />
+                    <ToggleBtn label="Water" icon="💧" on={showWater} onClick={() => setShowWater(!showWater)} />
+                    <ToggleBtn label="Rain" icon="🌧" on={showRain} onClick={() => setShowRain(!showRain)} />
                     <ToggleBtn label="Debris" icon="🪵" on={showDebris} onClick={() => setShowDebris(!showDebris)} />
                 </div>
             </div>
@@ -539,6 +648,7 @@ export function SimulationPage() {
             <div style={{
                 display: 'flex', flexDirection: 'column',
                 height: 'calc(100dvh - 64px)',   /* above bottom nav */
+                paddingBottom: 'env(safe-area-inset-bottom, 0px)',
                 background: '#03080f', color: '#e8f0ff',
                 fontFamily: 'Inter,system-ui,sans-serif', overflow: 'hidden',
             }}>
@@ -601,8 +711,8 @@ export function SimulationPage() {
                     {/* ── 3D VIEWPORT ── */}
                     <div className="relative flex-1 min-h-0 overflow-hidden" style={{ background: '#03080f' }}>
 
-                        {/* Drag hint */}
-                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full z-10 pointer-events-none text-[0.6rem] text-slate-500 whitespace-nowrap"
+                        {/* Drag hint — desktop only, mobile users rely on touch gestures */}
+                        <div className="hidden lg:flex absolute bottom-3 left-1/2 -translate-x-1/2 items-center gap-1.5 px-3 py-1.5 rounded-full z-10 pointer-events-none text-[0.6rem] text-slate-500 whitespace-nowrap"
                             style={{ background: 'rgba(3,8,15,0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.07)' }}>
                             <RotateCcw size={11} /> Drag • Scroll zoom • Right-drag pan
                         </div>
@@ -631,27 +741,34 @@ export function SimulationPage() {
                             }} />
                         )}
 
-                        {/* ── MOBILE FAB ── tap to open the sheet */}
+                        {/* ── MOBILE FAB ── centered pill at bottom of viewport */}
                         <button
-                            className="lg:hidden absolute z-20 active:scale-95"
+                            className="lg:hidden absolute z-20 active:scale-[0.97]"
                             style={{
-                                bottom: 14, right: 14,
-                                display: 'flex', alignItems: 'center', gap: 8,
-                                padding: '10px 16px', borderRadius: 20,
-                                background: 'rgba(6,14,26,0.92)',
-                                backdropFilter: 'blur(20px)',
-                                border: `1px solid ${cfg.riskBorder}`,
+                                bottom: 16,
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                display: 'flex', alignItems: 'center', gap: 10,
+                                padding: '12px 22px',
+                                borderRadius: 999,
+                                background: 'rgba(5,11,22,0.94)',
+                                backdropFilter: 'blur(24px) saturate(180%)',
+                                border: `1.5px solid ${cfg.riskBorder}`,
                                 color: cfg.riskColor,
-                                boxShadow: `0 8px 28px rgba(0,0,0,0.55), 0 0 0 1px ${cfg.riskBorder}`,
-                                fontSize: '0.78rem', fontWeight: 700,
-                                transition: 'all 0.22s',
+                                boxShadow: `0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px ${cfg.riskBorder}, inset 0 1px 0 rgba(255,255,255,0.06)`,
+                                fontSize: '0.82rem', fontWeight: 700,
+                                letterSpacing: '0.01em',
+                                whiteSpace: 'nowrap',
+                                transition: 'all 0.2s cubic-bezier(0.34,1.56,0.64,1)',
                             }}
                             onClick={() => setShowPanel(true)}
                         >
-                            {level === 'normal' ? <CheckCircle size={14} /> : <AlertTriangle size={14} />}
+                            {level === 'normal'
+                                ? <CheckCircle size={15} style={{ flexShrink: 0 }} />
+                                : <AlertTriangle size={15} style={{ flexShrink: 0 }} />}
                             <span>{cfg.riskLabel}</span>
-                            <span style={{ opacity: 0.35, fontSize: '0.7rem' }}>·</span>
-                            <Settings2 size={13} style={{ opacity: 0.55 }} />
+                            <span style={{ width: 1, height: 14, background: cfg.riskBorder, flexShrink: 0 }} />
+                            <Settings2 size={13} style={{ opacity: 0.6, flexShrink: 0 }} />
                         </button>
 
                         <Canvas shadows dpr={[1, 1.8]}

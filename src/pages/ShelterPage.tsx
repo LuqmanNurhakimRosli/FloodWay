@@ -240,14 +240,16 @@ export function ShelterPage() {
             <div className={cn(
                 // Base: Hidden/Visible transition
                 "fixed z-20 transition-all duration-500 ease-in-out pointer-events-none flex",
-                // Mobile: Bottom Sheet logic
-                "inset-x-0 bottom-0 top-auto h-[45vh] md:h-full",
+                // Mobile: Bottom Sheet — sits ABOVE the 64px bottom nav
+                "inset-x-0 top-auto h-[45vh] md:h-full",
                 // Desktop: Side Panel logic - fixed width, slides in/out
                 "md:inset-y-0 md:left-0 md:right-auto md:w-[400px] md:top-0",
                 isPanelVisible
                     ? "translate-y-0 md:translate-x-0"
                     : "translate-y-full md:-translate-x-full"
-            )}>
+            )}
+                style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}
+            >
                 {/* Content Container */}
                 <div className="w-full h-full bg-slate-900/95 backdrop-blur-xl border-t md:border-t-0 md:border-r border-white/10 rounded-t-[2.5rem] md:rounded-none flex flex-col pointer-events-auto shadow-2xl overflow-hidden">
                     {/* Drag Handle (Mobile Only) */}
@@ -271,7 +273,7 @@ export function ShelterPage() {
                     </header>
 
                     {/* Scrollable Content Area */}
-                    <div className="flex-1 overflow-y-auto overscroll-contain pb-[calc(1rem+var(--safe-bottom))] md:pb-18 scrollbar-thin scrollbar-thumb-white/10">
+                    <div className="flex-1 overflow-y-auto overscroll-contain pb-6 md:pb-18 scrollbar-thin scrollbar-thumb-white/10">
                         {/* 1. Forecast Overlay Context */}
                         <div className="px-5 py-4 border-b border-white/5 bg-white/5">
                             <span className="block text-[10px] text-muted-foreground uppercase tracking-widest mb-3 font-semibold">Flood Risk Forecast</span>
@@ -426,7 +428,8 @@ export function ShelterPage() {
             {/* Mobile Fab to Show Panel */}
             {!isPanelVisible && (
                 <Button
-                    className="absolute bottom-24 right-4 z-30 size-12 rounded-full bg-emerald-600 shadow-xl text-white animate-in zoom-in-50 duration-300 md:hidden"
+                    className="fixed right-4 z-30 size-12 rounded-full bg-emerald-600 shadow-xl text-white animate-in zoom-in-50 duration-300 md:hidden"
+                    style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px) + 1rem)' }}
                     onClick={() => setIsPanelVisible(true)}
                 >
                     <Shield className="size-6" />
