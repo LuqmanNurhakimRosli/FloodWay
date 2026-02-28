@@ -1,10 +1,11 @@
 // Global app store using React Context for state management
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { Location, Shelter, DailyPrediction, Route, Coordinates, TransportMode } from '../types/app';
 import type { FloodReport, HumanReview } from '../types/report';
 import { DEFAULT_POSITION } from '../data/locations';
 import { generateDailyPrediction } from '../utils/predictionGenerator';
 import { calculateRoute } from '../utils/pathfinding';
+import { fetchReports, saveReport, updateReportHumanReview, deleteReport, INITIAL_REPORTS } from '../services/reportsService';
 
 interface AppState {
     selectedLocation: Location | null;
@@ -28,6 +29,7 @@ interface AppContextType extends AppState {
     // Flood report actions
     addFloodReport: (report: FloodReport) => void;
     clearFloodReports: () => void;
+    deleteFloodReport: (reportId: string) => void;
     // Human review actions
     updateHumanReview: (reportId: string, review: HumanReview) => void;
 }
@@ -43,8 +45,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
         userPosition: DEFAULT_POSITION,
         transportMode: 'car',
         isRouteLoading: false,
-        floodReports: [],
+        floodReports: INITIAL_REPORTS,  // instantly show 2 demo reports; Firestore replaces shortly after
     });
+
+    // Fetch from Firestore in the background; replace state when ready.
+    // fetchReports() handles all deduplication internally.
+    useEffect(() => {
+        let cancelled = false;
+        fetchReports()
+            .then(reports => {
+                if (!cancelled) {
+                    setState(prev => ({ ...prev, floodReports: reports }));
+                }
+            })
+            .catch(err => console.error('[AppContext] Firestore load error:', err));
+        return () => { cancelled = true; };
+    }, []);
+
 
     const setLocation = useCallback((location: Location) => {
         const prediction = generateDailyPrediction(true); // Simulate danger for demo
@@ -113,10 +130,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
             waterDetected: report.aiResult?.waterDetected,
             confidence: report.aiResult?.confidence,
         });
+        // Optimistic local update
         setState(prev => ({
             ...prev,
             floodReports: [report, ...prev.floodReports],
         }));
+        // Persist to Firestore (fire-and-forget)
+        const { id: _id, ...withoutId } = report;
+        saveReport(withoutId).catch(err =>
+            console.error('Failed to save report to Firestore:', err),
+        );
     }, []);
 
     const clearFloodReports = useCallback(() => {
@@ -126,15 +149,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }));
     }, []);
 
+    // Moderator: permanently delete a report
+    const deleteFloodReport = useCallback((reportId: string) => {
+        console.log('🗑️ [Moderator] Deleting report:', reportId);
+        // Optimistic local removal
+        setState(prev => ({
+            ...prev,
+            floodReports: prev.floodReports.filter(r => r.id !== reportId),
+        }));
+        // Persist deletion to Firestore (fire-and-forget)
+        deleteReport(reportId).catch(err =>
+            console.error('Failed to delete report from Firestore:', err),
+        );
+    }, []);
+
     // Human review: moderator approves/rejects a report
     const updateHumanReview = useCallback((reportId: string, review: HumanReview) => {
         console.log('👤 [Moderator] Review updated:', { reportId, review });
+        // Optimistic local update
         setState(prev => ({
             ...prev,
             floodReports: prev.floodReports.map(r =>
                 r.id === reportId ? { ...r, humanReview: review } : r
             ),
         }));
+        // Persist review to Firestore
+        updateReportHumanReview(reportId, review).catch(err =>
+            console.error('Failed to update review in Firestore:', err),
+        );
     }, []);
 
     const reset = useCallback(() => {
@@ -162,6 +204,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 reset,
                 addFloodReport,
                 clearFloodReports,
+                deleteFloodReport,
                 updateHumanReview,
             }}
         >

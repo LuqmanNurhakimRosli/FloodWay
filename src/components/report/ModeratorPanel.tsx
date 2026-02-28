@@ -9,10 +9,11 @@ interface ModeratorPanelProps {
 }
 
 export default function ModeratorPanel({ onBack }: ModeratorPanelProps) {
-    const { floodReports, updateHumanReview } = useApp();
+    const { floodReports, updateHumanReview, deleteFloodReport } = useApp();
     const [selectedReport, setSelectedReport] = useState<FloodReport | null>(null);
     const [moderatorNote, setModeratorNote] = useState('');
     const [filter, setFilter] = useState<'all' | 'pending' | 'reviewed'>('all');
+    const [confirmDelete, setConfirmDelete] = useState(false);
 
     const filteredReports = floodReports.filter(r => {
         if (filter === 'pending') return r.humanReview.status === HumanReviewStatus.PENDING;
@@ -31,6 +32,19 @@ export default function ModeratorPanel({ onBack }: ModeratorPanelProps) {
             moderatorNote: moderatorNote || null,
         });
         setSelectedReport(null);
+        setModeratorNote('');
+    };
+
+    const handleDelete = (reportId: string) => {
+        deleteFloodReport(reportId);
+        setSelectedReport(null);
+        setConfirmDelete(false);
+        setModeratorNote('');
+    };
+
+    const closePanel = () => {
+        setSelectedReport(null);
+        setConfirmDelete(false);
         setModeratorNote('');
     };
 
@@ -106,6 +120,7 @@ export default function ModeratorPanel({ onBack }: ModeratorPanelProps) {
                             onClick={() => {
                                 setSelectedReport(report);
                                 setModeratorNote('');
+                                setConfirmDelete(false);
                             }}
                         >
                             {/* Left: Evidence */}
@@ -130,7 +145,7 @@ export default function ModeratorPanel({ onBack }: ModeratorPanelProps) {
                                         })}
                                     </span>
                                     <span className={`mod-card-ai ${report.aiResult?.status === VerificationStatus.VERIFIED
-                                            ? 'ai-verified' : 'ai-unverified'
+                                        ? 'ai-verified' : 'ai-unverified'
                                         }`}>
                                         🤖 {report.aiResult?.status === VerificationStatus.VERIFIED
                                             ? 'AI ✓' : 'AI ✗'}
@@ -152,7 +167,7 @@ export default function ModeratorPanel({ onBack }: ModeratorPanelProps) {
                                 )}
                             </div>
 
-                            {/* Right: Status */}
+                            {/* Right: Status + quick delete */}
                             <div className="mod-card-status">
                                 {getHumanStatusBadge(report.humanReview)}
                             </div>
@@ -164,7 +179,7 @@ export default function ModeratorPanel({ onBack }: ModeratorPanelProps) {
             {/* Detail / Action Panel (when a report is selected) */}
             {selectedReport && (
                 <div className="mod-action-panel">
-                    <div className="mod-action-overlay" onClick={() => setSelectedReport(null)} />
+                    <div className="mod-action-overlay" onClick={closePanel} />
                     <div className="mod-action-sheet">
                         <div className="mod-action-handle" />
 
@@ -182,7 +197,7 @@ export default function ModeratorPanel({ onBack }: ModeratorPanelProps) {
                             <div className="mod-comparison-col">
                                 <h3 className="mod-comp-title">🤖 AI Verdict</h3>
                                 <div className={`mod-comp-status ${selectedReport.aiResult?.status === VerificationStatus.VERIFIED
-                                        ? 'status-verified' : 'status-unverified'
+                                    ? 'status-verified' : 'status-unverified'
                                     }`}>
                                     {selectedReport.aiResult?.status === VerificationStatus.VERIFIED
                                         ? '✅ Verified' : '❌ Not Verified'}
@@ -218,49 +233,89 @@ export default function ModeratorPanel({ onBack }: ModeratorPanelProps) {
                         </div>
 
                         {/* Moderator Note */}
-                        <div className="mod-note-section">
-                            <label className="mod-note-label" htmlFor="mod-note-input">
-                                Moderator Note (optional)
-                            </label>
-                            <textarea
-                                id="mod-note-input"
-                                className="mod-note-input"
-                                placeholder="Add context or reasoning..."
-                                value={moderatorNote}
-                                onChange={e => setModeratorNote(e.target.value)}
-                                rows={2}
-                            />
-                        </div>
+                        {!confirmDelete && (
+                            <div className="mod-note-section">
+                                <label className="mod-note-label" htmlFor="mod-note-input">
+                                    Moderator Note (optional)
+                                </label>
+                                <textarea
+                                    id="mod-note-input"
+                                    className="mod-note-input"
+                                    placeholder="Add context or reasoning..."
+                                    value={moderatorNote}
+                                    onChange={e => setModeratorNote(e.target.value)}
+                                    rows={2}
+                                />
+                            </div>
+                        )}
 
-                        {/* Action Buttons */}
-                        <div className="mod-action-buttons">
-                            <button
-                                className="mod-btn mod-btn-approve"
-                                onClick={() => handleAction(selectedReport.id, HumanReviewStatus.APPROVED)}
-                                id="mod-approve-btn"
-                            >
-                                ✅ Approve & Publish
-                            </button>
-
-                            {/* Show Override button if AI rejected but moderator thinks it's valid */}
-                            {selectedReport.aiResult?.status !== VerificationStatus.VERIFIED && (
+                        {/* ── Delete confirmation state ── */}
+                        {confirmDelete ? (
+                            <div className="mod-delete-confirm">
+                                <div className="mod-delete-confirm__icon">🗑️</div>
+                                <p className="mod-delete-confirm__text">
+                                    Permanently delete this report? This <strong>cannot be undone</strong>.
+                                </p>
+                                <div className="mod-action-buttons">
+                                    <button
+                                        className="mod-btn mod-btn-delete-confirm"
+                                        onClick={() => handleDelete(selectedReport.id)}
+                                        id="mod-delete-confirm-btn"
+                                    >
+                                        🗑️ Yes, Delete Permanently
+                                    </button>
+                                    <button
+                                        className="mod-btn mod-btn-cancel"
+                                        onClick={() => setConfirmDelete(false)}
+                                        id="mod-delete-cancel-btn"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            /* ── Normal action buttons ── */
+                            <div className="mod-action-buttons">
                                 <button
-                                    className="mod-btn mod-btn-override"
-                                    onClick={() => handleAction(selectedReport.id, HumanReviewStatus.OVERRIDDEN)}
-                                    id="mod-override-btn"
+                                    className="mod-btn mod-btn-approve"
+                                    onClick={() => handleAction(selectedReport.id, HumanReviewStatus.APPROVED)}
+                                    id="mod-approve-btn"
                                 >
-                                    🔄 Override AI — Approve
+                                    ✅ Approve & Publish
                                 </button>
-                            )}
 
-                            <button
-                                className="mod-btn mod-btn-reject"
-                                onClick={() => handleAction(selectedReport.id, HumanReviewStatus.REJECTED)}
-                                id="mod-reject-btn"
-                            >
-                                ❌ Reject Report
-                            </button>
-                        </div>
+                                {selectedReport.aiResult?.status !== VerificationStatus.VERIFIED && (
+                                    <button
+                                        className="mod-btn mod-btn-override"
+                                        onClick={() => handleAction(selectedReport.id, HumanReviewStatus.OVERRIDDEN)}
+                                        id="mod-override-btn"
+                                    >
+                                        🔄 Override AI — Approve
+                                    </button>
+                                )}
+
+                                <button
+                                    className="mod-btn mod-btn-reject"
+                                    onClick={() => handleAction(selectedReport.id, HumanReviewStatus.REJECTED)}
+                                    id="mod-reject-btn"
+                                >
+                                    ❌ Reject Report
+                                </button>
+
+                                {/* Danger zone divider */}
+                                <div className="mod-danger-divider">
+                                    <span>Danger Zone</span>
+                                </div>
+
+                                <button
+                                    className="mod-btn mod-btn-delete"
+                                    onClick={() => setConfirmDelete(true)}
+                                    id="mod-delete-btn"
+                                >
+                                    🗑️ Delete Report
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

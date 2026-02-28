@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { AIVerificationResult, AutoTags, ReportFormOutput } from '../types/report';
-import { ReportCategory, VerificationStatus, HumanReviewStatus } from '../types/report';
+import { ReportCategory, VerificationStatus, HumanReviewStatus, CATEGORY_META } from '../types/report';
 import type { FloodReport } from '../types/report';
 
 import EmergencyMode from '../components/report/EmergencyMode';
@@ -10,163 +10,128 @@ import ModeratorPanel from '../components/report/ModeratorPanel';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { useApp } from '../store';
 import '../components/report/report.css';
+import './ReportPage.css';
 
 type ReportScreen = 'LIST' | 'EMERGENCY' | 'VERIFICATION' | 'REPORT' | 'MODERATOR';
+type FilterTab = 'all' | 'verified' | 'pending';
 
+// ── Fake user profiles for the 2 seeded reports ──────────────────────────────
+const PROFILES = [
+    { handle: '@razif_kl', name: 'Razif Hasan', avatar: '🧔🏽', city: 'Kuala Lumpur' },
+    { handle: '@norhaida91', name: 'Norhaida Zainal', avatar: '👩🏽', city: 'Ampang' },
+    { handle: '@floodwatch_my', name: 'FloodWatch MY', avatar: '🛰️', city: 'KL Metro' },
+    { handle: '@fikri_rescue', name: 'Fikri Rashid', avatar: '👨🏽‍🚒', city: 'Kuala Lumpur' },
+];
+
+function getProfile(report: FloodReport) {
+    // Deterministic profile from report id
+    const idx = report.id.charCodeAt(0) % PROFILES.length;
+    return PROFILES[idx];
+}
+
+// ── Place name from coords ────────────────────────────────────────────────────
+function placeLabel(lat: number, lng: number): string {
+    if (lat > 3.14 && lat < 3.16 && lng < 101.70) return 'Masjid India / Jln TAR, KL';
+    if (lat > 3.15 && lng > 101.71) return 'Jln Ampang / Ampang Park, KL';
+    if (lat > 3.10 && lat < 3.14) return 'Chow Kit, KL';
+    if (lng < 101.68) return 'KL City Centre';
+    return `KL (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+function timeAgo(iso: string): string {
+    const diff = Date.now() - new Date(iso).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+}
+
+function pipelineInfo(report: FloodReport) {
+    const ai = report.aiResult?.status;
+    const hr = report.humanReview.status;
+    if (hr === HumanReviewStatus.APPROVED) return { label: 'Verified', cls: 'tw-badge--green', icon: '✅', phase: 3 };
+    if (hr === HumanReviewStatus.OVERRIDDEN) return { label: 'Approved', cls: 'tw-badge--cyan', icon: '✅', phase: 3 };
+    if (hr === HumanReviewStatus.REJECTED) return { label: 'Rejected', cls: 'tw-badge--red', icon: '❌', phase: 3 };
+    if (ai === VerificationStatus.VERIFIED) return { label: 'AI Passed', cls: 'tw-badge--yellow', icon: '⏳', phase: 2 };
+    if (ai === VerificationStatus.UNVERIFIED) return { label: 'Escalated', cls: 'tw-badge--orange', icon: '⚠️', phase: 2 };
+    return { label: 'Processing', cls: 'tw-badge--gray', icon: '🔄', phase: 1 };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 export function ReportPage() {
     const [screen, setScreen] = useState<ReportScreen>('LIST');
     const { floodReports, addFloodReport } = useApp();
     const geo = useGeolocation();
 
-    // Pending report being verified
     const [pendingReport, setPendingReport] = useState<Omit<
-        FloodReport,
-        'id' | 'aiResult' | 'humanReview' | 'createdAt'
+        FloodReport, 'id' | 'aiResult' | 'humanReview' | 'createdAt'
     > | null>(null);
 
-    // ── Transitions ──
-    const handleActivateEmergency = useCallback(() => {
-        setScreen('EMERGENCY');
-    }, []);
+    const handleActivateEmergency = useCallback(() => setScreen('EMERGENCY'), []);
+    const handleCancelEmergency = useCallback(() => { setScreen('LIST'); setPendingReport(null); }, []);
 
-    const handleCancelEmergency = useCallback(() => {
-        setScreen('LIST');
+    const handleSubmitEvidence = useCallback((data: {
+        photoDataURLs: string[]; category: ReportCategory;
+        description: string; autoTags: AutoTags;
+    }) => { setPendingReport(data); setScreen('VERIFICATION'); }, []);
+
+    const handleVerificationComplete = useCallback((result: AIVerificationResult) => {
+        if (!pendingReport) return;
+        if (result.status !== VerificationStatus.REJECTED) {
+            addFloodReport({
+                id: crypto.randomUUID(),
+                photoDataURLs: pendingReport.photoDataURLs,
+                category: pendingReport.category,
+                description: pendingReport.description,
+                autoTags: pendingReport.autoTags,
+                aiResult: result,
+                humanReview: { status: HumanReviewStatus.PENDING, reviewedAt: null, moderatorNote: null },
+                createdAt: new Date().toISOString(),
+            });
+        }
         setPendingReport(null);
-    }, []);
-
-    const handleSubmitEvidence = useCallback(
-        (data: {
-            photoDataURLs: string[];
-            category: ReportCategory;
-            description: string;
-            autoTags: AutoTags;
-        }) => {
-            setPendingReport(data);
-            setScreen('VERIFICATION');
-        },
-        [],
-    );
-
-    const handleVerificationComplete = useCallback(
-        (result: AIVerificationResult) => {
-            if (!pendingReport) return;
-
-            // Only add to global store if not rejected
-            if (result.status !== VerificationStatus.REJECTED) {
-                const newReport: FloodReport = {
-                    id: crypto.randomUUID(),
-                    photoDataURLs: pendingReport.photoDataURLs,
-                    category: pendingReport.category,
-                    description: pendingReport.description,
-                    autoTags: pendingReport.autoTags,
-                    aiResult: result,
-                    humanReview: {
-                        status: HumanReviewStatus.PENDING,
-                        reviewedAt: null,
-                        moderatorNote: null,
-                    },
-                    createdAt: new Date().toISOString(),
-                };
-                addFloodReport(newReport);
-            }
-
-            setPendingReport(null);
-            setScreen('LIST');
-        },
-        [pendingReport, addFloodReport],
-    );
-
-    const handleRetry = useCallback(() => {
-        setScreen('EMERGENCY');
-        setPendingReport(null);
-    }, []);
-
-    // ── Report Form ──
-    const handleReportSubmit = useCallback((data: ReportFormOutput) => {
-        console.log('📋 Report submitted:', data);
         setScreen('LIST');
-    }, []);
+    }, [pendingReport, addFloodReport]);
 
-    const handleSafe = useCallback(() => {
-        console.log('💚 User marked safe at:', geo.lat, geo.lng);
-        setScreen('LIST');
-    }, [geo.lat, geo.lng]);
+    const handleRetry = useCallback(() => { setScreen('EMERGENCY'); setPendingReport(null); }, []);
+    const handleReportSubmit = useCallback((_d: ReportFormOutput) => setScreen('LIST'), []);
+    const handleSafe = useCallback(() => setScreen('LIST'), []);
 
     return (
         <>
             {screen === 'LIST' && (
-                <ReportListScreen
+                <FeedScreen
                     reports={floodReports}
                     onActivateEmergency={handleActivateEmergency}
                     onOpenModerator={() => setScreen('MODERATOR')}
                 />
             )}
-
             {screen === 'EMERGENCY' && (
-                <EmergencyMode
-                    onSubmit={handleSubmitEvidence}
-                    onCancel={handleCancelEmergency}
-                />
+                <EmergencyMode onSubmit={handleSubmitEvidence} onCancel={handleCancelEmergency} />
             )}
-
             {screen === 'VERIFICATION' && pendingReport && (
-                <AIVerification
-                    report={pendingReport}
-                    onComplete={handleVerificationComplete}
-                    onRetry={handleRetry}
-                />
+                <AIVerification report={pendingReport} onComplete={handleVerificationComplete} onRetry={handleRetry} />
             )}
-
             {screen === 'REPORT' && (
                 <ReportForm
-                    userLocation={{
-                        lat: geo.lat ?? 3.0253,
-                        lng: geo.lng ?? 101.6178,
-                        accuracy: geo.accuracy ?? 12.5,
-                    }}
+                    userLocation={{ lat: geo.lat ?? 3.1498, lng: geo.lng ?? 101.6942, accuracy: geo.accuracy ?? 10 }}
                     onSubmit={handleReportSubmit}
                     onSafe={handleSafe}
                     onCancel={() => setScreen('LIST')}
                 />
             )}
-
-            {screen === 'MODERATOR' && (
-                <ModeratorPanel
-                    onBack={() => setScreen('LIST')}
-                />
-            )}
+            {screen === 'MODERATOR' && <ModeratorPanel onBack={() => setScreen('LIST')} />}
         </>
     );
 }
 
-// ── Helper: Get pipeline status label ──
-function getPipelineStatus(report: FloodReport) {
-    const aiStatus = report.aiResult?.status;
-    const humanStatus = report.humanReview.status;
-
-    if (humanStatus === HumanReviewStatus.APPROVED) {
-        return { label: '✅ Fully Verified', className: 'pipeline-approved', phase: 3 };
-    }
-    if (humanStatus === HumanReviewStatus.OVERRIDDEN) {
-        return { label: '✅ Override Approved', className: 'pipeline-overridden', phase: 3 };
-    }
-    if (humanStatus === HumanReviewStatus.REJECTED) {
-        return { label: '❌ Rejected by Moderator', className: 'pipeline-rejected', phase: 3 };
-    }
-
-    // Human review pending
-    if (aiStatus === VerificationStatus.VERIFIED) {
-        return { label: '⏳ Awaiting Human Review', className: 'pipeline-pending', phase: 2 };
-    }
-    if (aiStatus === VerificationStatus.UNVERIFIED) {
-        return { label: '⏳ Escalated to Moderator', className: 'pipeline-escalated', phase: 2 };
-    }
-
-    return { label: '🔄 Processing', className: 'pipeline-processing', phase: 1 };
-}
-
-// ── Report List / Overview Screen ──
-function ReportListScreen({
+// ─────────────────────────────────────────────────────────────────────────────
+// Feed / List screen
+// ─────────────────────────────────────────────────────────────────────────────
+function FeedScreen({
     reports,
     onActivateEmergency,
     onOpenModerator,
@@ -175,158 +140,300 @@ function ReportListScreen({
     onActivateEmergency: () => void;
     onOpenModerator: () => void;
 }) {
+    const [filter, setFilter] = useState<FilterTab>('all');
+
+    const filtered = useMemo(() => {
+        if (filter === 'verified')
+            return reports.filter(r =>
+                r.humanReview.status === HumanReviewStatus.APPROVED ||
+                r.humanReview.status === HumanReviewStatus.OVERRIDDEN,
+            );
+        if (filter === 'pending')
+            return reports.filter(r => r.humanReview.status === HumanReviewStatus.PENDING);
+        return reports;
+    }, [reports, filter]);
+
+    const verifiedCount = reports.filter(
+        r => r.humanReview.status === HumanReviewStatus.APPROVED ||
+            r.humanReview.status === HumanReviewStatus.OVERRIDDEN,
+    ).length;
+    const pendingCount = reports.filter(r => r.humanReview.status === HumanReviewStatus.PENDING).length;
+
     return (
-        <div className="report-list-screen">
-            {/* Header */}
-            <header className="report-list-header">
-                <div>
-                    <h1 className="report-list-title">
-                        Community <span>Sentinel</span>
-                    </h1>
-                    <p className="report-list-subtitle">
-                        Dual AI + Human verified flood reports
-                    </p>
+        <div className="tw-screen">
+
+            {/* ── Top header ── */}
+            <header className="tw-header">
+                <div className="tw-header__left">
+                    <div className="tw-header__logo">🛰️</div>
+                    <div>
+                        <h1 className="tw-header__title">Community <em>Sentinel</em></h1>
+                        <p className="tw-header__sub">Dual AI + human verified flood reports · Kuala Lumpur</p>
+                    </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <button
-                        className="moderator-access-btn"
-                        onClick={onOpenModerator}
-                        id="moderator-panel-btn"
-                        title="Open Moderator Panel"
-                    >
+                <div className="tw-header__right">
+                    <button className="tw-icon-btn" onClick={onOpenModerator} id="moderator-panel-btn" title="Moderator">
                         🔑
                     </button>
-                    <div className="report-count-badge">
-                        <span className="report-count-dot" />
-                        {reports.length} Reports
-                    </div>
+                    <span className="tw-live-pill"><span className="tw-live-dot" />LIVE</span>
                 </div>
             </header>
 
-            {/* Pipeline Legend */}
-            {reports.length > 0 && (
-                <div className="pipeline-legend">
-                    <span className="pipeline-legend-item">
-                        <span className="pipeline-dot dot-ai" /> AI Analyzed
-                    </span>
-                    <span className="pipeline-legend-item">
-                        <span className="pipeline-dot dot-pending" /> Human Pending
-                    </span>
-                    <span className="pipeline-legend-item">
-                        <span className="pipeline-dot dot-approved" /> Fully Verified
-                    </span>
+            {/* ── Stats row ── */}
+            <div className="tw-stats-row">
+                <div className="tw-stat">
+                    <span className="tw-stat__n">{reports.length}</span>
+                    <span className="tw-stat__l">Total</span>
                 </div>
-            )}
+                <div className="tw-stat-sep" />
+                <div className="tw-stat">
+                    <span className="tw-stat__n tw-stat__n--green">{verifiedCount}</span>
+                    <span className="tw-stat__l">Verified</span>
+                </div>
+                <div className="tw-stat-sep" />
+                <div className="tw-stat">
+                    <span className="tw-stat__n tw-stat__n--yellow">{pendingCount}</span>
+                    <span className="tw-stat__l">Pending</span>
+                </div>
+                <div className="tw-stat-sep" />
+                <div className="tw-stat">
+                    <span className="tw-stat__n tw-stat__n--red">
+                        {reports.filter(r => r.aiResult?.waterDetected).length}
+                    </span>
+                    <span className="tw-stat__l">Flood Active</span>
+                </div>
+            </div>
 
-            {/* Content */}
-            <div className="report-list-content">
-                {reports.length === 0 ? (
-                    <div className="report-list-empty">
-                        <div className="report-empty-icon">🛰️</div>
-                        <h2>No Reports Yet</h2>
-                        <p>Submit your first flood report using the Emergency button below.</p>
-                    </div>
+            {/* ── Filter tabs ── */}
+            <div className="tw-tabs">
+                {(['all', 'verified', 'pending'] as FilterTab[]).map(t => (
+                    <button
+                        key={t}
+                        className={`tw-tab ${filter === t ? 'tw-tab--active' : ''}`}
+                        onClick={() => setFilter(t)}
+                    >
+                        {t === 'all' && <>🌊 All <span className="tw-tab__count">{reports.length}</span></>}
+                        {t === 'verified' && <>✅ Verified <span className="tw-tab__count">{verifiedCount}</span></>}
+                        {t === 'pending' && <>⏳ Pending <span className="tw-tab__count">{pendingCount}</span></>}
+                    </button>
+                ))}
+            </div>
+
+            {/* ── Disclaimer banner ── */}
+            <div className="tw-disclaimer">
+                <span className="tw-disclaimer__icon">⚠️</span>
+                <span className="tw-disclaimer__text">
+                    Images shared on social media during floods cannot independently confirm flood authenticity.
+                    All reports undergo <strong>AI + human review</strong> before reaching verified status.
+                </span>
+            </div>
+
+            {/* ── Feed content ── */}
+            <div className="tw-content">
+                {filtered.length === 0 ? (
+                    <EmptyState filter={filter} />
                 ) : (
-                    <div className="report-list-grid">
-                        {reports.map((report) => {
-                            const isFlood = report.aiResult?.waterDetected === true;
-                            const confidence = report.aiResult?.confidence ?? 0;
-                            const depth = report.aiResult?.depthEstimate || 'N/A';
-                            const time = new Date(report.createdAt).toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                            });
-                            const pipeline = getPipelineStatus(report);
-
-                            return (
-                                <div
-                                    key={report.id}
-                                    className={`report-card ${isFlood ? 'flood' : 'warning'}`}
-                                >
-                                    {/* Image */}
-                                    {report.photoDataURLs.length > 0 && (
-                                        <div className="report-card-image">
-                                            <img
-                                                src={report.photoDataURLs[0]}
-                                                alt="Evidence"
-                                            />
-                                            <div className="report-card-badge">
-                                                {isFlood ? '🌊 Flash Flood' : '⚠️ Incident'}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Info */}
-                                    <div className="report-card-body">
-                                        <div className="report-card-meta">
-                                            <span className="report-card-time">🕐 {time}</span>
-                                            <span className="report-card-confidence">
-                                                {confidence}% confidence
-                                            </span>
-                                        </div>
-                                        <p className="report-card-desc">
-                                            {report.description || 'No description provided.'}
-                                        </p>
-                                        <div className="report-card-footer">
-                                            <span className={`report-card-status ${report.aiResult?.status === VerificationStatus.VERIFIED ? 'verified' : 'not-verified'}`}>
-                                                {report.aiResult?.status === VerificationStatus.VERIFIED ? '✅ AI Verified' : '❌ AI Not Verified'}
-                                            </span>
-                                            <span className="report-card-depth">
-                                                Depth: {depth}
-                                            </span>
-                                        </div>
-
-                                        {/* 3-Phase Pipeline Status */}
-                                        <div className="report-pipeline-tracker">
-                                            <div className="pipeline-phases">
-                                                <div className={`pipeline-phase ${pipeline.phase >= 1 ? 'active' : ''}`}>
-                                                    <span className="pipeline-phase-dot">📷</span>
-                                                    <span className="pipeline-phase-label">Submitted</span>
-                                                </div>
-                                                <div className="pipeline-connector" />
-                                                <div className={`pipeline-phase ${pipeline.phase >= 2 ? 'active' : ''}`}>
-                                                    <span className="pipeline-phase-dot">🤖</span>
-                                                    <span className="pipeline-phase-label">AI</span>
-                                                </div>
-                                                <div className="pipeline-connector" />
-                                                <div className={`pipeline-phase ${pipeline.phase >= 3 ? 'active' : ''}`}>
-                                                    <span className="pipeline-phase-dot">👤</span>
-                                                    <span className="pipeline-phase-label">Human</span>
-                                                </div>
-                                            </div>
-                                            <div className={`pipeline-status-badge ${pipeline.className}`}>
-                                                {pipeline.label}
-                                            </div>
-                                        </div>
-
-                                        <div className="report-card-location">
-                                            📍 {report.autoTags.lat.toFixed(4)}, {report.autoTags.lng.toFixed(4)}
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                    <div className="tw-grid">
+                        {filtered.map((r, i) => (
+                            <TweetCard key={r.id} report={r} index={i} />
+                        ))}
                     </div>
                 )}
             </div>
 
-            {/* FAB */}
-            <div className="report-list-fab-area">
-                <button
-                    className="report-list-fab"
-                    onClick={onActivateEmergency}
-                    id="report-emergency-btn"
-                >
+            {/* ── Report FAB ── */}
+            <div className="tw-fab-wrap">
+                <button className="tw-fab" onClick={onActivateEmergency} id="report-emergency-btn">
                     🚨
                 </button>
-                <span className="report-list-fab-label">Report Emergency</span>
+                <span className="tw-fab__label">Report Flood</span>
             </div>
 
-            {/* Bottom hint */}
-            <div className="report-list-hint">
-                <span className="report-hint-dot" />
-                Fully verified reports appear on the Shelter map
+            {/* ── Bottom info bar ── */}
+            <div className="tw-bottom-bar">
+                <span className="tw-bottom-bar__dot" />
+                Verified reports appear on the Shelter map
             </div>
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Individual tweet-style card
+// ─────────────────────────────────────────────────────────────────────────────
+function TweetCard({ report, index }: { report: FloodReport; index: number }) {
+    const [open, setOpen] = useState(false);
+    const [imgFail, setImgFail] = useState(false);
+
+    const profile = getProfile(report);
+    const pipeline = pipelineInfo(report);
+    const cat = CATEGORY_META[report.category];
+    const isFlood = report.aiResult?.waterDetected === true;
+    const conf = report.aiResult?.confidence ?? 0;
+    const depth = report.aiResult?.depthEstimate ?? 'N/A';
+    const place = placeLabel(report.autoTags.lat, report.autoTags.lng);
+    const hasImg = report.photoDataURLs.length > 0;
+
+    return (
+        <article
+            className="tw-card"
+            style={{ animationDelay: `${index * 80}ms` }}
+        >
+            {/* ── User row ── */}
+            <div className="tw-card__user-row">
+                <span className="tw-card__avatar">{profile.avatar}</span>
+                <div className="tw-card__user-info">
+                    <span className="tw-card__name">{profile.name}</span>
+                    <span className="tw-card__handle">{profile.handle} · {timeAgo(report.createdAt)}</span>
+                </div>
+                <span className={`tw-badge ${pipeline.cls}`}>{pipeline.icon} {pipeline.label}</span>
+            </div>
+
+            {/* ── Location ── */}
+            <div className="tw-card__location">
+                <span className="tw-card__loc-icon">📍</span>
+                <span className="tw-card__loc-text">{place}</span>
+                <span className={`tw-card__cat-chip`} style={{ color: cat.color, borderColor: cat.color }}>
+                    {cat.emoji} {cat.label}
+                </span>
+            </div>
+
+            {/* ── Text content ── */}
+            <p className="tw-card__text">{report.description}</p>
+
+            {/* ── Image ── */}
+            {hasImg && !imgFail && (
+                <div className="tw-card__img-wrap">
+                    <img
+                        className="tw-card__img"
+                        src={report.photoDataURLs[0]}
+                        alt="Flood evidence"
+                        loading="lazy"
+                        onError={() => setImgFail(true)}
+                    />
+                    {/* overlays */}
+                    <div className="tw-card__img-gradient" />
+                    <div className="tw-card__img-badges">
+                        {isFlood && <span className="tw-img-pill tw-img-pill--red">🌊 FLOOD DETECTED</span>}
+                        <span className="tw-img-pill tw-img-pill--dark">📷 User submitted</span>
+                    </div>
+                    <div className="tw-card__img-unverified">
+                        ⚠️ Image authenticity unconfirmed — report is under verification
+                    </div>
+                </div>
+            )}
+
+            {/* ── Metrics row ── */}
+            <div className="tw-card__metrics">
+                <div className="tw-metric">
+                    <span className="tw-metric__label">AI Confidence</span>
+                    <div className="tw-metric__bar-bg">
+                        <div
+                            className="tw-metric__bar-fill"
+                            style={{
+                                width: `${conf}%`,
+                                background: conf >= 80 ? '#22c55e' : conf >= 60 ? '#f5c542' : '#ef4444',
+                            }}
+                        />
+                    </div>
+                    <span className="tw-metric__val">{conf}%</span>
+                </div>
+                <div className="tw-metric-tag">
+                    <span>💧</span><span>{depth}</span>
+                </div>
+                <div className="tw-metric-tag">
+                    <span>±{report.autoTags.accuracy}m</span>
+                </div>
+            </div>
+
+            {/* ── Action row ── */}
+            <div className="tw-card__actions">
+                <button
+                    className="tw-action-btn"
+                    onClick={() => setOpen(x => !x)}
+                    aria-expanded={open}
+                >
+                    {open ? '▲ Hide details' : '▼ View AI analysis'}
+                </button>
+                <span className="tw-card__coords">
+                    {report.autoTags.lat.toFixed(5)}, {report.autoTags.lng.toFixed(5)}
+                </span>
+            </div>
+
+            {/* ── Expanded panel ── */}
+            {open && (
+                <div className="tw-card__expand">
+                    {/* Pipeline bar */}
+                    <div className="tw-pipeline">
+                        {[
+                            { icon: '📷', label: 'Submitted', done: pipeline.phase >= 1 },
+                            { icon: '🤖', label: 'AI Review', done: pipeline.phase >= 2 },
+                            { icon: '👤', label: 'Human OK', done: pipeline.phase >= 3 },
+                        ].map((step, i, arr) => (
+                            <span key={step.label} className="tw-pipeline__group">
+                                <span className={`tw-pipeline__step ${step.done ? 'done' : ''}`}>
+                                    <span className="tw-pipeline__icon">{step.icon}</span>
+                                    <span className="tw-pipeline__label">{step.label}</span>
+                                </span>
+                                {i < arr.length - 1 && (
+                                    <span className={`tw-pipeline__line ${pipeline.phase > i + 1 ? 'done' : ''}`} />
+                                )}
+                            </span>
+                        ))}
+                    </div>
+
+                    {/* AI verdict */}
+                    {report.aiResult?.summary && (
+                        <div className="tw-expand__block tw-expand__block--blue">
+                            <span className="tw-expand__label">🤖 AI Verdict</span>
+                            <p className="tw-expand__text">{report.aiResult.summary}</p>
+                        </div>
+                    )}
+
+                    {/* Anomaly tags */}
+                    {(report.aiResult?.anomalies?.length ?? 0) > 0 && (
+                        <div className="tw-tags">
+                            {report.aiResult!.anomalies.map(a => (
+                                <span key={a} className="tw-tag">⚠️ {a}</span>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Moderator note */}
+                    {report.humanReview.moderatorNote && (
+                        <div className="tw-expand__block tw-expand__block--green">
+                            <span className="tw-expand__label">👤 Moderator Note</span>
+                            <p className="tw-expand__text">{report.humanReview.moderatorNote}</p>
+                        </div>
+                    )}
+
+                    {/* Coordinates detail */}
+                    <div className="tw-coord-row">
+                        <span>📡</span>
+                        <span>Lat {report.autoTags.lat.toFixed(6)}, Lng {report.autoTags.lng.toFixed(6)}</span>
+                        <span className="tw-coord-acc">±{report.autoTags.accuracy}m accuracy</span>
+                    </div>
+                </div>
+            )}
+        </article>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+function EmptyState({ filter }: { filter: FilterTab }) {
+    return (
+        <div className="tw-empty">
+            <div className="tw-empty__icon">🛰️</div>
+            <h2 className="tw-empty__title">
+                {filter === 'all' ? 'No Reports Yet'
+                    : filter === 'verified' ? 'No Verified Reports'
+                        : 'No Pending Reports'}
+            </h2>
+            <p className="tw-empty__desc">
+                {filter === 'all'
+                    ? 'Use the 🚨 button to submit the first flood report.'
+                    : 'Check back soon — reports are being processed.'}
+            </p>
         </div>
     );
 }

@@ -525,6 +525,114 @@
     background: rgba(239, 68, 68, 0.2);
 }
 
+/* ── Danger zone divider ── */
+.mod-danger-divider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 0;
+    color: rgba(239, 68, 68, 0.5);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.mod-danger-divider::before,
+.mod-danger-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(239, 68, 68, 0.2);
+}
+
+/* ── Delete button (initial, outlined red) ── */
+.mod-btn-delete {
+    background: transparent;
+    color: rgba(239, 68, 68, 0.7);
+    border: 1px dashed rgba(239, 68, 68, 0.35);
+    transition: all 0.2s;
+}
+
+.mod-btn-delete:hover {
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.55);
+}
+
+/* ── Delete confirm panel ── */
+.mod-delete-confirm {
+    padding: 16px;
+    background: rgba(239, 68, 68, 0.06);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 16px;
+    margin-bottom: 8px;
+    text-align: center;
+    animation: mod-shake-in 0.25s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes mod-shake-in {
+    0% {
+        transform: translateX(-4px);
+    }
+
+    25% {
+        transform: translateX(4px);
+    }
+
+    50% {
+        transform: translateX(-2px);
+    }
+
+    75% {
+        transform: translateX(2px);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+.mod-delete-confirm__icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.mod-delete-confirm__text {
+    font-size: 13px;
+    color: #fca5a5;
+    line-height: 1.5;
+    margin: 0 0 16px;
+}
+
+.mod-delete-confirm__text strong {
+    color: #ef4444;
+    font-weight: 800;
+}
+
+/* ── Delete confirm button (solid red) ── */
+.mod-btn-delete-confirm {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    color: white;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+}
+
+.mod-btn-delete-confirm:hover {
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+}
+
+/* ── Cancel button ── */
+.mod-btn-cancel {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mod-btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
 /* ═══════════════════════════════════════════════
    Moderator Access Button (on Report List)
    ═══════════════════════════════════════════════ */
