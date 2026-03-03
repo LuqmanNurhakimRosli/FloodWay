@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserAvatar } from '../components/UserAvatar';
+import { WhatsAppAlertBanner } from '../components/WhatsAppAlertBanner';
 
 // ── AI Action Script (Smart Checklist) ──
 const ACTION_ITEMS_DANGER = [
@@ -33,8 +34,11 @@ export function HomePage() {
     const navigate = useNavigate();
     const { selectedLocation, prediction, floodReports } = useApp();
 
-    const hasDanger = prediction?.hourlyPredictions?.some(p => p.riskLevel === 'danger') || false;
-    const hasWarning = prediction?.hourlyPredictions?.some(p => p.riskLevel === 'warning') || false;
+    // ── DEMO: force danger state for FYP prototype ──────────────────────────
+    // Remove these two lines to restore real prediction-based status.
+    const hasDanger = true;
+    const hasWarning = false;
+    // ────────────────────────────────────────────────────────────────────────
 
     // Determine traffic light status
     const status: 'green' | 'yellow' | 'red' = hasDanger ? 'red' : hasWarning ? 'yellow' : 'green';
@@ -163,6 +167,22 @@ export function HomePage() {
             </header>
 
             <main className="flex-1 px-5 py-4 overflow-y-auto space-y-4 relative z-10">
+
+                {/* ── WhatsApp Flood Alert Banner (WARNING / DANGER only) ── */}
+                {(status === 'yellow' || status === 'red') && (() => {
+                    const demoPrediction = prediction ?? {
+                        date: new Date(),
+                        hourlyPredictions: [{ hour: 14, time: '14:00', riskLevel: 'danger' as const, probability: 0.87, rainfall: 120 }],
+                        peakRiskHour: 14,
+                        overallRisk: 'danger' as const,
+                    };
+                    return (
+                        <WhatsAppAlertBanner
+                            prediction={demoPrediction}
+                            locationName={selectedLocation?.name || 'Kuala Lumpur'}
+                        />
+                    );
+                })()}
 
                 {/* ═══════════════════════════════════════════════════════════
                     1. TRAFFIC LIGHT STATUS HEADER (The "One Glance" Card)
