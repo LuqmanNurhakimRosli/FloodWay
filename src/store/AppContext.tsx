@@ -5,7 +5,7 @@ import type { FloodReport, HumanReview } from '../types/report';
 import { DEFAULT_POSITION } from '../data/locations';
 import { generateDailyPrediction } from '../utils/predictionGenerator';
 import { calculateRoute } from '../utils/pathfinding';
-import { fetchReports, saveReport, updateReportHumanReview, deleteReport, INITIAL_REPORTS } from '../services/reportsService';
+import { fetchReports, saveReport, updateReportHumanReview, INITIAL_REPORTS } from '../services/reportsService';
 
 interface AppState {
     selectedLocation: Location | null;
@@ -149,18 +149,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }));
     }, []);
 
-    // Moderator: permanently delete a report
+    // Moderator: session-only delete (UI only — Firestore is NOT touched).
+    // The report disappears from the panel for this session but returns on refresh.
+    // Seed reports (banjir2/banjir3) are always re-created by ensureSeedDocs() on next load.
     const deleteFloodReport = useCallback((reportId: string) => {
-        console.log('🗑️ [Moderator] Deleting report:', reportId);
-        // Optimistic local removal
+        console.log('🗑️ [Moderator] Hiding report for this session (local only):', reportId);
         setState(prev => ({
             ...prev,
             floodReports: prev.floodReports.filter(r => r.id !== reportId),
         }));
-        // Persist deletion to Firestore (fire-and-forget)
-        deleteReport(reportId).catch(err =>
-            console.error('Failed to delete report from Firestore:', err),
-        );
+        // ✅ No Firestore deleteDoc — data is preserved in Firebase.
+        // Refresh the page to restore the report.
     }, []);
 
     // Human review: moderator approves/rejects a report

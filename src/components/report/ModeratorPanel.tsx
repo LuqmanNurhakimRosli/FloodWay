@@ -254,7 +254,7 @@ export default function ModeratorPanel({ onBack }: ModeratorPanelProps) {
                             <div className="mod-delete-confirm">
                                 <div className="mod-delete-confirm__icon">🗑️</div>
                                 <p className="mod-delete-confirm__text">
-                                    Permanently delete this report? This <strong>cannot be undone</strong>.
+                                    Remove this report from the panel? It will <strong>return on page refresh</strong> — Firestore data is preserved.
                                 </p>
                                 <div className="mod-action-buttons">
                                     <button
@@ -262,7 +262,7 @@ export default function ModeratorPanel({ onBack }: ModeratorPanelProps) {
                                         onClick={() => handleDelete(selectedReport.id)}
                                         id="mod-delete-confirm-btn"
                                     >
-                                        🗑️ Yes, Delete Permanently
+                                        🗑️ Yes, Hide for This Session
                                     </button>
                                     <button
                                         className="mod-btn mod-btn-cancel"
