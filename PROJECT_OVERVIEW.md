@@ -282,6 +282,326 @@ Login/Signup (Firebase Auth)
 
 ---
 
+## 📱 Page-by-Page Workflow
+
+This section documents the **end-to-end user journey** through every screen in FloodWay — from authentication to simulation — including the underlying data flows, algorithms, and verification pipelines that power each feature.
+
+---
+
+### 🔐 Page 1: Sign-In / Authentication
+
+**Entry point of the entire app.** No user can access any feature without authenticating first.
+
+```
+   ┌─────────────────────────────────────────────────┐
+   │              SIGN-IN PAGE (WelcomePage.tsx)      │
+   │                                                 │
+   │   ┌─────────────────┐   ┌─────────────────┐    │
+   │   │  Email + Password│   │  Sign in with   │    │
+   │   │  (Firebase Auth) │   │  Google (OAuth) │    │
+   │   └────────┬────────┘   └────────┬────────┘    │
+   └────────────┼────────────────────┼──────────────┘
+                │                    │
+                ▼                    ▼
+         Firebase Authentication (signInWithEmailAndPassword
+                              / signInWithPopup)
+                │
+                ▼
+         onAuthStateChanged fires → user session persisted
+                │
+                ▼
+         RequireAuth guard passes → redirect to /home
+```
+
+**Workflow Steps:**
+1. User lands on `/` (WelcomePage). The `RedirectIfAuthed` HOC checks if already logged in — if yes, skips straight to `/home`.
+2. User chooses **Email/Password** or **Sign in with Google** (Gmail OAuth via Firebase `signInWithPopup`).
+3. Firebase validates credentials and returns a `UserCredential` object.
+4. `AuthContext` stores the user and sets session via `onAuthStateChanged` listener — session persists across refreshes.
+5. On success, React Router redirects to `/home`. On failure, the page shows an inline error message.
+6. New users click **"Sign Up"** → navigated to `SignUpPage.tsx` which creates a Firebase account with `createUserWithEmailAndPassword` and calls `updateProfile` to save the display name.
+
+**Key Files:** `src/pages/WelcomePage.tsx` · `src/pages/SignUpPage.tsx` · `src/contexts/AuthContext.tsx` · `src/lib/firebase.ts`
+
+---
+
+### 🏠 Page 2: Home Dashboard
+
+**The real-time flood situational awareness hub.** Shows predictions, current impact scoring, and alerts.
+
+```
+   HOME PAGE (HomePage.tsx)
+   │
+   ├── 🕐 Flood Impact Timeline (24-hour view)
+   │     • X-axis: Time (every hour for 24h)
+   │     • Y-axis: Flood Probability (0.0 – 1.0)
+   │     • Color bars: 🟢 Safe | 🟡 Warning | 🔴 Danger
+   │     • Data Source: ANN model via FastAPI /predict
+   │                    OR predictionGenerator.ts (offline demo)
+   │
+   ├── 📊 Impact Score Card
+   │     • Overall risk score for current time window
+   │     • "When" the peak flood impact is expected
+   │     • Derived from the highest probability in the 24h window
+   │
+   ├── 🚦 Current Status Indicator
+   │     • SAFE / WARNING / DANGER badge
+   │     • Live threshold: ≥70% → DANGER, 40–70% → WARNING, <40% → SAFE
+   │
+   └── 📲 WhatsApp Share Alert Banner
+         • Appears ONLY when status is WARNING or DANGER
+         • One-tap button opens WhatsApp via wa.me deep link
+         • Pre-filled message: location + risk level + FloodWay link
+         • Intent: let user instantly warn family/friends of flood danger
+```
+
+**Workflow Steps:**
+1. On mount, `HomePage` fetches 24-hour flood prediction data. It tries the FastAPI backend first; if offline, `predictionGenerator.ts` synthesizes realistic predictions from seeded patterns.
+2. The prediction array drives the **FloodTimeline** component — an interactive horizontal scrubber showing probability bars colour-coded by risk tier.
+3. The highest probability in the next 6 hours determines the **current status** badge and the **Impact Score** displayed in `AlertCard.tsx`.
+4. If status is WARNING or DANGER, a **WhatsApp Share Alert Banner** appears at the top. When tapped, the app opens `https://wa.me/?text=<encoded_message>` which launches WhatsApp with a pre-written evacuation warning message including the user's location area.
+5. Users can interact (scrub) the timeline to inspect predicted risk for any hour.
+
+**Key Files:** `src/pages/HomePage.tsx` · `src/components/AlertCard.tsx` · `src/components/FloodTimeline.tsx` · `src/components/FloodTimelineScrubber.tsx` · `src/components/RiskIndicator.tsx` · `src/utils/predictionGenerator.ts` · `src/services/floodService.ts`
+
+---
+
+### 🏚️ Page 3: Shelter & Evacuation
+
+**The core evacuation intelligence page.** Combines flood forecasting, safe routing, and real-time flood zone awareness.
+
+```
+   SHELTER PAGE (ShelterPage.tsx)
+   │
+   ├── 📍 Nearby Shelter List (5 real Malaysian PPS locations)
+   │     • Shows name, address, distance from user GPS
+   │     • Colour-coded risk indicator per shelter's zone
+   │
+   ├── 🗺️  Interactive Leaflet Map
+   │     ├── FloodZoneLayer.tsx — Static high-risk flood polygons
+   │     ├── FloodReportLayer.tsx — Live community report pins
+   │     └── User GPS blue dot + shelter pins
+   │
+   ├── 🌧️  Flood Risk Forecast Panel
+   │     • Pulls 24-hour rainfall forecast from:
+   │       1. Google Weather API (hourly precipitation)
+   │       2. MetMalaysia API (official Malaysia forecast)
+   │     • Combined with ANN model trained on 10 years (2000-2010)
+   │        historical rainfall data → gives flood probability per hour
+   │     • Displays "probability of flooding" per area for the next 24h
+   │
+   ├── 🎯 Area Flood Probability Heatmap
+   │     • Overlay showing probability gradient across the map
+   │     • High-risk zones turn red/orange; safe zones remain green
+   │
+   ├── 🚗 Transport Mode Picker
+   │     │  Car / Motorcycle / Walk
+   │     │
+   │     └── On shelter tap → triggers routing
+   │
+   └── 🧭 Route to Shelter (with Flood Avoidance)
+         │
+         ├── Primary Engine: OSRM (OpenStreetMap road network)
+         │     • Fetches real road geometry + turn-by-turn steps
+         │     • 8-second timeout with curved-interpolation fallback
+         │
+         └── Flood-Avoidance Logic (A* Conceptual Layer):
+               • The A* algorithm is used as the conceptual basis
+                 for penalizing flood-risk road segments:
+                 - Nodes = road intersections
+                 - Edges = road segments with travel cost
+                 - Heuristic = Euclidean distance to shelter
+                 - Penalty: roads in FloodZone polygons or with
+                   active flood community reports get ×5–×10 cost
+               • In practice, OSRM handles the real graph traversal;
+                 flood zones inform which roads to mark as impassable
+               • Navigation route avoids known flooded areas and
+                 guides user via safest clear roads to the shelter
+```
+
+**Workflow Steps:**
+1. Page loads user GPS via `navigator.geolocation`. Leaflet map renders centered on user position.
+2. **Flood Zone** polygons (static GeoJSON of historically flooded areas in Shah Alam / Klang) are drawn on the map as red overlay areas.
+3. **Flood Risk Forecast** panel fetches the next 24 hours of rainfall predictions by combining:
+   - Google Weather API (hourly `precipitationProbability`) for near-term 24h data
+   - MetMalaysia API for official Malaysian regional forecasts
+   - ANN model (trained on 10 years of historical rainfall) that converts precipitation forecast → flood probability score
+4. User selects a shelter card and a transport mode (Car / Motorcycle / Walk).
+5. Route is computed via OSRM API. The route polyline is drawn on the Leaflet map, styled to avoid areas inside flood zone polygons.
+6. User taps **"Navigate"** → transitions to `NavigationPage.tsx` for turn-by-turn guidance with animated progress along the route.
+7. During navigation, `FloodReportLayer` shows community-submitted flood pins so users are visually warned of nearby reported incidents.
+
+**Key Files:** `src/pages/ShelterPage.tsx` · `src/pages/NavigationPage.tsx` · `src/utils/pathfinding.ts` · `src/components/FloodZoneLayer.tsx` · `src/components/FloodReportLayer.tsx` · `src/data/locations.ts`
+
+---
+
+### 📰 Page 4: Community Report ("Social Media for Floods")
+
+**A crowd-sourced, dual-verified flood reporting feed** — inspired by social media but with AI + human gatekeeping to stop misinformation.
+
+```
+   REPORT PAGE (ReportPage.tsx)
+   │
+   ├── 📸 Feed — Social Media Style
+   │     • Scrollable card feed of submitted flood images
+   │     • Each card shows: photo, location, timestamp, report type,
+   │       AI verification badge, and map pin
+   │     • Cards do NOT show the location or reach the public map
+   │       until they pass BOTH verification layers
+   │
+   ├── ➕ Submit a Report
+   │     ├── Standard Form (ReportForm.tsx)
+   │     │     • Category: Rising Water / Blocked Road /
+   │     │                 Trapped Victim / Landslide
+   │     │     • Description (text)
+   │     │     • Photo upload or camera capture (useCamera.ts hook)
+   │     │     • GPS auto-filled from useGeolocation.ts
+   │     │
+   │     └── Emergency Mode (EmergencyMode.tsx)
+   │           • One-tap panic button for critical situations
+   │           • Auto-fills max severity, captures photo immediately
+   │
+   └── ✅ Dual Verification Pipeline
+         │
+         ├── LAYER 1 — Gemini 1.5 Flash AI Verification
+         │     • Photo (base64) + description → Gemini Vision API
+         │     • Returns structured JSON:
+         │         detected_type: "Flash Flood" / "Rising Water" / ...
+         │         severity: "Low" / "Medium" / "High" / "Critical"
+         │         is_verified: true / false
+         │         confidence: 0–100%
+         │         ai_feedback: natural language explanation
+         │     • If NOT verified → flagged as potentially fake, queued
+         │     • If VERIFIED → moves to Layer 2
+         │
+         └── LAYER 2 — Human Moderator Review (ModeratorPanel.tsx)
+               • Moderator sees: original photo + user description
+                                 + full AI verdict + confidence score
+               • Actions: ✅ APPROVE / ❌ REJECT / 🔄 OVERRIDE AI
+               • APPROVED or AI-VERIFIED + OVERRIDDEN → live on public map
+               • REJECTED → permanently suppressed
+               • PENDING → hidden from all public views until reviewed
+```
+
+**Workflow Steps:**
+1. The feed shows cards of reports in a social-media-inspired layout — many images, various flood types, from different locations. The "unknown" factor (true or false, where exactly) is intentional, prompting curiosity to check.
+2. User taps the **Submit** button. They fill out the report form: pick category, add description, attach or take a photo (via `useCamera` hook), and confirm GPS location (via `useGeolocation` hook).
+3. On submit, the report is saved to **Firestore** with status `pending_ai`. The `reportsService.ts` triggers AI verification immediately.
+4. **Layer 1 – Gemini AI**: The photo is encoded as base64 and sent to Gemini 1.5 Flash with a structured prompt asking it to assess whether the image contains valid flood evidence, the type of event, severity, and a confidence score. A "Golden Record" is logged (timestamp + GPS + verdict) for auditability.
+5. If AI marks `is_verified: true`, the report moves to `pending_human`. If rejected, it moves to `ai_rejected` and is quarantined.
+6. **Layer 2 – Human Moderator**: A moderator accesses `ModeratorPanel.tsx`. They review the photo, the user's text, and the Gemini verdict side-by-side. They can **Approve** (publish to map), **Reject** (hard delete), or **Override** (override AI decision and publish manually).
+7. Only reports that achieve `approved` status appear as pins on the **Shelter Page** map via `FloodReportLayer`, closing the loop between community data and evacuation intelligence.
+
+**Key Files:** `src/pages/ReportPage.tsx` · `src/components/report/ReportForm.tsx` · `src/components/report/EmergencyMode.tsx` · `src/components/report/AIVerification.tsx` · `src/components/report/ModeratorPanel.tsx` · `src/components/report/ReportCard.tsx` · `src/utils/aiVerification.ts` · `src/services/reportsService.ts` · `src/hooks/useCamera.ts` · `src/hooks/useGeolocation.ts`
+
+---
+
+### 🌊 Page 5: Flood Simulation — "KL Digital Twin"
+
+**An immersive 3D flood simulator** that lets users experience what flooding looks like in a city environment — answering questions like *"How high will the water be?", "What will my street look like?", "Is my building safe?"* — before a real emergency happens.
+
+```
+   SIMULATION PAGE (SimulationPage.tsx)
+   │
+   ├── 🏙️  3D City Scene (WebGL via React Three Fiber)
+   │     • City model: custom Blender-built KL city block
+   │       exported as GLB → imported via useGLTF hook
+   │     • Buildings: varied heights, mixed commercial/residential
+   │       infrastructure (roads, intersections, street lamps)
+   │     • Perspective: isometric-style camera with full OrbitControls
+   │       (drag, zoom, pan — always enabled)
+   │
+   ├── 🌊 Dynamic Water Surface (GLSL Shader)
+   │     • Custom ShaderMaterial with vertex + fragment shaders:
+   │       - Vertex: 3-layer sine wave displacement (wave physics)
+   │       - Fragment: deep/shallow color gradient + foam near edges
+   │     • Water RISES from 0m → 1.5m → 4.2m per flood level
+   │     • Opacity and color shift as depth increases
+   │
+   ├── 🌧️  Environmental Effects
+   │     • Rain: Three.js InstancedMesh (up to 200 rain drops)
+   │     • Debris: 10 floating mesh objects on water surface
+   │     • Fog: FogExp2 atmospheric haze that thickens with severity
+   │     • Lighting: dynamic PointLight with color/intensity animation
+   │
+   ├── 🎛️  Simulation Controls (UI Panel)
+   │     ├── Level Picker: Normal (0m) / Medium (1.5m) / High (4.2m)
+   │     ├── Layer Toggles: Water ON/OFF · Rain ON/OFF · Debris ON/OFF
+   │     ├── Demo Cycle: auto-cycles through all levels (for FYP demo)
+   │     └── Live Metrics: animated counters for:
+   │                       Rainfall (mm/h) · Wind Speed · Temperature
+   │                       Flood Gauge (visual progress bar)
+   │
+   └── 📐 3D Buildings + Flood Depth Answer
+         "If water is at 1.5m, which floors are submerged?"
+         • The GLB city model has real building heights
+         • The water plane rises to the specified level
+         • Users can visually count which building floors are below
+           the waterline — giving intuitive spatial understanding
+         • This directly answers: "How high?", "How does it look?",
+           "Which infrastructure is affected?" — all in 3D
+```
+
+**Workflow Steps:**
+1. `SimulationPage` loads the `city.glb` model via `useGLTF`. This is a custom Blender model with varied building heights, roads, and street furniture representing a Kuala Lumpur city block.
+2. The default scene starts at **Normal** level (no flood, sunny atmosphere). The user sees the city from an isometric camera angle with full mouse/touch control.
+3. The user selects a flood level (Normal / Medium / High) from the control panel. The following animate simultaneously:
+   - Water plane **rises** to the corresponding height with wave shader active
+   - **Rain intensity** increases (more InstancedMesh rain drops)
+   - **Fog density** and atmospheric color shift to darker, stormier tones
+   - **Lighting** transitions from warm (safe) to cold blue-grey (danger)
+   - **Live metrics** counters update (e.g. rainfall jumps to 150 mm/h)
+4. User can toggle individual layers (water / rain / debris) to focus their understanding.
+5. **Demo Cycle** mode auto-loops all three levels for FYP presentation — showing the full progression from calm to catastrophic flooding in a continuous loop.
+6. The **Flood Gauge** widget on the side panel shows a visual fill bar representing current water height, giving an at-a-glance sense of depth relative to building stories.
+7. The combination of 3D buildings + rising water plane directly answers the questions:
+   - *"How high will the water be?"* → Visible waterline against building facades
+   - *"How does it look with infrastructure?"* → City roads, buildings, lampposts submerging
+   - *"Which floor is safe?"* → Count building floors above/below waterline
+8. **Desktop** shows a sidebar panel (controls + metrics). **Mobile** uses a bottom-sheet drawer with a FAB button to expand/collapse controls, ensuring the 3D view is not obscured.
+
+**Key Files:** `src/pages/SimulationPage.tsx` · `public/city.glb` · React Three Fiber · `@react-three/drei` (OrbitControls, useGLTF, Environment) · Three.js ShaderMaterial (custom GLSL)
+
+---
+
+### 🔁 Complete User Journey Summary
+
+```
+  [SIGN IN] ──────────────────────────────────────────────────────────▶
+  Firebase Auth (Email / Google OAuth)
+  │
+  ▼
+  [HOME] ─── AI flood timeline ─── Impact score ─── Current status
+     │              │
+     │    If WARNING/DANGER:
+     │    └── WhatsApp Share Alert Banner ─── wa.me deep link
+     │
+  ▼
+  [SHELTER] ── Flood forecast (ANN + Google + MetMalaysia)
+     │        ── Flood zone heatmap overlay on Leaflet map
+     │        ── Shelter list with distance
+     │        ── Pick transport mode
+     │        └── OSRM routing (A* flood-avoidance penalisation)
+     │              └── Navigate → turn-by-turn with flood pin overlays
+     │
+  ▼
+  [REPORT] ── Social-media-style flood image feed
+     │       ── Submit: photo + category + GPS
+     │       └── Dual Verification:
+     │             Layer 1: Gemini 1.5 Flash AI vision check
+     │             Layer 2: Human moderator approve/reject/override
+     │             ✅ Approved → appears on Shelter map as flood pin
+     │
+  ▼
+  [SIMULATE] ── 3D KL city GLB model
+              ── Rising water GLSL shader (0m → 1.5m → 4.2m)
+              ── Rain / Debris / Fog / Lighting effects
+              └── Answers: "How high?", "How does it look?",
+                           "Which floors submerge?"
+```
+
+---
+
 ## Running The Project
 
 ```bash
