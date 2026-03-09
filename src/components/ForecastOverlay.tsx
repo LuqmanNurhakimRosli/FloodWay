@@ -155,7 +155,7 @@ export function ForecastOverlay({ selectedHourIndex = 0 }: ForecastOverlayProps)
                 ].map((stat, i) => (
                     <Card key={i} className="bg-slate-900/80 backdrop-blur-md border border-white/5 shadow-lg">
                         <CardContent className="p-1.5 md:p-2 text-center">
-                            <stat.icon className={cn("size-2.5 md:size-3 mx-auto mb-1", stat.color)} />
+                            <stat.icon className={cn("size-5 md:size-6 mx-auto mb-1.5", stat.color)} />
                             <div className="text-[10px] md:text-xs font-bold text-white">{stat.val}</div>
                         </CardContent>
                     </Card>
