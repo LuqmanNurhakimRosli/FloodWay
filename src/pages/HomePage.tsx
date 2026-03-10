@@ -221,6 +221,41 @@ export function HomePage() {
                         <p className="text-white/90 text-sm font-medium leading-relaxed max-w-[90%]">
                             {cfg.subtitle}
                         </p>
+
+                        {/* ── Evacuate Now CTA Button (red status only) ── */}
+                        {status === 'red' && (
+                            <button
+                                onClick={() => navigate('/shelters')}
+                                className="mt-5 w-full sm:w-auto relative group flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl font-black text-sm tracking-wide uppercase overflow-hidden transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50"
+                                style={{
+                                    background: 'linear-gradient(135deg, #ffffff 0%, #ffe4e4 100%)',
+                                    color: '#b91c1c',
+                                    boxShadow: '0 0 0 3px rgba(255,255,255,0.25), 0 8px 32px rgba(0,0,0,0.35)',
+                                }}
+                                id="find-shelter-btn"
+                            >
+                                {/* Animated ring pulse */}
+                                <span
+                                    className="absolute inset-0 rounded-2xl animate-ping opacity-30"
+                                    style={{ background: 'rgba(255,255,255,0.5)', animationDuration: '1.4s' }}
+                                />
+                                {/* Shine overlay on hover */}
+                                <span className="absolute inset-0 rounded-2xl bg-gradient-to-b from-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                                {/* Icon */}
+                                <span className="relative z-10 flex items-center justify-center size-6 bg-red-600 rounded-full shadow-md shrink-0">
+                                    <Navigation className="size-3.5 text-white fill-current" />
+                                </span>
+
+                                <span className="relative z-10 flex flex-col items-start leading-none">
+                                    <span className="text-[9px] font-bold text-red-400 uppercase tracking-widest mb-0.5">Emergency</span>
+                                    <span className="text-base font-black text-red-700 leading-none">Find Shelter Now</span>
+                                </span>
+
+                                {/* Arrow */}
+                                <ChevronRight className="relative z-10 size-5 text-red-500 ml-auto group-hover:translate-x-1 transition-transform duration-200" />
+                            </button>
+                        )}
                     </div>
                 </div>
 
