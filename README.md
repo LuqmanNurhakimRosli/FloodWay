@@ -19,14 +19,15 @@
 | Muhammad Luqman Nurhakim Bin Rosli | Developer / Project Lead |
 | Nadyie Azil Bin Nazeri | Developer |
 | Rina Syazana Binti Rahman | Developer |
+| Nur Aleya Binti Muhammad Hafeez | Developer |
 
 **Faculty of Computer and Mathematical Sciences**
 Universiti Teknologi MARA (UiTM), 40450, Shah Alam, Selangor, Malaysia
 
-**Supervised by:** Dr. Azliza Mohd Ali
+**Supervised by:** Dr. Azliza Mohd Ali & Dr. Ezzatul Akmal Kamaru-Zaman
 Faculty of Computer and Mathematical Sciences, UiTM
 
-**Date of Submission:** 23 March 2025
+**Date of Submission:** 13 March 2025
 
 ---
 
@@ -38,12 +39,13 @@ Faculty of Computer and Mathematical Sciences, UiTM
 
 | Resource | Link |
 |---|---|
-| 🎬 **Demo Video** | [Watch on Google Drive](https://drive.google.com/file/d/1trikwP5Y6jQdNsB2ijK1QfZ6xiu01Mnw/view?usp=drive_link) |
+| � **Live App** | [floodways.netlify.app](https://floodways.netlify.app/) |
+| �🎬 **Demo Video** | [Watch on Google Drive](https://drive.google.com/file/d/1trikwP5Y6jQdNsB2ijK1QfZ6xiu01Mnw/view?usp=drive_link) |
 | 💻 **Codebase (Repository)** | [github.com/LuqmanNurhakimRosli/FloodWay](https://github.com/LuqmanNurhakimRosli/FloodWay) |
 | 📄 **Project Report** | `Borneo HackWKDN Submition/Report FloodWay.pdf` |
 | 🛠️ **Setup Instructions** | See [Getting Started](#-getting-started) section below |
 
-> **Judges**: The full source code is available in the GitHub repository above. To run the project locally, please follow the [Getting Started](#-getting-started) guide at the bottom of this README.
+> **Judges**: The live app is accessible at [floodways.netlify.app](https://floodways.netlify.app/). The full source code is available in the GitHub repository above. To run the project locally, please follow the [Getting Started](#-getting-started) guide at the bottom of this README.
 
 ---
 
