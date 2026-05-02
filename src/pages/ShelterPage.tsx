@@ -1,10 +1,10 @@
 // Shelter Selection Page with shadcn/Tailwind - includes transport mode selection
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useApp } from '../store';
-import { getSheltersWithDistance, LOCATIONS } from '../data/locations';
+import { getSheltersWithDistance, LOCATIONS, IOT_SENSOR_LOCATION } from '../data/locations';
 import type { Shelter, TransportMode } from '../types/app';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -44,15 +44,30 @@ const createShelterIcon = (isSelected: boolean) => new L.DivIcon({
     iconAnchor: [isSelected ? 28 : 22, isSelected ? 56 : 44],
 });
 
+// Sensor icon
+const createSensorIcon = () => new L.DivIcon({
+    className: 'map-sensor-icon',
+    html: `
+        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse">
+            <span class="text-sm">💧</span>
+        </div>
+    `,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+});
+
 // Map controller
-function MapController({ center, shouldAnimate }: { center: [number, number] | null, shouldAnimate: boolean }) {
+function MapController({ center, zoom = 14, shouldAnimate }: { center: [number, number] | null, zoom?: number, shouldAnimate: boolean }) {
     const map = useMap();
+    
+    const lat = center?.[0];
+    const lng = center?.[1];
 
     useEffect(() => {
-        if (center && shouldAnimate) {
-            map.flyTo(center, 14, { duration: 0.6 });
+        if (lat !== undefined && lng !== undefined && shouldAnimate) {
+            map.flyTo([lat, lng], zoom, { duration: 0.6 });
         }
-    }, [map, center, shouldAnimate]);
+    }, [map, lat, lng, zoom, shouldAnimate]);
 
     return null;
 }
@@ -82,6 +97,8 @@ const TRANSPORT_MODES: { mode: TransportMode; label: string; icon: typeof Car; s
 
 export function ShelterPage() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const focusSensor = location.state?.focusSensor;
     const { userPosition, selectedLocation, prediction, setShelter, navigateToShelter, transportMode, setTransportMode, isRouteLoading, setLocation } = useApp();
     const [selectedShelterId, setSelectedShelterId] = useState<string | null>(null);
     const [animateToShelter, setAnimateToShelter] = useState(false);
@@ -120,6 +137,7 @@ export function ShelterPage() {
 
     const shelters = useMemo(() => getSheltersWithDistance(userPosition), [userPosition]);
     const userIcon = useMemo(() => createUserIcon(), []);
+    const sensorIcon = useMemo(() => createSensorIcon(), []);
     const selectedShelter = shelters.find(s => s.id === selectedShelterId);
 
     // All positions for initial bounds
@@ -149,7 +167,9 @@ export function ShelterPage() {
 
     const mapCenter: [number, number] | null = selectedShelter
         ? [selectedShelter.position.lat, selectedShelter.position.lng]
-        : null;
+        : focusSensor
+            ? [IOT_SENSOR_LOCATION.position.lat, IOT_SENSOR_LOCATION.position.lng]
+            : null;
 
     const routePreview: [number, number][] = selectedShelter
         ? [[userPosition.lat, userPosition.lng], [selectedShelter.position.lat, selectedShelter.position.lng]]
@@ -180,6 +200,9 @@ export function ShelterPage() {
 
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
+                    {/* IoT Sensor River Marker */}
+                    <Marker position={[3.149, 101.696]} icon={sensorIcon} />
+
                     <Marker position={[userPosition.lat, userPosition.lng]} icon={userIcon} />
 
                     {selectedShelter && (
@@ -207,7 +230,7 @@ export function ShelterPage() {
                     <FloodReportLayer />
 
                     <FitBounds positions={allPositions} />
-                    <MapController center={mapCenter} shouldAnimate={animateToShelter} />
+                    <MapController center={mapCenter} zoom={focusSensor ? 16 : 14} shouldAnimate={animateToShelter || focusSensor} />
                 </MapContainer>
             </div>
 

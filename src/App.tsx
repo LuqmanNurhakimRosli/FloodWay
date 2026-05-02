@@ -13,6 +13,8 @@ import { FutureWorkPage } from './pages/FutureWorkPage';
 import { ReportPage } from './pages/ReportPage';
 import { SimulationPage } from './pages/SimulationPage';
 import { BottomNav } from './components/BottomNav';
+import { IoTWidget } from './components/IoTWidget';
+import { EmergencyAlert } from './components/EmergencyAlert';
 import './App.css';
 
 // Pages that should show the bottom navigation
@@ -87,6 +89,10 @@ function AppLayout() {
 
       {/* Bottom Navigation */}
       {showBottomNav && <BottomNav />}
+
+      {/* IoT Integration Components */}
+      <IoTWidget />
+      <EmergencyAlert />
     </div>
   );
 }
