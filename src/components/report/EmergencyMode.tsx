@@ -1,8 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
 import { ReportCategory } from '../../types/report';
 import type { AutoTags } from '../../types/report';
 import { useCamera } from '../../hooks/useCamera';
 import { useGeolocation } from '../../hooks/useGeolocation';
+import 'leaflet/dist/leaflet.css';
 import './EmergencyMode.css';
 
 interface EmergencyModeProps {
@@ -15,12 +18,29 @@ interface EmergencyModeProps {
     onCancel: () => void;
 }
 
+// Custom marker icon for pinning
+const pinIcon = new L.Icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+});
+
+function MapPicker({ onLocationSelect, initialPos }: { onLocationSelect: (lat: number, lng: number) => void; initialPos: [number, number] }) {
+    useMapEvents({
+        click(e) {
+            onLocationSelect(e.latlng.lat, e.latlng.lng);
+        },
+    });
+    return null;
+}
+
 export default function EmergencyMode({ onSubmit, onCancel }: EmergencyModeProps) {
     const [category] = useState<ReportCategory>(ReportCategory.RISING_WATER);
     const [description, setDescription] = useState('');
     const [photoDataURLs, setPhotoDataURLs] = useState<string[]>([]);
+    const [pinnedLocation, setPinnedLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-    const [viewMode, setViewMode] = useState<'SELECTION' | 'CAMERA' | 'PREVIEW'>('SELECTION');
+    const [viewMode, setViewMode] = useState<'SELECTION' | 'CAMERA' | 'PREVIEW' | 'MAP'>('SELECTION');
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -46,51 +66,52 @@ export default function EmergencyMode({ onSubmit, onCancel }: EmergencyModeProps
         }
     }, [capturePhoto, stopCamera]);
 
-
-
     const handleDeletePhoto = (index: number) => {
-        setPhotoDataURLs(prev => prev.filter((_, i) => i !== index));
-        if (photoDataURLs.length <= 1) {
-            // If we deleted the last one, maybe go back to selection? 
-            // Or just stay in preview with empty list? 
-            // Let's stay in preview but show a prompt to add photos.
-        }
+        setPhotoDataURLs(prev => {
+            const next = prev.filter((_, i) => i !== index);
+            if (next.length === 0) setViewMode('SELECTION');
+            return next;
+        });
     };
 
     const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const url = URL.createObjectURL(file);
-        setPhotoDataURLs(prev => [...prev, url]);
-        setViewMode('PREVIEW');
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const dataURL = reader.result as string;
+            setPhotoDataURLs(prev => [...prev, dataURL]);
+            setViewMode('PREVIEW');
+        };
+        reader.readAsDataURL(file);
     }, []);
 
     // ── Selection Handlers ──
     const handleSelectCamera = () => setViewMode('CAMERA');
     const handleSelectGallery = () => fileInputRef.current?.click();
+    const handleSelectMap = () => setViewMode('MAP');
 
     const handleSubmit = () => {
+        const finalLat = pinnedLocation?.lat || geo.lat || 3.163845;
+        const finalLng = pinnedLocation?.lng || geo.lng || 101.70193;
+
         const autoTags: AutoTags = {
-            lat: 3.163845,
-            lng: 101.70193,
-            accuracy: geo.accuracy ?? 0,
+            lat: finalLat,
+            lng: finalLng,
+            accuracy: pinnedLocation ? 1.0 : (geo.accuracy ?? 0), // Pinned location is considered precise
             timestamp: new Date().toISOString(),
             compassHeading: geo.heading,
         };
         onSubmit({ photoDataURLs, category, description, autoTags });
     };
 
-
-
     const canSubmit = category !== undefined && photoDataURLs.length > 0;
+    const currentPos: [number, number] = [pinnedLocation?.lat || geo.lat || 3.163845, pinnedLocation?.lng || geo.lng || 101.70193];
 
     return (
         <div className="emergency-mode">
-            {/* ── Top Half: Controls ── */}
-            {/* ── Evidence Layer (Instagram Inspired) ── */}
             <div className="emergency-evidence-layer">
-                {/* ── Top Header and Info ── */}
                 <div className="emergency-info-panel">
                     <div className="emergency-header">
                         <div className="emergency-title">
@@ -102,20 +123,27 @@ export default function EmergencyMode({ onSubmit, onCancel }: EmergencyModeProps
                         </button>
                     </div>
 
-                    {/* Auto Tags */}
                     <div className="auto-tags">
-                        <div className="auto-tag">
+                        <div className={`auto-tag ${pinnedLocation ? 'border-cyan-500 text-cyan-400' : ''}`}>
                             <span className="auto-tag-icon">📍</span>
-                            {geo.lat ? `${geo.lat.toFixed(4)}, ${geo.lng?.toFixed(4)}` : 'Locating...'}
+                            {pinnedLocation ? 'Pinned: ' : ''}{currentPos[0].toFixed(4)}, {currentPos[1].toFixed(4)}
+                            {pinnedLocation && <button className="ml-2 text-[10px] underline" onClick={() => setPinnedLocation(null)}>Reset</button>}
                         </div>
                         <div className="auto-tag">
                             <span className="auto-tag-icon">🕐</span>
                             {new Date().toLocaleTimeString()}
                         </div>
+                        <button 
+                            className={`auto-tag auto-tag--btn ${viewMode === 'MAP' ? 'active' : ''}`}
+                            onClick={() => setViewMode('MAP')}
+                        >
+                            <span className="auto-tag-icon">🗺️</span>
+                            {pinnedLocation ? 'Change Pin' : 'Manual Pin'}
+                        </button>
+
                     </div>
                 </div>
 
-                {/* ── Content Area: Camera/Selection (NOW AT TOP) ── */}
                 <div className="emergency-visual-area">
                     {/* 1. SELECTION VIEW */}
                     {viewMode === 'SELECTION' && (
@@ -133,6 +161,7 @@ export default function EmergencyMode({ onSubmit, onCancel }: EmergencyModeProps
                                     <span className="selection-label">Upload Photo</span>
                                 </button>
                             </div>
+
                             {photoDataURLs.length > 0 && (
                                 <button className="back-to-preview-btn" onClick={() => setViewMode('PREVIEW')}>
                                     Back to Review ({photoDataURLs.length})
@@ -144,111 +173,100 @@ export default function EmergencyMode({ onSubmit, onCancel }: EmergencyModeProps
                     {/* 2. CAMERA VIEW */}
                     {viewMode === 'CAMERA' && (
                         <div className="emergency-camera-view">
-                            <video
-                                ref={videoRef}
-                                className="camera-video"
-                                autoPlay
-                                playsInline
-                                muted
-                            />
+                            <video ref={videoRef} className="camera-video" autoPlay playsInline muted />
                             {isActive && (
                                 <div className="camera-overlay">
                                     <div className="camera-crosshair" />
-                                    <button
-                                        className="capture-btn"
-                                        onClick={handleCapture}
-                                        aria-label="Capture photo"
-                                        id="capture-btn"
-                                    >
-                                        📸
-                                    </button>
-                                    <button
-                                        className="back-btn-floating"
-                                        onClick={() => setViewMode(photoDataURLs.length > 0 ? 'PREVIEW' : 'SELECTION')}
-                                    >
-                                        ↩
-                                    </button>
+                                    <button className="capture-btn" onClick={handleCapture} aria-label="Capture photo" id="capture-btn">📸</button>
+                                    <button className="back-btn-floating" onClick={() => setViewMode(photoDataURLs.length > 0 ? 'PREVIEW' : 'SELECTION')}>↩</button>
                                 </div>
                             )}
                             {camError && (
                                 <div className="camera-error">
                                     <div className="camera-error-icon">📷</div>
-                                    <p>Camera access denied</p>
+                                    <p>{camError}</p>
                                 </div>
                             )}
                         </div>
                     )}
 
-                    {/* 3. PREVIEW VIEW (Multi-Image) */}
+                    {/* 3. PREVIEW VIEW */}
                     {viewMode === 'PREVIEW' && (
                         <div className="photo-preview-container">
                             <div className="preview-grid">
                                 {photoDataURLs.map((url, index) => (
                                     <div key={index} className="preview-item">
                                         <img src={url} alt={`Evidence ${index + 1}`} />
-                                        <button
-                                            className="delete-photo-btn"
-                                            onClick={() => handleDeletePhoto(index)}
-                                            aria-label="Delete photo"
-                                        >
-                                            ✕
-                                        </button>
+                                        <button className="delete-photo-btn" onClick={() => handleDeletePhoto(index)} aria-label="Delete photo">✕</button>
                                         <div className="preview-index-badge">{index + 1} / {photoDataURLs.length}</div>
                                     </div>
                                 ))}
                             </div>
+                            <button className="add-more-card" onClick={() => setViewMode('SELECTION')} aria-label="Add more photos"><span className="add-more-icon">+</span></button>
+                        </div>
+                    )}
 
-                            {/* Floating Add Button */}
-                            <button className="add-more-card" onClick={() => setViewMode('SELECTION')} aria-label="Add more photos">
-                                <span className="add-more-icon">+</span>
-                            </button>
+                    {/* 4. MAP PICKER VIEW */}
+                    {viewMode === 'MAP' && (
+                        <div className="emergency-map-picker">
+                            <MapContainer center={currentPos} zoom={16} style={{ width: '100%', height: '100%' }}>
+                                <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" attribution='&copy; CARTO' />
+                                <Marker position={currentPos} icon={pinIcon} />
+                                <MapPicker onLocationSelect={(lat, lng) => setPinnedLocation({ lat, lng })} initialPos={currentPos} />
+                            </MapContainer>
+                            <div className="map-picker-overlay">
+                                <div className="map-picker-hint">Tap on map to pin location</div>
+                                <button className="map-confirm-btn" onClick={() => setViewMode(photoDataURLs.length > 0 ? 'PREVIEW' : 'SELECTION')}>
+                                    Confirm Location
+                                </button>
+                            </div>
                         </div>
                     )}
                 </div>
 
-                {/* ── Briefing Panel (Description) ── */}
-                <div className="flex flex-col flex-1 p-6 gap-4 overflow-y-auto">
-                    <div className="flex items-center gap-2 text-cyan-400 font-bold text-sm tracking-wider uppercase">
+                <div className="flex flex-col flex-1 p-6 gap-6 overflow-y-auto bg-white/[0.02]">
+                    <div className="flex items-center gap-2 text-cyan-400 font-bold text-[10px] tracking-[0.25em] uppercase opacity-70">
                         <span>📝</span>
                         <span>SITUATION BRIEFING</span>
                     </div>
-                    <textarea
-                        className="w-full flex-1 min-h-[120px] bg-white/5 border border-white/10 rounded-xl p-4 text-white text-base resize-none focus:outline-none focus:border-cyan-500/50 transition-colors placeholder:text-gray-500"
-                        placeholder="Describe the situation... (e.g. Water rising quickly)"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        id="report-description"
-                    />
+                    <div className="relative flex-1 flex flex-col">
+                        <textarea
+                            className="w-full flex-1 min-h-[140px] bg-black/40 border border-white/10 rounded-2xl p-5 text-white text-lg resize-none focus:outline-none focus:border-cyan-500/50 focus:ring-4 focus:ring-cyan-500/10 transition-all placeholder:text-gray-600 leading-relaxed shadow-inner"
+                            placeholder="What's happening? (e.g. Water is knee-deep and rising quickly...)"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            id="report-description"
+                        />
+                        <div className="absolute bottom-4 right-4 text-[10px] text-gray-500 font-mono opacity-50">
+                            {description.length} CHARS
+                        </div>
+                    </div>
 
-                    {/* ── Submit Button (Now inside panel) ── */}
                     <button
-                        className={`w-full py-4 rounded-xl font-bold text-white text-lg tracking-wide uppercase transition-all duration-300 shadow-lg flex flex-col items-center justify-center gap-1
+                        className={`w-full py-5 rounded-2xl font-black text-white text-xl tracking-wider uppercase transition-all duration-500 shadow-2xl flex flex-col items-center justify-center gap-1 group relative overflow-hidden
                             ${canSubmit
-                                ? 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 hover:-translate-y-0.5 shadow-red-600/30'
-                                : 'bg-gray-800 text-gray-500 cursor-not-allowed border border-white/5'
+                                ? 'bg-gradient-to-br from-red-600 via-red-500 to-orange-600 hover:scale-[1.02] active:scale-[0.98] shadow-red-600/40 cursor-pointer'
+                                : 'bg-white/5 text-gray-600 cursor-not-allowed border border-white/5'
                             }`}
                         onClick={handleSubmit}
                         disabled={!canSubmit}
                         id="submit-report-btn"
                     >
-                        <span>SUBMIT REPORT</span>
-                        <span className="text-xs opacity-80 font-medium normal-case">
-                            {photoDataURLs.length > 0 ? `${photoDataURLs.length} Photos Attached` : 'Evidence Required'}
+                        {canSubmit && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
+                        )}
+                        <span className="relative z-10">SUBMIT REPORT</span>
+                        <span className="text-[10px] opacity-70 font-bold tracking-widest normal-case relative z-10">
+                            {photoDataURLs.length > 0 ? `${photoDataURLs.length} EVIDENCE FILES ATTACHED` : 'EVIDENCE REQUIRED'}
                         </span>
                     </button>
-                    <p className="text-xs text-gray-500 text-center">
-                        AI verification will begin immediately after submission.
-                    </p>
+                    <div className="flex items-center justify-center gap-2 text-[10px] text-gray-500 font-bold tracking-widest opacity-60">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+                        AI SENTINEL ACTIVE
+                    </div>
                 </div>
 
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    style={{ display: 'none' }}
-                    id="emergency-file-input"
-                />
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} id="emergency-file-input" />
             </div>
         </div>
     );

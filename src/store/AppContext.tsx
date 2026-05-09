@@ -2,11 +2,13 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { Location, Shelter, DailyPrediction, Route, Coordinates, TransportMode } from '../types/app';
 import type { FloodReport, HumanReview } from '../types/report';
-import { DEFAULT_POSITION } from '../data/locations';
+import { DEFAULT_POSITION, IOT_SENSOR_LOCATION } from '../data/locations';
 import { generateDailyPrediction } from '../utils/predictionGenerator';
 import { calculateRoute } from '../utils/pathfinding';
 import { fetchReports, saveReport, updateReportHumanReview, INITIAL_REPORTS } from '../services/reportsService';
 import { useBluetooth } from '../hooks/useBluetooth';
+import { ReportCategory, VerificationStatus, HumanReviewStatus } from '../types/report';
+import { useRef } from 'react';
 
 interface AppState {
     selectedLocation: Location | null;
@@ -58,6 +60,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // IoT Hook
     const iot = useBluetooth();
+    const lastTriggeredStatus = useRef<'SAFE' | 'WARNING' | 'DANGER' | null>(null);
+
 
     // Fetch from Firestore in the background; replace state when ready.
     // fetchReports() handles all deduplication internally.
@@ -201,6 +205,60 @@ export function AppProvider({ children }: { children: ReactNode }) {
             floodReports: [],
         });
     }, []);
+
+    // Automated IoT Report Trigger - Defined after all functions it depends on
+    useEffect(() => {
+        // Trigger only on DANGER and if status changed or report was deleted
+        if (iot.status === 'DANGER') {
+            // 1. Daily Limit Check: Check if a sensor report already exists for today
+            const today = new Date().toDateString();
+            const sensorDescription = "Water reach dangerous zone at location";
+            
+            const hasReportedToday = state.floodReports.some(r => 
+                r.description === sensorDescription && 
+                new Date(r.createdAt).toDateString() === today
+            );
+
+            if (!hasReportedToday) {
+                console.log('🚨 [IoT] Danger detected and no report for today. Generating automated report...');
+                
+                const timestamp = new Date().toISOString();
+                const automatedReport: FloodReport = {
+                    id: `iot-auto-${Date.now()}`, // Temporary ID for local state
+                    photoDataURLs: ['/water-level.png'],
+                    category: ReportCategory.RISING_WATER,
+                    description: sensorDescription,
+                    autoTags: {
+                        lat: IOT_SENSOR_LOCATION.position.lat,
+                        lng: IOT_SENSOR_LOCATION.position.lng,
+                        accuracy: 5,
+                        timestamp: timestamp,
+                        compassHeading: null,
+                    },
+                    aiResult: {
+                        confidence: 100,
+                        status: VerificationStatus.VERIFIED,
+                        waterDetected: true,
+                        depthEstimate: 'Critical',
+                        anomalies: [],
+                        crossRefStatus: 'CONSISTENT',
+                        summary: "Automated sensor detection: Critical water level reached at monitoring station.",
+                    },
+                    humanReview: {
+                        status: HumanReviewStatus.PENDING,
+                        reviewedAt: null,
+                        moderatorNote: null,
+                    },
+                    createdAt: timestamp,
+                };
+
+                // Add to local state (this also triggers persistence to Firestore in addFloodReport)
+                addFloodReport(automatedReport);
+            }
+        }
+        
+        lastTriggeredStatus.current = iot.status;
+    }, [iot.status, state.floodReports, addFloodReport]);
 
     return (
         <AppContext.Provider
