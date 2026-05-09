@@ -1,6 +1,6 @@
-// Sign Up Page — FloodWay · Blue/White/Black · Clean human-centric design
+// Sign Up Page — FloodWay · Floating Card Layout
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, Waves } from 'lucide-react';
 
@@ -22,28 +22,27 @@ const GoogleIcon = () => (
     </svg>
 );
 
-function UnderlineInput({
-    id, type = 'text', placeholder, value, onChange, required, disabled, minLength, rightElement
+function RoundedInput({
+    id, type = 'text', placeholder, label, value, onChange, required, disabled, minLength, rightElement
 }: {
-    id: string; type?: string; placeholder: string; value: string;
+    id: string; type?: string; placeholder: string; label: string; value: string;
     onChange: (v: string) => void; required?: boolean; disabled?: boolean;
     minLength?: number; rightElement?: React.ReactNode;
 }) {
-    const [focused, setFocused] = useState(false);
     return (
-        <div className="relative">
-            <input
-                id={id} type={type} placeholder={placeholder} value={value}
-                onChange={e => onChange(e.target.value)}
-                required={required} disabled={disabled} minLength={minLength}
-                onFocus={() => setFocused(true)}
-                onBlur={() => setFocused(false)}
-                className="w-full h-[50px] bg-transparent border-0 border-b text-slate-100 text-[0.88rem] font-medium placeholder:text-slate-600 outline-none pb-2 pr-10 transition-all duration-200"
-                style={{ borderBottomColor: focused ? '#1A73E8' : 'rgba(255,255,255,0.12)' }}
-            />
-            {rightElement && (
-                <div className="absolute right-0 top-3">{rightElement}</div>
-            )}
+        <div className="flex flex-col gap-2">
+            <label htmlFor={id} className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest px-1">{label}</label>
+            <div className="relative">
+                <input
+                    id={id} type={type} placeholder={placeholder} value={value}
+                    onChange={e => onChange(e.target.value)}
+                    required={required} disabled={disabled} minLength={minLength}
+                    className="w-full h-14 bg-[#F1F5F9] border-none rounded-2xl px-6 text-[#111827] font-semibold placeholder:text-slate-300 focus:ring-2 focus:ring-[#1A73E8] outline-none transition-all"
+                />
+                {rightElement && (
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2">{rightElement}</div>
+                )}
+            </div>
         </div>
     );
 }
@@ -65,7 +64,7 @@ export function SignUpPage() {
         e.preventDefault();
         setError('');
         if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
-        if (name.trim().length < 2) { setError('Please enter your full name (at least 2 characters).'); return; }
+        if (name.trim().length < 2) { setError('Please enter your full name.'); return; }
         setLoading(true);
         const { error: err } = await signUp(email, password, name.trim());
         if (err) { setError(err.message); setLoading(false); }
@@ -83,122 +82,112 @@ export function SignUpPage() {
 
     const eyeBtn = (
         <button type="button" onClick={() => setShowPassword(!showPassword)}
-            className="text-slate-500 hover:text-slate-300 transition-colors bg-transparent border-none cursor-pointer p-0">
-            {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+            className="text-slate-300 hover:text-slate-500 transition-colors bg-transparent border-none cursor-pointer p-0">
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
         </button>
     );
 
     return (
-        <div className="min-h-dvh bg-[#060C18] flex flex-col items-center justify-center relative overflow-hidden p-5">
+        <div className="min-h-dvh bg-[#F8FAFC] flex items-center justify-center relative overflow-hidden p-6">
             <style>{`
-                @keyframes floatA { 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(-20px,-30px); } }
-                @keyframes floatB { 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(25px,20px); } }
-                @keyframes cardIn { from{ opacity:0; transform:translateY(28px); } to{ opacity:1; transform:translateY(0); } }
+                @keyframes cardFloat { from{ opacity:0; transform:translateY(30px); } to{ opacity:1; transform:translateY(0); } }
+                .auth-bg {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 50dvh;
+                    background: linear-gradient(135deg, #1A73E8 0%, #0D47A1 100%);
+                    z-index: 0;
+                }
+                .auth-wave {
+                    position: absolute;
+                    bottom: -1px;
+                    left: 0;
+                    width: 100%;
+                    line-height: 0;
+                    fill: #F8FAFC;
+                }
+                .auth-card {
+                    background: white;
+                    border-radius: 32px;
+                    box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+                    width: 100%;
+                    max-width: 440px;
+                    padding: 40px;
+                    position: relative;
+                    z-index: 10;
+                    animation: cardFloat 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+                    max-height: 95dvh;
+                    overflow-y: auto;
+                }
+                .auth-card::-webkit-scrollbar { display: none; }
             `}</style>
 
-            {/* Background orbs */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute w-[50vw] h-[50vw] max-w-[500px] max-h-[500px] rounded-full blur-[120px] opacity-[0.10]"
-                    style={{ background: 'radial-gradient(circle, #1A73E8, transparent)', top: '-15%', left: '-10%', animation: 'floatA 14s ease-in-out infinite' }} />
-                <div className="absolute w-[40vw] h-[40vw] max-w-[380px] max-h-[380px] rounded-full blur-[100px] opacity-[0.07]"
-                    style={{ background: 'radial-gradient(circle, #4A90E2, transparent)', bottom: '-10%', right: '-8%', animation: 'floatB 18s ease-in-out infinite' }} />
+            {/* Bottom Layer: Background & Wave */}
+            <div className="auth-bg">
+                <div className="auth-wave">
+                    <svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,149.3C672,149,768,203,864,202.7C960,203,1056,149,1152,122.7C1248,96,1344,96,1392,96L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+                    </svg>
+                </div>
             </div>
 
-            <div className="absolute inset-0 pointer-events-none opacity-[0.025]"
-                style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-
-            {/* Card */}
-            <div className="relative z-10 w-full max-w-[400px] max-h-[95dvh] overflow-y-auto"
-                style={{ animation: 'cardIn 0.65s cubic-bezier(0.22,1,0.36,1) both' }}>
-
-                {/* Logo */}
-                <div className="flex flex-col items-center mb-7">
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                        style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', boxShadow: '0 0 32px rgba(26,115,232,0.4)' }}>
-                        <Waves className="w-7 h-7 text-white" />
+            {/* Top Layer: Floating Card */}
+            <div className="auth-card scrollbar-hide">
+                <div className="flex flex-col items-center mb-8">
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
+                        style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', boxShadow: '0 8px 32px rgba(26,115,232,0.2)' }}>
+                        <Waves className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-[1.75rem] font-black text-white tracking-tight leading-none">
-                        Create your account
-                    </h1>
-                    <p className="text-slate-400 text-[0.78rem] mt-1.5 font-medium">
-                        AI-powered flood monitoring &amp; early warning
-                    </p>
+                    <h2 className="text-[#111827] text-2xl font-black tracking-tight">Create Account</h2>
+                    <p className="text-slate-400 text-sm font-medium mt-1">Join the FloodWay network today</p>
                 </div>
 
-                {/* Error */}
                 {error && (
-                    <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-[0.78rem] font-semibold text-center">
+                    <div className="mb-6 px-4 py-3 rounded-2xl bg-red-50 text-red-500 text-xs font-bold text-center border border-red-100">
                         {error}
                     </div>
                 )}
 
-                {/* Google */}
+                <form onSubmit={handleSignUp} className="flex flex-col gap-4">
+                    <RoundedInput id="name" label="Full Name" placeholder="Ahmad Farid" value={name} onChange={setName} required disabled={busy} />
+                    <RoundedInput id="email" label="Email Address" type="email" placeholder="name@example.com" value={email} onChange={setEmail} required disabled={busy} />
+                    <RoundedInput id="password" label="Password" type={showPassword ? 'text' : 'password'} placeholder="Min. 6 characters"
+                        value={password} onChange={setPassword} required disabled={busy} minLength={6} rightElement={eyeBtn} />
+                    <RoundedInput id="confirmPassword" label="Confirm Password" type={showPassword ? 'text' : 'password'} placeholder="Repeat password"
+                        value={confirmPassword} onChange={setConfirmPassword} required disabled={busy} minLength={6} />
+
+                    <button
+                        type="submit"
+                        disabled={busy}
+                        className="w-full h-14 rounded-2xl text-[1rem] font-bold text-white transition-all duration-300 mt-2"
+                        style={{ background: 'linear-gradient(135deg, #1A73E8 0%, #0D47A1 100%)', boxShadow: '0 8px 25px rgba(26,115,232,0.25)' }}
+                    >
+                        {loading ? <Spinner /> : 'Create Account'}
+                    </button>
+                </form>
+
+                <div className="flex items-center gap-3 my-6">
+                    <div className="flex-1 h-px bg-slate-100" />
+                    <span className="text-[0.65rem] text-slate-300 font-bold uppercase tracking-widest">OR</span>
+                    <div className="flex-1 h-px bg-slate-100" />
+                </div>
+
                 <button
-                    id="google-signup-btn"
                     onClick={handleGoogle}
                     disabled={busy}
-                    className="w-full h-[52px] flex items-center justify-center gap-3 rounded-2xl border text-[0.88rem] font-semibold text-white mb-5 transition-all duration-200 disabled:opacity-50"
-                    style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.12)' }}
-                    onMouseEnter={e => { if (!busy) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.20)'; } }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.12)'; }}
+                    className="w-full h-14 flex items-center justify-center gap-3 rounded-2xl border-2 border-slate-50 text-[0.92rem] font-bold text-slate-600 mb-6 transition-all hover:bg-slate-50"
                 >
                     {googleLoading ? <Spinner /> : <GoogleIcon />}
                     Continue with Google
                 </button>
 
-                {/* Divider */}
-                <div className="flex items-center gap-3 mb-5">
-                    <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
-                    <span className="text-[0.62rem] text-slate-600 font-semibold uppercase tracking-widest">or email</span>
-                    <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
-                </div>
-
-                {/* Form */}
-                <form onSubmit={handleSignUp} className="flex flex-col gap-4">
-                    <div className="flex flex-col gap-1.5">
-                        <label htmlFor="name" className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-[0.15em]">Full Name</label>
-                        <UnderlineInput id="name" placeholder="Ahmad Farid" value={name} onChange={setName} required disabled={busy} />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                        <label htmlFor="email" className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-[0.15em]">Email Address</label>
-                        <UnderlineInput id="email" type="email" placeholder="name@example.com" value={email} onChange={setEmail} required disabled={busy} />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                        <label htmlFor="password" className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-[0.15em]">Password</label>
-                        <UnderlineInput id="password" type={showPassword ? 'text' : 'password'} placeholder="Min. 6 characters"
-                            value={password} onChange={setPassword} required disabled={busy} minLength={6} rightElement={eyeBtn} />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                        <label htmlFor="confirmPassword" className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-[0.15em]">Confirm Password</label>
-                        <UnderlineInput id="confirmPassword" type={showPassword ? 'text' : 'password'} placeholder="Repeat password"
-                            value={confirmPassword} onChange={setConfirmPassword} required disabled={busy} minLength={6} />
-                    </div>
-
-                    <button
-                        type="submit"
-                        id="email-signup-btn"
-                        disabled={busy}
-                        className="mt-2 w-full h-[52px] rounded-2xl text-[0.88rem] font-bold text-white flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-60"
-                        style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', boxShadow: '0 4px 20px rgba(26,115,232,0.3)' }}
-                    >
-                        {loading ? <><Spinner /> Creating account…</> : 'Create Account'}
-                    </button>
-                </form>
-
-                {/* Sign in link */}
-                <p className="text-center text-[0.82rem] text-slate-500 font-medium mt-5">
+                <p className="text-center text-sm text-slate-400 font-medium">
                     Already have an account?{' '}
-                    <Link to="/" className="font-bold no-underline transition-colors"
-                        style={{ color: '#4A90E2', borderBottom: '1px solid rgba(74,144,226,0.35)' }}>
-                        Sign in
-                    </Link>
-                </p>
-
-                <p className="text-center text-[0.60rem] text-slate-700 mt-4">
-                    Flood Monitoring &amp; Navigation System · Kuala Lumpur Region
+                    <button type="button" onClick={() => navigate('/')} className="font-bold text-[#1A73E8] hover:underline">
+                        Sign In
+                    </button>
                 </p>
             </div>
         </div>

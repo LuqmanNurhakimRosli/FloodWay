@@ -1,10 +1,9 @@
-// Login Page — FloodWay · Blue/White/Black · Squarespace-inspired clean design
+// Login Page — FloodWay · Floating Card Layout
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Mail, Eye, EyeOff, Waves } from 'lucide-react';
+import { Eye, EyeOff, Waves, Mail } from 'lucide-react';
 
-/* ─── Helpers ─── */
 function Spinner() {
     return (
         <svg className="w-[18px] h-[18px] shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -52,88 +51,106 @@ export function LoginPage() {
     const busy = loading || gLoading;
 
     return (
-        <div className="min-h-dvh bg-[#060C18] flex flex-col items-center justify-center relative overflow-hidden p-5">
-            {/* Keyframes */}
+        <div className="min-h-dvh bg-[#F8FAFC] flex items-center justify-center relative overflow-hidden p-6">
             <style>{`
-                @keyframes floatA { 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(-20px,-30px); } }
-                @keyframes floatB { 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(25px,20px); } }
-                @keyframes cardIn { from{ opacity:0; transform:translateY(28px); } to{ opacity:1; transform:translateY(0); } }
-                @keyframes slideExpand { from{ opacity:0; transform:translateY(-8px); } to{ opacity:1; transform:translateY(0); } }
+                @keyframes cardFloat { from{ opacity:0; transform:translateY(30px); } to{ opacity:1; transform:translateY(0); } }
+                .auth-bg {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 50dvh;
+                    background: linear-gradient(135deg, #1A73E8 0%, #0D47A1 100%);
+                    z-index: 0;
+                }
+                .auth-wave {
+                    position: absolute;
+                    bottom: -1px;
+                    left: 0;
+                    width: 100%;
+                    line-height: 0;
+                    fill: #F8FAFC;
+                }
+                .auth-card {
+                    background: white;
+                    border-radius: 32px;
+                    box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+                    width: 100%;
+                    max-width: 440px;
+                    padding: 48px 40px;
+                    position: relative;
+                    z-index: 10;
+                    animation: cardFloat 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+                }
             `}</style>
 
-            {/* Background orbs */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute w-[50vw] h-[50vw] max-w-[500px] max-h-[500px] rounded-full blur-[120px] opacity-[0.12]"
-                    style={{ background: 'radial-gradient(circle, #1A73E8, transparent)', top: '-15%', right: '-10%', animation: 'floatA 14s ease-in-out infinite' }} />
-                <div className="absolute w-[40vw] h-[40vw] max-w-[400px] max-h-[400px] rounded-full blur-[100px] opacity-[0.08]"
-                    style={{ background: 'radial-gradient(circle, #4A90E2, transparent)', bottom: '-10%', left: '-8%', animation: 'floatB 18s ease-in-out infinite' }} />
+            {/* Bottom Layer: Background & Wave */}
+            <div className="auth-bg">
+                <div className="auth-wave">
+                    <svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,149.3C672,149,768,203,864,202.7C960,203,1056,149,1152,122.7C1248,96,1344,96,1392,96L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+                    </svg>
+                </div>
             </div>
 
-            {/* Grid dots */}
-            <div className="absolute inset-0 pointer-events-none opacity-[0.025]"
-                style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-
-            {/* Card */}
-            <div
-                className="relative z-10 w-full max-w-[400px]"
-                style={{ animation: 'cardIn 0.65s cubic-bezier(0.22,1,0.36,1) both' }}
-            >
-                {/* Logo */}
-                <div className="flex flex-col items-center mb-8">
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5"
-                        style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', boxShadow: '0 0 32px rgba(26,115,232,0.4)' }}>
-                        <Waves className="w-7 h-7 text-white" />
+            {/* Top Layer: Floating Card */}
+            <div className="auth-card">
+                <div className="flex flex-col items-center mb-10">
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
+                        style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', boxShadow: '0 8px 32px rgba(26,115,232,0.2)' }}>
+                        <Waves className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-[1.85rem] font-black text-white tracking-tight leading-none">
-                        Sign in to FloodWay
-                    </h1>
-                    <p className="text-slate-400 text-[0.78rem] mt-2 font-medium">
-                        Flood Monitoring &amp; Early Warning System
-                    </p>
+                    <h2 className="text-[#111827] text-2xl font-black tracking-tight">Welcome back !</h2>
+                    <p className="text-slate-400 text-sm font-medium mt-1">Sign in to continue your session</p>
                 </div>
 
-                {/* Error */}
                 {error && (
-                    <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-[0.78rem] font-semibold text-center">
+                    <div className="mb-6 px-4 py-3 rounded-2xl bg-red-50 text-red-500 text-xs font-bold text-center border border-red-100">
                         {error}
                     </div>
                 )}
 
-                {/* Google button */}
-                <button
-                    id="google-signin-btn"
-                    onClick={handleGoogle}
-                    disabled={busy}
-                    className="w-full h-[52px] flex items-center justify-center gap-3 rounded-2xl border text-[0.88rem] font-semibold text-white mb-3 transition-all duration-200 disabled:opacity-50"
-                    style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.12)' }}
-                    onMouseEnter={e => { if (!busy) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.20)'; } }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.12)'; }}
-                >
-                    {gLoading ? <Spinner /> : <GoogleIcon />}
-                    Continue with Google
-                </button>
-
-                {/* Email toggle / form */}
                 {!showEmail ? (
-                    <button
-                        id="email-toggle-btn"
-                        onClick={() => setShowEmail(true)}
-                        disabled={busy}
-                        className="w-full h-[52px] flex items-center justify-center gap-3 rounded-2xl text-[0.88rem] font-bold text-white transition-all duration-200 disabled:opacity-50"
-                        style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', boxShadow: '0 4px 20px rgba(26,115,232,0.3)' }}
-                        onMouseEnter={e => { if (!busy) (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px rgba(26,115,232,0.5)'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 20px rgba(26,115,232,0.3)'; }}
-                    >
-                        <Mail size={18} />
-                        Continue with Email
-                    </button>
+                    <div className="flex flex-col gap-4">
+                        <button
+                            id="email-toggle-btn"
+                            onClick={() => setShowEmail(true)}
+                            disabled={busy}
+                            className="w-full h-14 rounded-2xl text-[1rem] font-bold text-white transition-all duration-300"
+                            style={{ background: 'linear-gradient(135deg, #1A73E8 0%, #0D47A1 100%)', boxShadow: '0 8px 25px rgba(26,115,232,0.25)' }}
+                        >
+                            Login with Email
+                        </button>
+                        
+                        <button
+                            id="create-account-btn"
+                            onClick={() => navigate('/signup')}
+                            className="w-full h-14 rounded-2xl text-[1rem] font-bold text-[#1A73E8] border-2 border-[#1A73E8]/20 transition-all bg-white hover:bg-slate-50"
+                        >
+                            Create Account
+                        </button>
+
+                        <div className="flex items-center gap-3 my-6">
+                            <div className="flex-1 h-px bg-slate-100" />
+                            <span className="text-[0.65rem] text-slate-300 font-bold uppercase tracking-widest">OR CONNECT WITH</span>
+                            <div className="flex-1 h-px bg-slate-100" />
+                        </div>
+
+                        <div className="flex flex-col gap-4">
+                            <button
+                                onClick={handleGoogle}
+                                disabled={busy}
+                                className="w-full h-14 flex items-center justify-center gap-3 rounded-2xl border-2 border-slate-50 text-[0.92rem] font-bold text-slate-600 transition-all hover:bg-slate-50"
+                            >
+                                {gLoading ? <Spinner /> : <GoogleIcon />}
+                                Continue with Google
+                            </button>
+                        </div>
+                    </div>
                 ) : (
-                    <form onSubmit={handleEmail} className="flex flex-col gap-3" style={{ animation: 'slideExpand 0.3s ease both' }}>
-                        {/* Email field */}
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-[0.15em]">
-                                Email Address
-                            </label>
+                    <form onSubmit={handleEmail} className="flex flex-col gap-5">
+                        <div className="flex flex-col gap-2">
+                            <label className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest px-1">Email Address</label>
                             <input
                                 type="email"
                                 placeholder="name@example.com"
@@ -141,38 +158,31 @@ export function LoginPage() {
                                 onChange={e => setEmail(e.target.value)}
                                 required
                                 disabled={busy}
-                                className="h-[50px] bg-transparent border-0 border-b text-slate-100 text-[0.88rem] font-medium placeholder:text-slate-600 outline-none transition-all duration-200 pb-2"
-                                style={{ borderBottomColor: 'rgba(255,255,255,0.12)' }}
-                                onFocus={e => { (e.currentTarget as HTMLElement).style.borderBottomColor = '#1A73E8'; }}
-                                onBlur={e => { (e.currentTarget as HTMLElement).style.borderBottomColor = 'rgba(255,255,255,0.12)'; }}
+                                className="w-full h-14 bg-[#F1F5F9] border-none rounded-2xl px-6 text-[#111827] font-semibold placeholder:text-slate-300 focus:ring-2 focus:ring-[#1A73E8] outline-none transition-all"
                             />
                         </div>
 
-                        {/* Password field */}
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-[0.15em]">
-                                Password
-                            </label>
+                        <div className="flex flex-col gap-2">
+                            <div className="flex items-center justify-between px-1">
+                                <label className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest">Password</label>
+                                <button type="button" className="text-[0.65rem] font-bold text-[#1A73E8] hover:underline uppercase tracking-widest">Forgot?</button>
+                            </div>
                             <div className="relative">
                                 <input
                                     type={showPw ? 'text' : 'password'}
-                                    placeholder="Password"
+                                    placeholder="••••••••"
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
                                     required
-                                    minLength={6}
                                     disabled={busy}
-                                    className="w-full h-[50px] bg-transparent border-0 border-b text-slate-100 text-[0.88rem] font-medium placeholder:text-slate-600 outline-none pr-10 pb-2 transition-all duration-200"
-                                    style={{ borderBottomColor: 'rgba(255,255,255,0.12)' }}
-                                    onFocus={e => { (e.currentTarget as HTMLElement).style.borderBottomColor = '#1A73E8'; }}
-                                    onBlur={e => { (e.currentTarget as HTMLElement).style.borderBottomColor = 'rgba(255,255,255,0.12)'; }}
+                                    className="w-full h-14 bg-[#F1F5F9] border-none rounded-2xl px-6 text-[#111827] font-semibold placeholder:text-slate-300 focus:ring-2 focus:ring-[#1A73E8] outline-none pr-12 transition-all"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPw(!showPw)}
-                                    className="absolute right-0 top-3 text-slate-500 hover:text-slate-300 transition-colors bg-transparent border-none cursor-pointer p-0"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors"
                                 >
-                                    {showPw ? <EyeOff size={17} /> : <Eye size={17} />}
+                                    {showPw ? <EyeOff size={20} /> : <Eye size={20} />}
                                 </button>
                             </div>
                         </div>
@@ -180,38 +190,25 @@ export function LoginPage() {
                         <button
                             type="submit"
                             disabled={busy}
-                            className="mt-2 w-full h-[52px] rounded-2xl text-[0.88rem] font-bold text-white flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-60"
-                            style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', boxShadow: '0 4px 20px rgba(26,115,232,0.3)' }}
+                            className="w-full h-14 rounded-2xl text-[1rem] font-bold text-white transition-all duration-300 mt-2"
+                            style={{ background: 'linear-gradient(135deg, #1A73E8 0%, #0D47A1 100%)', boxShadow: '0 8px 25px rgba(26,115,232,0.25)' }}
                         >
-                            {loading ? <><Spinner /> Signing in…</> : 'Log In'}
+                            {loading ? <Spinner /> : 'Sign In'}
                         </button>
+
+                        <p className="text-center text-sm text-slate-400 font-medium mt-2">
+                            New here?{' '}
+                            <button type="button" onClick={() => navigate('/signup')} className="font-bold text-[#1A73E8] hover:underline">
+                                Create Account
+                            </button>
+                        </p>
                     </form>
                 )}
+            </div>
 
-                {/* Divider */}
-                <div className="flex items-center gap-3 my-5">
-                    <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
-                    <span className="text-[0.62rem] text-slate-600 font-semibold uppercase tracking-widest">or</span>
-                    <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
-                </div>
-
-                {/* Sign up */}
-                <p className="text-center text-[0.82rem] text-slate-500 font-medium">
-                    Don't have an account?{' '}
-                    <Link to="/signup"
-                        className="font-bold no-underline transition-colors"
-                        style={{ color: '#4A90E2', borderBottom: '1px solid rgba(74,144,226,0.35)' }}>
-                        Create account
-                    </Link>
-                </p>
-
-                {/* Footer */}
-                <p className="text-center text-[0.60rem] text-slate-700 mt-5">
-                    By signing in, you agree to our{' '}
-                    <span className="cursor-pointer" style={{ color: '#4A90E2' }}>Terms of Service</span>
-                    {' '}and{' '}
-                    <span className="cursor-pointer" style={{ color: '#4A90E2' }}>Privacy Policy</span>
-                </p>
+            {/* Version Badge */}
+            <div className="absolute bottom-6 left-0 w-full text-center pointer-events-none">
+                <p className="text-[0.65rem] text-slate-300 font-bold tracking-[0.2em] uppercase">FloodWay System v2.1.0</p>
             </div>
         </div>
     );

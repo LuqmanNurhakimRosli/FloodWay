@@ -25,15 +25,17 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-dvh flex items-center justify-center" style={{ background: '#060C18' }}>
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', boxShadow: '0 0 32px rgba(26,115,232,0.4)' }}>
-            <span className="text-2xl">🌊</span>
+      <div className="min-h-dvh flex items-center justify-center bg-[#F9FAFB]">
+        <div className="flex flex-col items-center gap-6">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center animate-logo-glow"
+            style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', boxShadow: '0 8px 32px rgba(26,115,232,0.25)' }}>
+            <span className="text-3xl text-white">🌊</span>
           </div>
-          <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
-            style={{ borderColor: '#1A73E8', borderTopColor: 'transparent' }} />
-          <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>FloodWay</p>
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
+              style={{ borderColor: '#1A73E8', borderTopColor: 'transparent' }} />
+            <p className="text-sm font-bold tracking-tight text-[#111827]">FloodWay</p>
+          </div>
         </div>
       </div>
     );
