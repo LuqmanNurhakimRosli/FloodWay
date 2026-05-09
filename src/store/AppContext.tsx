@@ -6,6 +6,7 @@ import { DEFAULT_POSITION } from '../data/locations';
 import { generateDailyPrediction } from '../utils/predictionGenerator';
 import { calculateRoute } from '../utils/pathfinding';
 import { fetchReports, saveReport, updateReportHumanReview, INITIAL_REPORTS } from '../services/reportsService';
+import { useBluetooth } from '../hooks/useBluetooth';
 
 interface AppState {
     selectedLocation: Location | null;
@@ -32,6 +33,13 @@ interface AppContextType extends AppState {
     deleteFloodReport: (reportId: string) => void;
     // Human review actions
     updateHumanReview: (reportId: string, review: HumanReview) => void;
+    // IoT
+    iotConnected: boolean;
+    iotLevel: number;
+    iotStatus: 'SAFE' | 'WARNING' | 'DANGER';
+    iotError: string | null;
+    connectIoT: () => Promise<void>;
+    disconnectIoT: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -47,6 +55,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         isRouteLoading: false,
         floodReports: INITIAL_REPORTS,  // instantly show 2 demo reports; Firestore replaces shortly after
     });
+
+    // IoT Hook
+    const iot = useBluetooth();
 
     // Fetch from Firestore in the background; replace state when ready.
     // fetchReports() handles all deduplication internally.
@@ -205,6 +216,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 clearFloodReports,
                 deleteFloodReport,
                 updateHumanReview,
+                // IoT
+                iotConnected: iot.connected,
+                iotLevel: iot.level,
+                iotStatus: iot.status,
+                iotError: iot.error,
+                connectIoT: iot.connect,
+                disconnectIoT: iot.disconnect,
             }}
         >
             {children}

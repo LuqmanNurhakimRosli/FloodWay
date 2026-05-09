@@ -8,6 +8,12 @@ export const DEFAULT_POSITION: Coordinates = {
     lng: 101.7148
 };
 
+// Global IoT Sensor Location (Klang River near Masjid Jamek)
+export const IOT_SENSOR_LOCATION = {
+    name: 'Klang River',
+    position: { lat: 3.149, lng: 101.696 }
+};
+
 // Available locations for selection
 export const LOCATIONS: Location[] = [
     {
