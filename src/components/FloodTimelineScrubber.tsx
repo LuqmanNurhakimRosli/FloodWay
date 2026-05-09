@@ -100,23 +100,23 @@ export function FloodTimelineScrubber({ selectedHourIndex, onHourChange }: Flood
             </div>
 
             {/* Timeline scrubber */}
-            <div className="relative bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-white/5 shadow-xl overflow-hidden">
+            <div className="relative bg-white/80 backdrop-blur-xl rounded-2xl border border-[#C7D0DA] shadow-lg overflow-hidden">
                 {/* Arrow buttons */}
                 <button
                     onClick={handlePrev}
                     disabled={selectedHourIndex === 0}
-                    className="absolute left-0 top-0 bottom-0 w-7 z-10 flex items-center justify-center bg-gradient-to-r from-slate-900/95 to-transparent disabled:opacity-30 transition-opacity"
+                    className="absolute left-0 top-0 bottom-0 w-7 z-10 flex items-center justify-center bg-gradient-to-r from-white/95 to-transparent disabled:opacity-30 transition-opacity"
                 >
-                    <ChevronLeft className="size-3.5 text-white/80" />
+                    <ChevronLeft className="size-3.5 text-slate-600" />
                 </button>
                 <button
                     onClick={handleNext}
                     disabled={selectedHourIndex === hours.length - 1}
-                    className="absolute right-0 top-0 bottom-0 w-7 z-10 flex items-center justify-center bg-gradient-to-l from-slate-900/95 to-transparent disabled:opacity-30 transition-opacity"
+                    className="absolute right-0 top-0 bottom-0 w-7 z-10 flex items-center justify-center bg-gradient-to-l from-white/95 to-transparent disabled:opacity-30 transition-opacity"
                 >
-                    <ChevronRight className="size-3.5 text-white/80" />
+                    <ChevronRight className="size-3.5 text-slate-600" />
                 </button>
-
+ 
                 {/* Scrollable timeline */}
                 <div
                     ref={scrollRef}
@@ -126,16 +126,16 @@ export function FloodTimelineScrubber({ selectedHourIndex, onHourChange }: Flood
                         const phase = getFloodPhaseForHour(index, hours);
                         const isSelected = index === selectedHourIndex;
                         const isCurrent = index === 0;
-
+ 
                         // Bar color based on risk
                         const barColor = hour.riskLevel === 'danger' ? 'bg-red-500'
                             : hour.riskLevel === 'warning' ? 'bg-amber-400'
                                 : 'bg-emerald-400';
-
+ 
                         // Phase separator line
                         const nextPhase = index < hours.length - 1 ? getFloodPhaseForHour(index + 1, hours) : phase;
                         const isPhaseTransition = nextPhase !== phase;
-
+ 
                         return (
                             <button
                                 key={index}
@@ -143,17 +143,17 @@ export function FloodTimelineScrubber({ selectedHourIndex, onHourChange }: Flood
                                 className={cn(
                                     "shrink-0 flex flex-col items-center gap-1 min-w-[28px] md:min-w-[32px] py-1 rounded-lg transition-all duration-200 relative",
                                     isSelected
-                                        ? "bg-white/10 scale-110"
-                                        : "hover:bg-white/5",
+                                        ? "bg-blue-100 scale-110"
+                                        : "hover:bg-blue-50",
                                 )}
                             >
                                 {/* Current time indicator */}
                                 {isCurrent && (
-                                    <div className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary animate-pulse" />
+                                    <div className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-600 animate-pulse" />
                                 )}
-
+ 
                                 {/* Risk bar */}
-                                <div className="w-1.5 md:w-2 h-6 md:h-8 bg-white/10 rounded-full flex items-end overflow-hidden">
+                                <div className="w-1.5 md:w-2 h-6 md:h-8 bg-slate-200/50 rounded-full flex items-end overflow-hidden">
                                     <div
                                         className={cn(
                                             "w-full rounded-full transition-all duration-500",
@@ -163,15 +163,15 @@ export function FloodTimelineScrubber({ selectedHourIndex, onHourChange }: Flood
                                         style={{ height: `${Math.max(hour.probability, 5)}%` }}
                                     />
                                 </div>
-
+ 
                                 {/* Time label */}
                                 <span className={cn(
                                     "text-[7px] md:text-[8px] font-medium transition-all",
-                                    isSelected ? 'text-white font-bold' : 'text-white/50'
+                                    isSelected ? 'text-slate-900 font-bold' : 'text-slate-500'
                                 )}>
                                     {hour.time.split(':')[0]}
                                 </span>
-
+ 
                                 {/* Phase dot */}
                                 <div className={cn(
                                     "w-1 h-1 rounded-full transition-all",
@@ -180,21 +180,21 @@ export function FloodTimelineScrubber({ selectedHourIndex, onHourChange }: Flood
                                             'bg-emerald-400',
                                     isSelected ? 'scale-150' : 'scale-100'
                                 )} />
-
+ 
                                 {/* Selection indicator */}
                                 {isSelected && (
-                                    <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 rounded-full bg-primary" />
+                                    <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-3 h-0.5 rounded-full bg-blue-600" />
                                 )}
-
+ 
                                 {/* Phase transition line */}
                                 {isPhaseTransition && (
-                                    <div className="absolute right-0 top-1 bottom-1 w-px bg-white/20" />
+                                    <div className="absolute right-0 top-1 bottom-1 w-px bg-slate-200" />
                                 )}
                             </button>
                         );
                     })}
                 </div>
-
+ 
                 {/* Phase labels below */}
                 <div className="flex items-center justify-center gap-4 px-3 pb-2 pt-0">
                     {(['before', 'during', 'after'] as const).map((phase) => (
@@ -207,7 +207,7 @@ export function FloodTimelineScrubber({ selectedHourIndex, onHourChange }: Flood
                             )} />
                             <span className={cn(
                                 "text-[7px] uppercase tracking-wider font-medium",
-                                currentPhase === phase ? 'text-white/80' : 'text-white/30'
+                                currentPhase === phase ? 'text-slate-700' : 'text-slate-400'
                             )}>
                                 {phase === 'before' ? 'Before' : phase === 'during' ? 'Flood' : 'After'}
                             </span>

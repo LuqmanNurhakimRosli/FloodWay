@@ -149,14 +149,14 @@ export function ForecastOverlay({ selectedHourIndex = 0 }: ForecastOverlayProps)
             {/* Weather Stats Row */}
             <div className="grid grid-cols-3 gap-1.5 md:gap-2">
                 {[
-                    { icon: Thermometer, val: `${weather.temp}°`, color: 'text-orange-400' },
-                    { icon: Droplets, val: `${weather.humidity}%`, color: 'text-blue-400' },
-                    { icon: Wind, val: weather.wind, color: 'text-slate-400' }
+                    { icon: Thermometer, val: `${weather.temp}°`, color: 'text-orange-600' },
+                    { icon: Droplets, val: `${weather.humidity}%`, color: 'text-blue-600' },
+                    { icon: Wind, val: weather.wind, color: 'text-slate-600' }
                 ].map((stat, i) => (
-                    <Card key={i} className="bg-slate-900/80 backdrop-blur-md border border-white/5 shadow-lg">
+                    <Card key={i} className="bg-white/80 backdrop-blur-md border border-[#C7D0DA] shadow-sm">
                         <CardContent className="p-1.5 md:p-2 text-center">
                             <stat.icon className={cn("size-5 md:size-6 mx-auto mb-1.5", stat.color)} />
-                            <div className="text-[10px] md:text-xs font-bold text-white">{stat.val}</div>
+                            <div className="text-[10px] md:text-xs font-bold text-slate-900">{stat.val}</div>
                         </CardContent>
                     </Card>
                 ))}

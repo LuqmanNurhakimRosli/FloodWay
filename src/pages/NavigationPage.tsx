@@ -363,7 +363,7 @@ export function NavigationPage() {
             </div>
 
             {/* Header overlay */}
-            <div className="absolute top-0 left-0 right-0 z-10 flex items-center gap-3 p-4 pt-[calc(0.875rem+var(--safe-top))] bg-gradient-to-b from-slate-900/[0.98] via-slate-900/85 to-transparent">
+            <div className="absolute top-0 left-0 right-0 z-10 flex items-center gap-3 p-4 pt-[calc(0.875rem+var(--safe-top))] bg-gradient-to-b from-[#F9FAFB]/[0.98] via-[#F9FAFB]/85 to-transparent">
                 <Button
                     variant="ghost"
                     size="icon"
@@ -394,7 +394,7 @@ export function NavigationPage() {
             </div>
 
             {/* Stats pill with transport mode */}
-            <div className="absolute top-[calc(75px+var(--safe-top))] left-1/2 -translate-x-1/2 z-10 flex items-center bg-slate-800/95 backdrop-blur-xl rounded-full px-6 py-2.5 shadow-lg border border-white/5">
+            <div className="absolute top-[calc(75px+var(--safe-top))] left-1/2 -translate-x-1/2 z-10 flex items-center bg-[#E3F4FF]/95 backdrop-blur-xl rounded-full px-6 py-2.5 shadow-lg border border-[#C7D0DA]">
                 {/* Transport mode badge */}
                 <div className="flex items-center gap-1.5 px-3 text-emerald-400">
                     <TransportModeIcon mode={route.transportMode || transportMode} />
@@ -415,7 +415,7 @@ export function NavigationPage() {
             </div>
 
             {/* Bottom instruction panel */}
-            <Card className="absolute bottom-0 left-0 right-0 z-10 rounded-t-3xl rounded-b-none shadow-2xl border-t border-white/5 border-b-0 md:max-w-md md:left-auto md:right-6 md:bottom-6 md:rounded-3xl md:border">
+            <Card className="absolute bottom-0 left-0 right-0 z-10 rounded-t-3xl rounded-b-none shadow-2xl border-t border-[#C7D0DA] border-b-0 md:max-w-md md:left-auto md:right-6 md:bottom-6 md:rounded-3xl md:border">
                 <Progress value={progress * 100} className="h-1.5 rounded-none md:rounded-t-3xl" />
 
                 <CardContent className="p-0">

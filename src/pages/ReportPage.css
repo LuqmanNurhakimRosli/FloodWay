@@ -6,7 +6,7 @@
 /* ── Screen ────────────────────────────────────────────────── */
 .tw-screen {
     min-height: 100dvh;
-    background: #07091a;
+    background: #EEF7FF;
     display: flex;
     flex-direction: column;
     /*
@@ -29,10 +29,10 @@
     align-items: center;
     justify-content: space-between;
     padding: 14px 18px;
-    background: rgba(7, 9, 26, 0.94);
+    background: rgba(238, 247, 255, 0.97);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    border-bottom: 1px solid #C7D0DA;
 }
 
 .tw-header__left {
@@ -46,8 +46,8 @@
     width: 42px;
     height: 42px;
     border-radius: 12px;
-    background: linear-gradient(135deg, rgba(239, 68, 68, .22), rgba(59, 130, 246, .22));
-    border: 1px solid rgba(255, 255, 255, .1);
+    background: linear-gradient(135deg, rgba(239, 68, 68, .15), rgba(59, 130, 246, .15));
+    border: 1px solid #C7D0DA;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -59,7 +59,7 @@
     font-size: 1.1rem;
     font-weight: 800;
     letter-spacing: -.03em;
-    color: #f1f5f9;
+    color: #0f172a;
     line-height: 1.1;
     white-space: nowrap;
 }
@@ -102,7 +102,7 @@
 
 .tw-header__sub {
     font-size: .6rem;
-    color: #475569;
+    color: #64748b;
     margin-top: 2px;
     white-space: nowrap;
     overflow: hidden;
@@ -120,8 +120,8 @@
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    background: rgba(255, 255, 255, .06);
-    border: 1px solid rgba(255, 255, 255, .1);
+    background: #E3F4FF;
+    border: 1px solid #C7D0DA;
     font-size: 1rem;
     cursor: pointer;
     display: flex;
@@ -131,7 +131,7 @@
 }
 
 .tw-icon-btn:hover {
-    background: rgba(255, 255, 255, .12);
+    background: #C7D0DA;
 }
 
 .tw-live-pill {
@@ -176,8 +176,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(11, 16, 35, .7);
-    border-bottom: 1px solid rgba(255, 255, 255, .05);
+    background: #EEF7FF;
+    border-bottom: 1px solid #C7D0DA;
     padding: 12px 16px;
 }
 
@@ -192,7 +192,7 @@
 .tw-stat__n {
     font-size: 1.45rem;
     font-weight: 800;
-    color: #f1f5f9;
+    color: #0f172a;
     line-height: 1;
     font-variant-numeric: tabular-nums;
 }
@@ -212,7 +212,7 @@
 .tw-stat__l {
     font-size: .58rem;
     font-weight: 600;
-    color: #475569;
+    color: #64748b;
     text-transform: uppercase;
     letter-spacing: .06em;
 }
@@ -220,14 +220,14 @@
 .tw-stat-sep {
     width: 1px;
     height: 28px;
-    background: rgba(255, 255, 255, .06);
+    background: #C7D0DA;
     margin: 0 4px;
 }
 
 /* ── Filter tabs ───────────────────────────────────────────── */
 .tw-tabs {
     display: flex;
-    border-bottom: 1px solid rgba(255, 255, 255, .06);
+    border-bottom: 1px solid #C7D0DA;
     overflow-x: auto;
     scrollbar-width: none;
 }
@@ -293,8 +293,8 @@
     align-items: center;
     gap: 8px;
     padding: 6px 14px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #EEF7FF;
+    border: 1px solid #C7D0DA;
     border-radius: 12px;
     margin-right: 4px;
 }
@@ -316,7 +316,7 @@
 .tw-loc-text {
     font-size: 0.65rem;
     font-weight: 700;
-    color: #94a3b8;
+    color: #475569;
     letter-spacing: 0.02em;
 }
 
@@ -337,8 +337,8 @@
 /* ── Filter Station V2 (Premium Image Match) ── */
 .tw-filter-station-v2 {
     margin: 12px 16px;
-    background: rgba(13, 19, 40, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: #EEF7FF;
+    border: 1px solid #C7D0DA;
     border-radius: 12px;
     overflow: hidden;
     display: flex;
@@ -347,7 +347,7 @@
 
 .tw-area-row {
     display: flex;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid #C7D0DA;
 }
 
 .tw-area-tab {
@@ -368,7 +368,7 @@
 
 .tw-area-tab.active {
     color: #3b82f6;
-    background: rgba(59, 130, 246, 0.03);
+    background: #E3F4FF;
 }
 
 .tw-area-tab .tw-tab-icon {
@@ -404,8 +404,8 @@
     justify-content: center;
     gap: 6px;
     padding: 10px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.03);
+    background: #EEF7FF;
+    border: 1px solid #C7D0DA;
     border-radius: 8px;
     color: #475569;
     font-size: 0.7rem;
@@ -416,7 +416,7 @@
 .tw-time-tab.active {
     background: rgba(59, 130, 246, 0.1);
     border-color: rgba(59, 130, 246, 0.3);
-    color: white;
+    color: #0f172a;
 }
 
 .tw-time-tab.disabled {
@@ -458,10 +458,10 @@
     align-items: center;
     gap: 6px;
     padding: 8px 12px;
-    background: rgba(13, 19, 40, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: #EEF7FF;
+    border: 1px solid #C7D0DA;
     border-radius: 8px;
-    color: #94a3b8;
+    color: #475569;
     font-size: 0.7rem;
     font-weight: 700;
     cursor: pointer;
@@ -470,7 +470,7 @@
 .tw-pill-v2.active {
     background: rgba(59, 130, 246, 0.1);
     border-color: rgba(59, 130, 246, 0.4);
-    color: #f1f5f9;
+    color: #0f172a;
     box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
 }
 
@@ -485,18 +485,18 @@
     align-items: center;
     gap: 6px;
     padding: 8px 12px;
-    background: rgba(13, 19, 40, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: #EEF7FF;
+    border: 1px solid #C7D0DA;
     border-radius: 8px;
-    color: #94a3b8;
+    color: #475569;
     font-size: 0.7rem;
     font-weight: 600;
 }
 
 .tw-view-toggle {
     display: flex;
-    background: rgba(13, 19, 40, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: #EEF7FF;
+    border: 1px solid #C7D0DA;
     border-radius: 8px;
     overflow: hidden;
 }
@@ -579,8 +579,8 @@
 
 /* ── Card ──────────────────────────────────────────────────── */
 .tw-card {
-    background: rgba(13, 19, 40, 0.95);
-    border: 1px solid rgba(255, 255, 255, .08);
+    background: #E3F4FF;
+    border: 1px solid #C7D0DA;
     border-radius: 18px;
     overflow: hidden;
     opacity: 0;
@@ -591,8 +591,8 @@
 
 .tw-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 16px 50px rgba(0, 0, 0, .55);
-    border-color: rgba(255, 255, 255, .13);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
+    border-color: #C7D0DA;
 }
 
 .tw-card--flood {
@@ -627,8 +627,8 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, .06);
-    border: 1.5px solid rgba(255, 255, 255, .12);
+    background: #E3F4FF;
+    border: 1.5px solid #C7D0DA;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -647,7 +647,7 @@
 .tw-card__name {
     font-size: .82rem;
     font-weight: 700;
-    color: #f1f5f9;
+    color: #0f172a;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -707,9 +707,9 @@
 }
 
 .tw-badge--gray {
-    background: rgba(255, 255, 255, .05);
-    color: #94a3b8;
-    border-color: rgba(255, 255, 255, .08);
+    background: #E3F4FF;
+    color: #64748b;
+    border-color: #C7D0DA;
 }
 
 /* ── Location row ──────────────────────────────────────────── */
@@ -742,7 +742,7 @@
     border: 1px solid;
     font-size: .6rem;
     font-weight: 700;
-    background: rgba(0, 0, 0, .3);
+    background: rgba(248, 250, 252, 0.8);
     white-space: nowrap;
     flex-shrink: 0;
 }
@@ -751,7 +751,7 @@
 .tw-card__text {
     font-size: .83rem;
     line-height: 1.6;
-    color: #cbd5e1;
+    color: #334155;
     padding: 0 16px 12px;
 }
 
@@ -762,7 +762,7 @@
     /* golden-ratio-ish height */
     aspect-ratio: 16 / 9;
     overflow: hidden;
-    background: #0d1422;
+    background: #E3F4FF;
 }
 
 .tw-card__img {
@@ -782,9 +782,9 @@
     position: absolute;
     inset: 0;
     background: linear-gradient(to bottom,
-            rgba(0, 0, 0, .0) 30%,
-            rgba(7, 9, 26, .78) 80%,
-            rgba(7, 9, 26, .96) 100%);
+            rgba(248, 250, 252, 0.0) 30%,
+            rgba(248, 250, 252, 0.6) 80%,
+            rgba(248, 250, 252, 0.92) 100%);
     pointer-events: none;
 }
 
@@ -844,8 +844,8 @@
     align-items: center;
     gap: 10px;
     padding: 10px 16px;
-    border-top: 1px solid rgba(255, 255, 255, .05);
-    border-bottom: 1px solid rgba(255, 255, 255, .05);
+    border-top: 1px solid #C7D0DA;
+    border-bottom: 1px solid #C7D0DA;
 }
 
 .tw-metric {
@@ -868,7 +868,7 @@
 .tw-metric__bar-bg {
     flex: 1;
     height: 4px;
-    background: rgba(255, 255, 255, .07);
+    background: #C7D0DA;
     border-radius: 2px;
     overflow: hidden;
 }
@@ -882,7 +882,7 @@
 .tw-metric__val {
     font-size: .68rem;
     font-weight: 800;
-    color: #f1f5f9;
+    color: #0f172a;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
     min-width: 28px;
@@ -894,12 +894,12 @@
     align-items: center;
     gap: 4px;
     padding: 3px 9px;
-    background: rgba(255, 255, 255, .05);
-    border: 1px solid rgba(255, 255, 255, .08);
+    background: #E3F4FF;
+    border: 1px solid #C7D0DA;
     border-radius: 20px;
     font-size: .62rem;
     font-weight: 600;
-    color: #94a3b8;
+    color: #475569;
     white-space: nowrap;
     flex-shrink: 0;
 }
@@ -940,7 +940,7 @@
     flex-direction: column;
     gap: 10px;
     animation: tw-expand-in .2s ease-out;
-    border-top: 1px solid rgba(255, 255, 255, .05);
+    border-top: 1px solid #C7D0DA;
 }
 
 @keyframes tw-expand-in {
@@ -961,8 +961,8 @@
     align-items: center;
     gap: 0;
     padding: 10px 12px;
-    background: rgba(255, 255, 255, .03);
-    border: 1px solid rgba(255, 255, 255, .06);
+    background: #EEF7FF;
+    border: 1px solid #C7D0DA;
     border-radius: 12px;
     overflow-x: auto;
     scrollbar-width: none;
@@ -1013,7 +1013,7 @@
 .tw-pipeline__line {
     width: 28px;
     height: 2px;
-    background: rgba(255, 255, 255, .07);
+    background: #C7D0DA;
     margin: 0 6px;
     margin-bottom: 14px;
     flex-shrink: 0;
@@ -1092,9 +1092,9 @@
 
 .tw-coord-acc {
     padding: 2px 7px;
-    background: rgba(255, 255, 255, .05);
+    background: #E3F4FF;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, .07);
+    border: 1px solid #C7D0DA;
     font-size: .58rem;
 }
 
@@ -1129,7 +1129,7 @@
 .tw-empty__title {
     font-size: 1.05rem;
     font-weight: 700;
-    color: #f1f5f9;
+    color: #0f172a;
     margin-bottom: 8px;
 }
 
@@ -1213,9 +1213,9 @@
     justify-content: center;
     gap: 8px;
     padding: 8px 20px;
-    background: rgba(7, 9, 26, .9);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(14px);
-    border-top: 1px solid rgba(255, 255, 255, .06);
+    border-top: 1px solid #C7D0DA;
     font-size: .65rem;
     font-weight: 600;
     color: #64748b;

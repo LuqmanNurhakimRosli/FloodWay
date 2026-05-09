@@ -1,5 +1,15 @@
 // Profile Page — FloodWay · Blue/White/Black · Clean premium design
 import { useState } from 'react';
+
+// ── Arctic Dawn palette constants ────────────────────────────────────────────
+const AD_BG        = '#F9FAFB';   // Off-White / Snow
+const AD_CARD      = '#E3F4FF';   // Pale Arctic Blue (surfaces)
+const AD_MID       = '#7FB8E6';   // Mid-Blue (primary accent)
+const AD_SKY       = '#B6DDFF';   // Sky Blue (secondary accent)
+const AD_BORDER    = '#C7D0DA';   // Cool Gray (2D borders)
+const AD_TEXT      = '#0f172a';   // Deep slate
+const AD_MUTED     = '#64748b';   // Muted slate
+
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -18,12 +28,12 @@ function Spinner() {
 
 function Section({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
     return (
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(10,20,40,0.85)', border: '1px solid rgba(26,115,232,0.14)', backdropFilter: 'blur(16px)' }}>
-            <div className="flex items-center gap-2.5 px-4 pt-4 pb-3 border-b" style={{ borderBottomColor: 'rgba(26,115,232,0.08)' }}>
-                <div className="size-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(26,115,232,0.12)', border: '1px solid rgba(26,115,232,0.2)' }}>
+        <div className="rounded-2xl overflow-hidden" style={{ background: AD_CARD, border: `1px solid ${AD_BORDER}` }}>
+            <div className="flex items-center gap-2.5 px-4 pt-4 pb-3 border-b" style={{ borderBottomColor: AD_BORDER }}>
+                <div className="size-7 rounded-lg flex items-center justify-center" style={{ background: AD_BG, border: `1px solid ${AD_BORDER}` }}>
                     {icon}
                 </div>
-                <h2 className="text-sm font-bold text-white">{title}</h2>
+                <h2 className="text-sm font-bold text-slate-900">{title}</h2>
             </div>
             <div className="p-4 flex flex-col gap-3">{children}</div>
         </div>
@@ -36,16 +46,16 @@ function InputField({ label, value, onChange, type = 'text', placeholder, disabl
     const [focused, setFocused] = useState(false);
     return (
         <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</label>
+            <label className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: AD_MUTED }}>{label}</label>
             <input
                 type={type} value={value} placeholder={placeholder}
                 onChange={e => onChange(e.target.value)} disabled={disabled}
                 onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-                className="w-full px-3 py-2.5 rounded-xl text-sm font-medium text-white placeholder-slate-600 outline-none transition-all"
+                className="w-full px-3 py-2.5 rounded-xl text-sm font-medium text-slate-900 placeholder-slate-600 outline-none transition-all"
                 style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${focused ? 'rgba(26,115,232,0.50)' : 'rgba(255,255,255,0.08)'}`,
-                    boxShadow: focused ? '0 0 0 3px rgba(26,115,232,0.10)' : 'none',
+                    background: AD_BG,
+                    border: `1px solid ${focused ? AD_MID : AD_BORDER}`,
+                    boxShadow: focused ? `0 0 0 3px ${AD_SKY}` : 'none',
                 }} />
         </div>
     );
@@ -95,37 +105,37 @@ export function ProfilePage() {
     };
 
     return (
-        <div className="min-h-dvh pb-28" style={{ background: '#060C18' }}>
+        <div className="min-h-dvh pb-28" style={{ background: AD_BG }}>
             {/* Subtle bg */}
             <div className="fixed inset-0 pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(26,115,232,0.06) 0%, transparent 65%)' }} />
+                style={{ background: AD_BG }} />
 
             {/* Header */}
-            <header className="sticky top-0 z-20 px-4 py-3 flex items-center gap-3" style={{ background: 'rgba(6,12,24,0.92)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(26,115,232,0.12)' }}>
+            <header className="sticky top-0 z-20 px-4 py-3 flex items-center gap-3" style={{ background: AD_BG, borderBottom: `1px solid ${AD_BORDER}` }}>
                 <button onClick={() => navigate('/home')}
                     className="size-8 rounded-xl flex items-center justify-center transition-all"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <ArrowLeft className="size-4 text-slate-400" />
+                    style={{ background: AD_BG, border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <ArrowLeft className="size-4 text-slate-500" />
                 </button>
-                <Waves className="size-5" style={{ color: '#1A73E8' }} />
-                <h1 className="text-base font-black text-white">My Profile</h1>
+                <Waves className="size-5" style={{ color: AD_MID }} />
+                <h1 className="text-base font-black text-slate-900">My Profile</h1>
             </header>
 
             <div className="max-w-md mx-auto px-4 py-5 flex flex-col gap-4 relative z-10">
 
                 {/* Avatar Card */}
                 <div className="flex flex-col items-center text-center p-6 rounded-3xl relative overflow-hidden"
-                    style={{ background: 'rgba(10,20,40,0.85)', border: '1px solid rgba(26,115,232,0.14)', backdropFilter: 'blur(16px)' }}>
+                    style={{ background: AD_CARD, border: `1px solid ${AD_BORDER}` }}>
                     {/* Glow */}
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-20 -translate-y-1/2 rounded-full blur-3xl pointer-events-none"
-                        style={{ background: 'rgba(26,115,232,0.15)' }} />
+                        style={{ background: 'AD_SKY' }} />
                     <div className="relative mb-4">
                         {user?.photoURL ? (
                             <img src={user.photoURL} alt="Profile"
                                 className="w-24 h-24 rounded-3xl object-cover ring-2 ring-blue-500/30 shadow-xl" />
                         ) : (
-                            <div className="w-24 h-24 rounded-3xl flex items-center justify-center text-4xl font-black text-white ring-2 ring-blue-500/30 shadow-xl"
-                                style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', boxShadow: '0 8px 32px rgba(26,115,232,0.35)' }}>
+                            <div className="w-24 h-24 rounded-3xl flex items-center justify-center text-4xl font-black text-slate-900 ring-2 ring-blue-500/30 shadow-xl"
+                                style={{ background: 'AD_MID', boxShadow: '0 8px 32px AD_SKY' }}>
                                 {getInitials()}
                             </div>
                         )}
@@ -142,10 +152,10 @@ export function ProfilePage() {
                         )}
                     </div>
 
-                    <h2 className="text-xl font-black text-white">
+                    <h2 className="text-xl font-black text-slate-900">
                         {user?.displayName || 'FloodWay User'}
                     </h2>
-                    <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-400">
+                    <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-500">
                         <Mail className="size-3" />
                         {user?.email}
                     </div>
@@ -171,8 +181,8 @@ export function ProfilePage() {
                         </div>
                     )}
                     <button onClick={handleProfileSave} disabled={profileSaving}
-                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50"
-                        style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', boxShadow: '0 4px 14px rgba(26,115,232,0.25)' }}>
+                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold text-slate-900 transition-all disabled:opacity-50"
+                        style={{ background: 'AD_MID', boxShadow: '0 4px 14px rgba(26,115,232,0.25)' }}>
                         {profileSaving ? <><Spinner />Saving…</> : 'Save Changes'}
                     </button>
                 </Section>
@@ -221,16 +231,16 @@ export function ProfilePage() {
                 <Section title="Preferences" icon={<Bell className="size-3.5 text-amber-400" />}>
                     {[
                         { icon: <Bell className="size-4 text-amber-400" />, label: 'Push Notifications', sub: 'Flood alerts & updates' },
-                        { icon: <Globe className="size-4 text-blue-400" />, label: 'Language', sub: 'English (Malaysia)' },
+                        { icon: <Globe className="size-4 text-blue-600" />, label: 'Language', sub: 'English (Malaysia)' },
                         { icon: <Moon className="size-4 text-purple-400" />, label: 'Appearance', sub: 'Dark mode' },
                     ].map((item, i) => (
                         <button key={i} className="flex items-center gap-3 py-2 rounded-lg transition-colors hover:bg-white/5 w-full text-left">
-                            <div className="size-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                            <div className="size-8 rounded-lg flex items-center justify-center" style={{ background: AD_BG }}>
                                 {item.icon}
                             </div>
                             <div className="flex-1">
-                                <p className="text-sm font-semibold text-white leading-none mb-0.5">{item.label}</p>
-                                <p className="text-[10px] text-slate-400">{item.sub}</p>
+                                <p className="text-sm font-semibold text-slate-900 leading-none mb-0.5">{item.label}</p>
+                                <p className="text-[10px] text-slate-500">{item.sub}</p>
                             </div>
                             <ChevronRight className="size-4 text-slate-500" />
                         </button>
@@ -240,16 +250,16 @@ export function ProfilePage() {
                 {/* Sign Out */}
                 <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(20,8,8,0.7)', border: '1px solid rgba(239,68,68,0.12)', backdropFilter: 'blur(16px)' }}>
                     <div className="p-4">
-                        <p className="text-[10px] text-red-400/60 font-bold uppercase tracking-widest mb-3">Danger Zone</p>
+                        <p className="text-[10px] text-red-600/60 font-bold uppercase tracking-widest mb-3">Danger Zone</p>
                         <button onClick={handleSignOut}
                             className="flex items-center gap-3 w-full py-3 px-4 rounded-xl transition-all hover:brightness-110"
                             style={{ background: 'rgba(239,68,68,0.09)', border: '1px solid rgba(239,68,68,0.20)' }}>
                             <div className="size-8 rounded-lg flex items-center justify-center"
                                 style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.2)' }}>
-                                <LogOut className="size-4 text-red-400" />
+                                <LogOut className="size-4 text-red-600" />
                             </div>
                             <span className="flex-1 text-sm font-bold text-red-300 text-left">Sign Out</span>
-                            <ChevronRight className="size-4 text-red-400/50" />
+                            <ChevronRight className="size-4 text-red-600/50" />
                         </button>
                     </div>
                 </div>

@@ -1,34 +1,33 @@
-// Bottom Navigation — Blue/White/Black theme
+// Bottom Navigation — Light theme, blue accent on active
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Building2, MapPin, User, Waves } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '../contexts/AuthContext';
 
 const tabs = [
-    { path: '/home', icon: Home, label: 'Home' },
-    { path: '/shelters', icon: Building2, label: 'Shelter' },
-    { path: '/reports', icon: MapPin, label: 'Reports' },
-    { path: '/simulation', icon: Waves, label: 'Simulate' },
-    { path: '/profile', icon: User, label: 'Profile' },
+    { path: '/home',       icon: Home,      label: 'Home'     },
+    { path: '/shelters',   icon: Building2, label: 'Shelter'  },
+    { path: '/reports',    icon: MapPin,    label: 'Reports'  },
+    { path: '/simulation', icon: Waves,     label: 'Simulate' },
+    { path: '/profile',    icon: User,      label: 'Profile'  },
 ];
 
 export function BottomNav() {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { user } = useAuth();
+    const navigate  = useNavigate();
+    const location  = useLocation();
+    const { user }  = useAuth();
 
     return (
-        <nav
-            className="fixed bottom-0 left-0 right-0 z-50 border-t pb-[var(--safe-bottom,0px)]"
+        <nav className="fixed bottom-0 left-0 right-0 z-50 border-t"
             style={{
-                background: 'rgba(6, 12, 24, 0.97)',
-                backdropFilter: 'blur(24px)',
-                borderTopColor: 'rgba(26, 115, 232, 0.12)',
-            }}
-        >
+                background: 'rgba(249,250,251,0.97)',
+                borderTopColor: '#C7D0DA',
+                backdropFilter: 'blur(20px)',
+                paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+            }}>
             <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
                 {tabs.map((tab) => {
-                    const isActive = location.pathname === tab.path;
+                    const isActive  = location.pathname === tab.path;
                     const isProfile = tab.path === '/profile';
 
                     return (
@@ -36,53 +35,46 @@ export function BottomNav() {
                             key={tab.path}
                             onClick={() => navigate(tab.path)}
                             className={cn(
-                                'flex flex-col items-center justify-center gap-0.5 flex-1 py-2 relative transition-all duration-250',
-                                isActive ? 'text-white' : 'text-slate-600'
+                                'flex flex-col items-center justify-center gap-0.5 flex-1 py-2 relative transition-all duration-200',
+                                isActive ? 'text-slate-900' : 'text-slate-400'
                             )}
                             aria-label={tab.label}
                         >
-                            {/* Active indicator line at top */}
+                            {/* Active indicator line */}
                             {isActive && (
-                                <div
-                                    className="absolute -top-px w-10 h-[2px] rounded-full"
-                                    style={{ background: 'linear-gradient(90deg, #1A73E8, #4A90E2)' }}
-                                />
+                                <div className="absolute -top-px w-10 h-[2px] rounded-full" style={{ background: '#7FB8E6' }} />
                             )}
 
                             {/* Icon container */}
                             <div className={cn(
-                                'relative p-1.5 rounded-xl transition-all duration-250',
-                                isActive && 'bg-blue-600/15'
-                            )}>
+                                'relative p-1.5 rounded-xl transition-all duration-200',
+                            )} style={isActive ? { background: '#E3F4FF' } : {}}>
                                 {isProfile && user?.photoURL ? (
                                     <img
                                         src={user.photoURL}
                                         alt="Profile"
                                         className={cn(
-                                            'size-5 rounded-md object-cover transition-all duration-250',
-                                            isActive && 'ring-1 ring-blue-400 scale-110'
+                                            'size-5 rounded-md object-cover transition-all',
+                                            isActive && 'ring-1 ring-blue-500 scale-110'
                                         )}
                                     />
                                 ) : (
-                                    <tab.icon className={cn(
-                                        'size-5 transition-all duration-250',
-                                        isActive && 'scale-110'
-                                    )} style={{ color: isActive ? '#4A90E2' : undefined }} />
+                                    <tab.icon
+                                        className={cn('size-5 transition-all', isActive && 'scale-110')}
+                                        style={{ color: isActive ? '#7FB8E6' : undefined }}
+                                    />
                                 )}
 
-                                {/* Dot for profile without photo */}
+                                {/* Online dot for profile */}
                                 {isProfile && isActive && !user?.photoURL && (
-                                    <span
-                                        className="absolute -top-0.5 -right-0.5 size-2 rounded-full border border-[#060C18]"
-                                        style={{ background: '#1A73E8' }}
-                                    />
+                                    <span className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-blue-600 border border-white" />
                                 )}
                             </div>
 
-                            <span className={cn(
-                                'text-[10px] font-semibold truncate transition-all',
-                                isActive ? 'text-blue-400' : 'text-slate-600'
-                            )}>
+                            <span
+                                className="text-[10px] font-semibold truncate transition-all"
+                                style={{ color: isActive ? '#7FB8E6' : '#94a3b8' }}
+                            >
                                 {tab.label}
                             </span>
                         </button>

@@ -318,7 +318,7 @@ function AnimCounter({ value, unit }: { value: number; unit: string }) {
 
 function SectionTitle({ icon, label, right }: { icon: React.ReactNode; label: string; right?: React.ReactNode }) {
     return (
-        <div className="flex items-center gap-1.5 text-[0.58rem] font-bold uppercase tracking-[0.1em] text-slate-400">
+        <div className="flex items-center gap-1.5 text-[0.58rem] font-bold uppercase tracking-[0.1em] text-slate-500">
             {icon}<span className="flex-1">{label}</span>{right}
         </div>
     );
@@ -333,7 +333,7 @@ const GAUGE_GRADIENTS: Record<FloodLevel, string> = {
 function FloodGauge({ level, cfg }: { level: FloodLevel; cfg: typeof FLOOD_CONFIG['normal'] }) {
     return (
         <div className="flex flex-col gap-1.5">
-            <div style={{ position: 'relative', height: 8, background: 'rgba(255,255,255,0.055)', borderRadius: 8, overflow: 'visible' }}>
+            <div style={{ position: 'relative', height: 8, background: 'rgba(199,208,218,0.5)', borderRadius: 8, overflow: 'visible' }}>
                 <div style={{
                     height: '100%', borderRadius: 8,
                     background: GAUGE_GRADIENTS[level], width: cfg.gaugeWidth,
@@ -348,8 +348,8 @@ function FloodGauge({ level, cfg }: { level: FloodLevel; cfg: typeof FLOOD_CONFI
                 <span style={{
                     position: 'absolute', top: -4, left: cfg.gaugeWidth,
                     width: 16, height: 16, borderRadius: '50%', background: 'white',
-                    border: '2.5px solid rgba(255,255,255,0.35)', transform: 'translateX(-50%)',
-                    boxShadow: '0 0 10px rgba(255,255,255,0.55)', display: 'block',
+                    border: '2.5px solid rgba(199,208,218,0.8)', transform: 'translateX(-50%)',
+                    boxShadow: '0 0 10px rgba(0,0,0,0.15)', display: 'block',
                     transition: 'left 1.2s cubic-bezier(0.34,1.1,0.64,1)',
                 }} />
             </div>
@@ -387,9 +387,9 @@ function LevelBtn({ l, active, onClick }: { l: FloodLevel; active: boolean; onCl
     const s: CSSProperties = {
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
         padding: '11px 6px', borderRadius: 13, width: '100%',
-        border: `1px solid ${active ? cfg.levelActiveBorder : 'rgba(255,255,255,0.06)'}`,
-        background: active ? cfg.levelActiveBg : 'rgba(255,255,255,0.025)',
-        color: active ? cfg.levelActiveText : '#8aa8cc',
+        border: `1px solid ${active ? cfg.levelActiveBorder : 'rgba(199,208,218,0.5)'}`,
+        background: active ? cfg.levelActiveBg : 'white',
+        color: active ? cfg.levelActiveText : '#64748b',
         fontSize: '0.68rem', cursor: 'pointer',
         transform: active ? 'translateY(-3px)' : 'translateY(0)',
         boxShadow: active ? cfg.levelActiveShadow : 'none',
@@ -413,8 +413,8 @@ function ToggleBtn({ label, icon, on, onClick }: { label: string; icon: string; 
     return (
         <button onClick={onClick} className={cn(
             'flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition-all',
-            on ? 'bg-blue-500/20 border border-blue-400/40 text-blue-300'
-                : 'bg-white/[0.05] border border-white/[0.1] text-slate-400'
+            on ? 'bg-blue-100 border border-blue-200 text-blue-700'
+                : 'bg-[#E3F4FF] border border-[#C7D0DA] text-slate-500'
         )}>
             <span>{icon}</span><span>{label}</span>
         </button>
@@ -425,12 +425,12 @@ function StatRow({ icon, iconColor, label, value }: {
     icon: React.ReactNode; iconColor: string; label: string; value: React.ReactNode;
 }) {
     return (
-        <div className="flex items-center gap-2.5 px-[11px] py-[9px] rounded-xl bg-white/[0.022] border border-white/[0.06] hover:bg-white/[0.05] transition-colors">
-            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/5 shrink-0" style={{ color: iconColor }}>
+        <div className="flex items-center gap-2.5 px-[11px] py-[9px] rounded-xl bg-[#E3F4FF] border border-[#C7D0DA] hover:bg-[#F9FAFB] transition-colors">
+            <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-blue-50 shrink-0" style={{ color: iconColor }}>
                 {icon}
             </div>
-            <span className="flex-1 text-[0.67rem] font-bold text-slate-400">{label}</span>
-            <span className="text-[0.82rem] font-bold text-slate-200 tabular-nums tracking-tight">{value}</span>
+            <span className="flex-1 text-[0.67rem] font-bold text-slate-500">{label}</span>
+            <span className="text-[0.82rem] font-bold text-slate-900 tabular-nums tracking-tight">{value}</span>
         </div>
     );
 }
@@ -457,9 +457,9 @@ export function SimulationPage() {
     // Auto-close panel in demo mode
     useEffect(() => { if (demoMode) setShowPanel(false); }, [demoMode]);
 
-    const border = 'rgba(26,115,232,0.15)';
-    const borderS = 'rgba(255,255,255,0.08)';
-    const bgPanel = 'rgba(10,20,40,0.85)';
+    const border = 'rgba(199,208,218,1)';
+    const borderS = 'rgba(199,208,218,0.5)';
+    const bgPanel = 'rgba(227,244,255,0.95)';
 
     // ── Control content (shared by sidebar + mobile sheet) ──────────
     const Controls = () => (
@@ -533,8 +533,8 @@ export function SimulationPage() {
             <button onClick={() => setDemoMode(!demoMode)} className={cn(
                 'flex items-center justify-center gap-2 w-full py-3 rounded-2xl border text-xs font-bold transition-all active:scale-95',
                 demoMode
-                    ? 'bg-blue-500/[0.15] border-blue-400/[0.4] text-blue-300 shadow-[0_0_12px_rgba(26,115,232,0.25)]'
-                    : 'bg-white/[0.05] border-white/[0.1] text-slate-400 hover:bg-blue-500/10 hover:border-blue-400/30 hover:text-blue-300'
+                    ? 'bg-blue-100 border-blue-300 text-blue-700 shadow-[0_0_12px_rgba(26,115,232,0.15)]'
+                    : 'bg-[#E3F4FF] border-[#C7D0DA] text-slate-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600'
             )}>
                 <Settings2 size={14} />
                 {demoMode ? 'Stop Demo Cycle' : 'Start Demo Cycle'}
@@ -551,12 +551,12 @@ export function SimulationPage() {
                 display: 'flex', flexDirection: 'column',
                 height: 'calc(100dvh - 64px)',   /* above bottom nav */
                 paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-                background: '#060C18', color: '#e8f0ff',
+                background: '#EEF7FF', color: '#0f172a',
                 fontFamily: 'Inter,system-ui,sans-serif', overflow: 'hidden',
             }}>
                 {/* ── MOBILE TOPBAR ── */}
                 <header className="lg:hidden flex items-center gap-2.5 px-4 py-2.5 shrink-0"
-                    style={{ background: 'rgba(6,12,24,0.92)', backdropFilter: 'blur(20px)', borderBottom: `1px solid ${border}` }}
+                    style={{ background: 'rgba(238,247,255,0.92)', backdropFilter: 'blur(20px)', borderBottom: `1px solid ${border}` }}
                 >
                     <button onClick={() => navigate('/home')}
                         className="flex items-center justify-center w-8 h-8 rounded-xl border transition-all active:scale-95"
@@ -565,7 +565,7 @@ export function SimulationPage() {
                     </button>
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                         <Droplets size={16} className="text-blue-400 shrink-0" />
-                        <span className="text-[0.85rem] font-black tracking-tight truncate text-white">Flood Simulation</span>
+                        <span className="text-[0.85rem] font-black tracking-tight truncate text-slate-900">Flood Simulation</span>
                         <span className="shrink-0 px-2 py-0.5 rounded-full text-[0.58rem] font-bold uppercase tracking-wide"
                             style={{ background: cfg.riskBg, color: cfg.riskColor, border: `1px solid ${cfg.riskBorder}` }}>
                             {cfg.riskLabel}
@@ -573,7 +573,7 @@ export function SimulationPage() {
                     </div>
                     <button onClick={() => setDemoMode(!demoMode)} className={cn(
                         'shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[0.6rem] font-bold uppercase tracking-wide border transition-all active:scale-95',
-                        demoMode ? 'bg-blue-500/20 border-blue-400/40 text-blue-300' : 'bg-white/[0.05] border-white/[0.1] text-slate-400')}>
+                        demoMode ? 'bg-blue-500/20 border-blue-400/40 text-blue-300' : 'bg-[#E3F4FF]/[0.05] border-white/[0.1] text-slate-400')}>
                         <Activity size={11} />{demoMode ? 'Live' : 'Demo'}
                     </button>
                 </header>
@@ -585,17 +585,17 @@ export function SimulationPage() {
                     <aside className="hidden lg:flex flex-col shrink-0 overflow-y-auto overflow-x-hidden"
                         style={{
                             width: 320, minWidth: 320, height: '100%',
-                            background: `linear-gradient(180deg, ${bgPanel} 0%, rgba(6,12,24,0.98) 100%)`,
+                            background: `rgba(227,244,255,0.98)`,
                             borderRight: `1px solid ${border}`,
                             backdropFilter: 'blur(16px)',
                             scrollbarWidth: 'thin', scrollbarColor: 'rgba(26,115,232,0.3) transparent',
                         }}
                     >
                         <div className="flex items-center gap-2.5 px-4 py-5 shrink-0"
-                            style={{ borderBottom: `1px solid ${border}`, background: 'rgba(6,12,24,0.45)' }}>
+                            style={{ borderBottom: `1px solid ${border}`, background: 'rgba(227,244,255,0.45)' }}>
                             <button onClick={() => navigate('/home')}
-                                className="flex items-center justify-center w-9 h-9 rounded-xl border transition-all active:scale-95 hover:bg-white/10"
-                                style={{ background: 'rgba(255,255,255,0.05)', borderColor: borderS, color: '#8aa8cc' }}>
+                                className="flex items-center justify-center w-9 h-9 rounded-xl border transition-all active:scale-95 hover:bg-slate-200"
+                                style={{ background: 'rgba(255,255,255,0.5)', borderColor: borderS, color: '#475569' }}>
                                 <ArrowLeft size={16} />
                             </button>
                             <div className="flex items-center gap-3">
@@ -603,8 +603,8 @@ export function SimulationPage() {
                                     <Droplets size={16} className="text-white fill-white/20" />
                                 </div>
                                 <div>
-                                    <p className="text-[0.95rem] font-black tracking-tight text-white leading-none">Flood Sim</p>
-                                    <p className="text-[0.57rem] font-bold text-blue-300 uppercase tracking-widest mt-1">KL Digital Twin</p>
+                                    <p className="text-[0.95rem] font-black tracking-tight text-slate-900 leading-none">Flood Sim</p>
+                                    <p className="text-[0.57rem] font-bold text-blue-600 uppercase tracking-widest mt-1">KL Digital Twin</p>
                                 </div>
                             </div>
                         </div>
@@ -617,9 +617,9 @@ export function SimulationPage() {
                     <div className="relative flex-1 min-h-0 overflow-hidden" style={{ background: '#060C18' }}>
 
                         {/* Drag hint — desktop only, mobile users rely on touch gestures */}
-                        <div className="hidden lg:flex absolute bottom-4 left-1/2 -translate-x-1/2 items-center gap-2 px-4 py-2 rounded-full z-10 pointer-events-none text-xs font-bold text-slate-300 whitespace-nowrap shadow-xl"
-                            style={{ background: 'rgba(10,20,40,0.85)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                            <RotateCcw size={12} className="text-blue-400" /> Drag • Scroll zoom • Right-drag pan
+                        <div className="hidden lg:flex absolute bottom-4 left-1/2 -translate-x-1/2 items-center gap-2 px-4 py-2 rounded-full z-10 pointer-events-none text-xs font-bold text-slate-700 whitespace-nowrap shadow-xl"
+                            style={{ background: 'rgba(238,247,255,0.85)', backdropFilter: 'blur(16px)', border: '1px solid rgba(199,208,218,0.5)' }}>
+                            <RotateCcw size={12} className="text-blue-600" /> Drag • Scroll zoom • Right-drag pan
                         </div>
 
                         {/* Desktop corner stats */}
@@ -630,7 +630,7 @@ export function SimulationPage() {
                                 { icon: <span className="text-[12px]">💧</span>, val: cfg.waterLevel, col: cfg.riskColor },
                             ].map((c, i) => (
                                 <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold tabular-nums shadow-lg border"
-                                    style={{ background: 'rgba(10,20,40,0.85)', backdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.1)', color: c.col ?? '#8aa8cc' }}>
+                                    style={{ background: 'rgba(238,247,255,0.85)', backdropFilter: 'blur(16px)', borderColor: 'rgba(199,208,218,0.5)', color: c.col ?? '#1e293b' }}>
                                     {c.icon}{c.val}
                                 </div>
                             ))}
@@ -653,9 +653,9 @@ export function SimulationPage() {
                                 bottom: 16, left: '50%', transform: 'translateX(-50%)',
                                 display: 'flex', alignItems: 'center', gap: 10,
                                 padding: '14px 24px', borderRadius: 999,
-                                background: 'rgba(10,20,40,0.95)', backdropFilter: 'blur(24px)',
+                                background: 'rgba(249,250,251,0.95)', backdropFilter: 'blur(24px)',
                                 border: `1px solid ${cfg.riskBorder}`, color: cfg.riskColor,
-                                boxShadow: `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px ${cfg.riskBorder}`,
+                                boxShadow: `0 8px 32px rgba(199,208,218,0.6), 0 0 0 1px ${cfg.riskBorder}`,
                                 fontSize: '0.85rem', fontWeight: 900,
                                 whiteSpace: 'nowrap', transition: 'all 0.2s',
                             }}
@@ -689,7 +689,7 @@ export function SimulationPage() {
             <div onClick={() => setShowPanel(false)}
                 className="lg:hidden fixed inset-0 z-[60]"
                 style={{
-                    background: 'rgba(6,12,24,0.8)', backdropFilter: 'blur(8px)',
+                    background: 'rgba(238,247,255,0.6)', backdropFilter: 'blur(8px)',
                     opacity: showPanel ? 1 : 0, pointerEvents: showPanel ? 'auto' : 'none',
                     transition: 'opacity 0.3s',
                 }}
@@ -700,16 +700,16 @@ export function SimulationPage() {
                 style={{
                     bottom: 64, maxHeight: 'calc(85vh - 64px)',
                     borderRadius: '28px 28px 0 0',
-                    background: 'rgba(10,20,40,0.98)', backdropFilter: 'blur(32px)',
+                    background: 'rgba(249,250,251,0.98)', backdropFilter: 'blur(32px)',
                     border: `1px solid ${border}`, borderBottom: 'none',
-                    boxShadow: '0 -16px 48px rgba(0,0,0,0.8)',
+                    boxShadow: '0 -16px 48px rgba(199,208,218,0.5)',
                     transform: showPanel ? 'translateY(0)' : 'translateY(108%)',
                     transition: 'transform 0.4s cubic-bezier(0.32,0.72,0,1)',
                 }}
             >
                 {/* Pill handle */}
                 <div className="flex justify-center pt-3 pb-2 shrink-0">
-                    <div className="w-12 h-1.5 rounded-full bg-white/20" />
+                    <div className="w-12 h-1.5 rounded-full bg-slate-300" />
                 </div>
 
                 {/* Sheet header */}
@@ -723,13 +723,13 @@ export function SimulationPage() {
                                 : <AlertTriangle size={18} style={{ color: cfg.riskColor }} />}
                         </div>
                         <div>
-                            <p className="text-[0.95rem] font-black tracking-tight text-white leading-none">Simulation Config</p>
-                            <p className="text-[0.6rem] font-bold text-slate-400 uppercase tracking-widest mt-1">KL Digital Twin • {cfg.label}</p>
+                            <p className="text-[0.95rem] font-black tracking-tight text-slate-900 leading-none">Simulation Config</p>
+                            <p className="text-[0.6rem] font-bold text-slate-500 uppercase tracking-widest mt-1">KL Digital Twin • {cfg.label}</p>
                         </div>
                     </div>
                     <button onClick={() => setShowPanel(false)}
-                        className="flex items-center justify-center w-9 h-9 rounded-full transition-all bg-white/5 border hover:bg-white/10 active:scale-95"
-                        style={{ borderColor: borderS, color: '#8aa8cc' }}>
+                        className="flex items-center justify-center w-9 h-9 rounded-full transition-all bg-[#E3F4FF] border hover:bg-[#F9FAFB] active:scale-95"
+                        style={{ borderColor: borderS, color: '#475569' }}>
                         <X size={16} />
                     </button>
                 </div>

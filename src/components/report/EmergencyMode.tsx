@@ -224,29 +224,31 @@ export default function EmergencyMode({ onSubmit, onCancel }: EmergencyModeProps
                     )}
                 </div>
 
-                <div className="flex flex-col flex-1 p-6 gap-6 overflow-y-auto bg-white/[0.02]">
-                    <div className="flex items-center gap-2 text-cyan-400 font-bold text-[10px] tracking-[0.25em] uppercase opacity-70">
+                <div className="emergency-briefing-panel">
+                    <div className="flex items-center gap-2 text-blue-600 font-bold text-[10px] tracking-[0.25em] uppercase opacity-70">
                         <span>📝</span>
                         <span>SITUATION BRIEFING</span>
                     </div>
                     <div className="relative flex-1 flex flex-col">
                         <textarea
-                            className="w-full flex-1 min-h-[140px] bg-black/40 border border-white/10 rounded-2xl p-5 text-white text-lg resize-none focus:outline-none focus:border-cyan-500/50 focus:ring-4 focus:ring-cyan-500/10 transition-all placeholder:text-gray-600 leading-relaxed shadow-inner"
+                            className="desc-input w-full flex-1 min-h-[140px] bg-white border border-[#C7D0DA] rounded-2xl p-5 text-slate-900 text-lg resize-none focus:outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all placeholder:text-slate-400 leading-relaxed shadow-sm"
                             placeholder="What's happening? (e.g. Water is knee-deep and rising quickly...)"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             id="report-description"
                         />
-                        <div className="absolute bottom-4 right-4 text-[10px] text-gray-500 font-mono opacity-50">
+                        <div className="absolute bottom-4 right-4 text-[10px] text-slate-400 font-mono opacity-50">
                             {description.length} CHARS
                         </div>
                     </div>
+                </div>
 
+                <div className="submit-bar">
                     <button
                         className={`w-full py-5 rounded-2xl font-black text-white text-xl tracking-wider uppercase transition-all duration-500 shadow-2xl flex flex-col items-center justify-center gap-1 group relative overflow-hidden
                             ${canSubmit
                                 ? 'bg-gradient-to-br from-red-600 via-red-500 to-orange-600 hover:scale-[1.02] active:scale-[0.98] shadow-red-600/40 cursor-pointer'
-                                : 'bg-white/5 text-gray-600 cursor-not-allowed border border-white/5'
+                                : 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
                             }`}
                         onClick={handleSubmit}
                         disabled={!canSubmit}
@@ -260,8 +262,8 @@ export default function EmergencyMode({ onSubmit, onCancel }: EmergencyModeProps
                             {photoDataURLs.length > 0 ? `${photoDataURLs.length} EVIDENCE FILES ATTACHED` : 'EVIDENCE REQUIRED'}
                         </span>
                     </button>
-                    <div className="flex items-center justify-center gap-2 text-[10px] text-gray-500 font-bold tracking-widest opacity-60">
-                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
+                    <div className="flex items-center justify-center gap-2 mt-4 text-[10px] text-slate-500 font-bold tracking-widest opacity-60">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
                         AI SENTINEL ACTIVE
                     </div>
                 </div>
