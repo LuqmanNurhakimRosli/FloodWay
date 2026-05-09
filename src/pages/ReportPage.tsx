@@ -187,7 +187,9 @@ function FeedScreen({
 
         // 2. Area Filter
         list = list.filter(r => {
-            const dist = calculateDistance(userLat, userLng, r.autoTags.lat, r.autoTags.lng);
+            const rLat = r.autoTags?.lat ?? (r as any).location?.lat ?? 3.14;
+            const rLng = r.autoTags?.lng ?? (r as any).location?.lng ?? 101.68;
+            const dist = calculateDistance(userLat, userLng, rLat, rLng);
             const inArea = dist <= 5;
 
             // Debug distance log to help identify why reports might be mis-categorized
@@ -377,8 +379,12 @@ function TweetCard({ report, index }: { report: FloodReport; index: number }) {
     const isFlood = report.aiResult?.waterDetected === true;
     const conf = report.aiResult?.confidence ?? 0;
     const depth = report.aiResult?.depthEstimate ?? 'N/A';
-    const place = placeLabel(report.autoTags.lat, report.autoTags.lng);
-    const hasImg = report.photoDataURLs.length > 0;
+    
+    const rLat = report.autoTags?.lat ?? (report as any).location?.lat ?? 3.14;
+    const rLng = report.autoTags?.lng ?? (report as any).location?.lng ?? 101.68;
+    const place = placeLabel(rLat, rLng);
+    
+    const hasImg = report.photoDataURLs?.length > 0;
 
     return (
         <article

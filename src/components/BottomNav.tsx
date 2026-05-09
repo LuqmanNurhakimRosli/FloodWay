@@ -5,17 +5,17 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '../contexts/AuthContext';
 
 const tabs = [
-    { path: '/home',       icon: Home,      label: 'Home'     },
-    { path: '/shelters',   icon: Building2, label: 'Shelter'  },
-    { path: '/reports',    icon: MapPin,    label: 'Reports'  },
-    { path: '/simulation', icon: Waves,     label: 'Simulate' },
-    { path: '/profile',    icon: User,      label: 'Profile'  },
+    { path: '/home', icon: Home, label: 'Home' },
+    { path: '/shelters', icon: Building2, label: 'Shelter' },
+    { path: '/reports', icon: MapPin, label: 'Reports' },
+    { path: '/simulation', icon: Waves, label: 'Simulate' },
+    { path: '/profile', icon: User, label: 'Profile' },
 ];
 
 export function BottomNav() {
-    const navigate  = useNavigate();
-    const location  = useLocation();
-    const { user }  = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { user } = useAuth();
 
     return (
         <nav
@@ -28,7 +28,7 @@ export function BottomNav() {
         >
             <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
                 {tabs.map((tab) => {
-                    const isActive  = location.pathname === tab.path;
+                    const isActive = location.pathname === tab.path;
                     const isProfile = tab.path === '/profile';
 
                     return (

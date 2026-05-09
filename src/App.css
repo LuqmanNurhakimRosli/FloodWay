@@ -66,6 +66,27 @@
   --color-ring: var(--ring);
 }
 
+/* ── Light mode token overrides ── */
+:root:not(.dark) {
+  --background: oklch(1 0 0);           /* white */
+  --foreground: oklch(0.08 0.015 250);  /* near-black */
+  --card: oklch(0.97 0.005 240);        /* slate-50 */
+  --card-foreground: oklch(0.08 0.015 250);
+  --popover: oklch(0.97 0.005 240);
+  --popover-foreground: oklch(0.08 0.015 250);
+  --primary: oklch(0.52 0.22 255);      /* blue-600 */
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.92 0.01 240);    /* slate-100 */
+  --secondary-foreground: oklch(0.15 0.015 250);
+  --muted: oklch(0.94 0.008 240);
+  --muted-foreground: oklch(0.45 0.015 250);
+  --accent: oklch(0.92 0.01 240);
+  --accent-foreground: oklch(0.15 0.015 250);
+  --border: oklch(0.88 0.01 240);       /* slate-200 */
+  --input: oklch(0.88 0.01 240);
+  --ring: oklch(0.52 0.22 255);
+}
+
 @layer base {
   * { @apply border-border; }
   body { @apply bg-background text-foreground antialiased; }
