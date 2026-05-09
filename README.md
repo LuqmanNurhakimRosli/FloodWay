@@ -60,6 +60,7 @@ Faculty of Computer and Mathematical Sciences, UiTM
 - [Scalability & Impact](#-scalability--impact)
 - [Outreach Plan](#-outreach-plan)
 - [Roadmap & Timeline](#️-roadmap--timeline)
+- [Final Submission Refinements](#-final-submission-refinements)
 - [Getting Started](#-getting-started)
 - [Usage](#-usage)
 - [Contributing](#-contributing)
@@ -241,6 +242,23 @@ The **"FloodWay Sentinel Campaign"** transitions AI into a practical lifeline. E
 - [ ] Community Chat (Geohash hyperlocal, 2km radius)
 - [ ] ASEAN Regional Dataset Integration (Indonesia / Thailand)
 - [ ] B2B Logistics API Licensing
+
+---
+
+## 🚀 Final Submission Refinements
+
+Based on mentor feedback and real-world deployment readiness, FloodWay has evolved from a preliminary prototype into a production-grade disaster intelligence platform.
+
+| Refinement Area | Improvement (Final vs. Preliminary) | Strategic Impact |
+|---|---|---|
+| **📡 IoT Integration** | Integrated real-time water-level sensors alongside community reports. | Establishes a hybrid sensing environment (physical + crowdsourced). |
+| **🌍 Platform Scope** | Expanded to a multi-disaster discovery platform (Landslides, Haze, Earthquakes). | Increases commercial relevance and long-term market viability. |
+| **📍 Location Input** | Added manual map pinning to complement live GPS tracking. | Improves accuracy in low-GPS or inaccessible environments. |
+| **📂 Data Lifecycle** | Reports are permanently retained for historical analysis & AI retraining. | Enables long-term disaster trend auditing and policy evaluation. |
+| **🧵 Data Structuring** | Similarity detection groups related reports into unified incident threads. | Reduces duplicate noise and improves situational awareness. |
+| **💰 Monetization** | Introduced API-based strategy for logistics, NGOs, and research agencies. | Establishes a sustainable business model for real-time intelligence. |
+| **🎮 Simulation** | Redesigned 3D environment to focus on practical emergency training. | Transforms visualization into a practical disaster preparedness asset. |
+| **📱 UI/UX Logic** | Implemented "Danger-First" navigation for immediate threat visibility. | Aligns interface behavior with real-world emergency response. |
 
 ---
 
