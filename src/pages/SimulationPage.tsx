@@ -4,104 +4,6 @@
  * ║                      Layer 4: Flood Visualization Engine                    ║
  * ╚══════════════════════════════════════════════════════════════════════════════╝
  *
- * ┌─────────────────────────────────────────────────────────────────────────────┐
- * │                        MODEL ADVANCEMENT FLOW                               │
- * └─────────────────────────────────────────────────────────────────────────────┘
- *
- * The visualization engine answers one key user question:
- *   "What does a flood actually LOOK LIKE at different severity levels?"
- *
- * ─────────────────────────────────────────────────────────────────────────────
- *  v1.0 — 2D Static Risk Map                                        [RETIRED]
- * ─────────────────────────────────────────────────────────────────────────────
- *  Tech:    Leaflet coloured circles / heatmap overlay
- *  Problem: ✗ Abstract — users can't relate a circle colour to
- *             real physical water depth
- *           ✗ No spatial scale or sense of immersive danger
- *           ✗ Zero emotional impact → users underestimate risk
- *
- * ─────────────────────────────────────────────────────────────────────────────
- *  v2.0 — Animated 2D Risk Timeline                                 [RETIRED]
- * ─────────────────────────────────────────────────────────────────────────────
- *  Tech:    React SVG bars + FloodTimeline.tsx + FloodTimelineScrubber.tsx
- *  Upgrade: ✓ Shows time-based risk progression (24-hour view)
- *           ✓ Color-coded bars (green → amber → red)
- *  Problem: ✗ Still abstract — "80% probability" means nothing
- *             to someone who has never seen a 1.5m flood
- *
- * ─────────────────────────────────────────────────────────────────────────────
- *  v3.0 — 3D WebGL City Simulation — KL Digital Twin          ← CURRENT (HERE)
- * ─────────────────────────────────────────────────────────────────────────────
- *  Tech:    React Three Fiber + Three.js + custom GLSL shaders
- *
- *  Scene Components:
- *  ┌─────────────────┬───────────────────────────────────────────────────────┐
- *  │ CityModel       │ Loads public/city.glb (Blender export) via useGLTF.  │
- *  │                 │ Clones scene, applies PBR materials (roughness 0.4,  │
- *  │                 │ metalness 0.25), casts/receives shadows.             │
- *  ├─────────────────┼───────────────────────────────────────────────────────┤
- *  │ WaterPlane      │ Custom ShaderMaterial with GLSL:                     │
- *  │                 │  • Vertex: 3-layer sine waves for realistic motion   │
- *  │                 │  • Fragment: deep/shallow color gradient + foam      │
- *  │                 │  All uniforms (Y, opacity, color, wave H/speed)      │
- *  │                 │  lerp smoothly between flood levels each frame.      │
- *  ├─────────────────┼───────────────────────────────────────────────────────┤
- *  │ RainSystem      │ InstancedMesh of 200 cylinders. Each frame, Y pos   │
- *  │                 │ decremented by gravity, reset at top when OOB.      │
- *  │                 │ Count toggled live between 0 / 80 / 200.            │
- *  ├─────────────────┼───────────────────────────────────────────────────────┤
- *  │ FloatingDebris  │ 10 box meshes orbit + bob on the water surface.     │
- *  │                 │ Only visible when opacity > 0.25 (active flood).    │
- *  ├─────────────────┼───────────────────────────────────────────────────────┤
- *  │ PulseRing       │ Ring geometry expands + fades → danger signal.      │
- *  ├─────────────────┼───────────────────────────────────────────────────────┤
- *  │ Atmosphere      │ FogExp2 + scene background color per flood level.   │
- *  ├─────────────────┼───────────────────────────────────────────────────────┤
- *  │ DynamicLights   │ PointLight refs lerp color/intensity per frame.     │
- *  └─────────────────┴───────────────────────────────────────────────────────┘
- *
- *  Flood Levels:
- *    Normal  (☀️) → waterY: -12  | opacity: 0    | rain: 0   drops
- *    Medium  (🌧️) → waterY: -1.8 | opacity: 0.62 | rain: 80  drops
- *    High    (🌊) → waterY:  2.8 | opacity: 0.80 | rain: 200 drops
- *
- *  UI Pattern:
- *    Desktop → persistent sidebar (292px) with all controls
- *    Mobile  → 3D viewport full-screen + bottom-sheet drawer
- *              opened by the centered pill FAB at bottom
- *
- *  Key upgrade over v2:
- *    ✓ Visceral, immersive understanding of flood depth
- *    ✓ Real-time WebGL — interactive camera (drag/zoom/pan)
- *    ✓ Builds visual flood literacy BEFORE an emergency
- *    ✓ Demo Cycle auto-sequences levels for kiosk/showcase
- *    ✗ City model is generic (not GPS-anchored to user's street)
- *
- * ─────────────────────────────────────────────────────────────────────────────
- *  v4.0 — GPS-Anchored Street-Level Simulation                     [PLANNED]
- * ─────────────────────────────────────────────────────────────────────────────
- *  Tech:  Three.js + Mapbox 3D Tiles or CesiumJS
- *  Logic: Load real 3D tiles of the USER's GPS location
- *         + overlay flood level from LSTM prediction (Layer 1 v3.0)
- *  Key:   "This is YOUR street at 1.5m flood depth"
- *
- * ─────────────────────────────────────────────────────────────────────────────
- *  v5.0 — Augmented Reality Flood Overlay                    [FUTURE VISION]
- * ─────────────────────────────────────────────────────────────────────────────
- *  Tech:  WebXR API + ARCore / ARKit device support
- *  Logic: Live camera feed + device depth estimation
- *         → render predicted water level on real-world view
- *  Key:   User points camera at road → sees a blue waterline
- *         rising on the wall of their own house
- *
- * ─────────────────────────────────────────────────────────────────────────────
- *  Summary Timeline:
- *
- *  PAST                   NOW                         FUTURE
- *  ──────────────────────────────────────────────────────────────────▶
- *  2D Map ──► 2D Timeline ──► 3D WebGL [HERE] ──► GPS 3D ──► AR Cam
- * ─────────────────────────────────────────────────────────────────────────────
- *
  * @module SimulationPage
  * @version 3.0.0
  * @author  Luqman Nurhakim
@@ -133,9 +35,9 @@ const FLOOD_CONFIG = {
     normal: {
         label: 'Normal', emoji: '☀️',
         waterY: -12, targetY: -12,
-        color: new THREE.Color('#22d3ee'), opacity: 0,
+        color: new THREE.Color('#1A73E8'), opacity: 0,
         waveSpeed: 0.3, waveHeight: 0.05,
-        skyColor: '#03080f', fogColor: '#03080f', fogDensity: 0.010,
+        skyColor: '#060C18', fogColor: '#060C18', fogDensity: 0.010,
         rainfall: 0, windSpeed: '5 km/h', temp: '28°C',
         riskLabel: 'Safe', riskColor: '#22c55e',
         riskBg: 'rgba(34,197,94,0.09)', riskBorder: 'rgba(74,222,128,0.28)',
@@ -150,9 +52,9 @@ const FLOOD_CONFIG = {
     medium: {
         label: 'Medium', emoji: '🌧️',
         waterY: -1.8, targetY: -1.8,
-        color: new THREE.Color('#3b82f6'), opacity: 0.62,
+        color: new THREE.Color('#0D47A1'), opacity: 0.62,
         waveSpeed: 1.0, waveHeight: 0.20,
-        skyColor: '#040a15', fogColor: '#0a1628', fogDensity: 0.014,
+        skyColor: '#0A1428', fogColor: '#0A1428', fogDensity: 0.014,
         rainfall: 120, windSpeed: '45 km/h', temp: '24°C',
         riskLabel: 'Warning', riskColor: '#f59e0b',
         riskBg: 'rgba(245,158,11,0.09)', riskBorder: 'rgba(251,191,36,0.28)',
@@ -167,9 +69,9 @@ const FLOOD_CONFIG = {
     high: {
         label: 'High', emoji: '🌊',
         waterY: 2.8, targetY: 2.8,
-        color: new THREE.Color('#1d4ed8'), opacity: 0.80,
+        color: new THREE.Color('#082F6A'), opacity: 0.80,
         waveSpeed: 2.0, waveHeight: 0.38,
-        skyColor: '#080d18', fogColor: '#080d18', fogDensity: 0.014,
+        skyColor: '#0C1A36', fogColor: '#0C1A36', fogDensity: 0.014,
         rainfall: 150, windSpeed: '50 km/h', temp: '21°C',
         riskLabel: 'Critical', riskColor: '#ef4444',
         riskBg: 'rgba(239,68,68,0.10)', riskBorder: 'rgba(248,113,113,0.28)',
@@ -416,7 +318,7 @@ function AnimCounter({ value, unit }: { value: number; unit: string }) {
 
 function SectionTitle({ icon, label, right }: { icon: React.ReactNode; label: string; right?: React.ReactNode }) {
     return (
-        <div className="flex items-center gap-1.5 text-[0.58rem] font-bold uppercase tracking-[0.1em] text-slate-500">
+        <div className="flex items-center gap-1.5 text-[0.58rem] font-bold uppercase tracking-[0.1em] text-slate-400">
             {icon}<span className="flex-1">{label}</span>{right}
         </div>
     );
@@ -451,7 +353,7 @@ function FloodGauge({ level, cfg }: { level: FloodLevel; cfg: typeof FLOOD_CONFI
                     transition: 'left 1.2s cubic-bezier(0.34,1.1,0.64,1)',
                 }} />
             </div>
-            <div className="flex justify-between text-[0.55rem] tracking-wide" style={{ opacity: 0.85 }}>
+            <div className="flex justify-between text-[0.55rem] tracking-wide font-bold" style={{ opacity: 0.85 }}>
                 <span className="text-emerald-400">Safe</span>
                 <span className="text-amber-400">Warning</span>
                 <span className="text-red-400">Critical</span>
@@ -487,7 +389,7 @@ function LevelBtn({ l, active, onClick }: { l: FloodLevel; active: boolean; onCl
         padding: '11px 6px', borderRadius: 13, width: '100%',
         border: `1px solid ${active ? cfg.levelActiveBorder : 'rgba(255,255,255,0.06)'}`,
         background: active ? cfg.levelActiveBg : 'rgba(255,255,255,0.025)',
-        color: active ? cfg.levelActiveText : '#4a6080',
+        color: active ? cfg.levelActiveText : '#8aa8cc',
         fontSize: '0.68rem', cursor: 'pointer',
         transform: active ? 'translateY(-3px)' : 'translateY(0)',
         boxShadow: active ? cfg.levelActiveShadow : 'none',
@@ -510,9 +412,9 @@ function LevelBtn({ l, active, onClick }: { l: FloodLevel; active: boolean; onCl
 function ToggleBtn({ label, icon, on, onClick }: { label: string; icon: string; on: boolean; onClick: () => void }) {
     return (
         <button onClick={onClick} className={cn(
-            'flex flex-1 items-center justify-center gap-1.5 rounded-[9px] py-[7px] text-[0.67rem] font-semibold transition-all',
-            on ? 'bg-sky-500/10 border border-sky-400/[.28] text-sky-300'
-                : 'bg-white/[0.025] border border-white/[0.06] text-slate-500'
+            'flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold transition-all',
+            on ? 'bg-blue-500/20 border border-blue-400/40 text-blue-300'
+                : 'bg-white/[0.05] border border-white/[0.1] text-slate-400'
         )}>
             <span>{icon}</span><span>{label}</span>
         </button>
@@ -523,11 +425,11 @@ function StatRow({ icon, iconColor, label, value }: {
     icon: React.ReactNode; iconColor: string; label: string; value: React.ReactNode;
 }) {
     return (
-        <div className="flex items-center gap-2.5 px-[11px] py-[9px] rounded-[10px] bg-white/[0.022] border border-white/[0.06] hover:bg-white/[0.042] transition-colors">
+        <div className="flex items-center gap-2.5 px-[11px] py-[9px] rounded-xl bg-white/[0.022] border border-white/[0.06] hover:bg-white/[0.05] transition-colors">
             <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-white/5 shrink-0" style={{ color: iconColor }}>
                 {icon}
             </div>
-            <span className="flex-1 text-[0.67rem] text-slate-500">{label}</span>
+            <span className="flex-1 text-[0.67rem] font-bold text-slate-400">{label}</span>
             <span className="text-[0.82rem] font-bold text-slate-200 tabular-nums tracking-tight">{value}</span>
         </div>
     );
@@ -555,9 +457,9 @@ export function SimulationPage() {
     // Auto-close panel in demo mode
     useEffect(() => { if (demoMode) setShowPanel(false); }, [demoMode]);
 
-    const border = 'rgba(56,120,210,0.15)';
-    const borderS = 'rgba(255,255,255,0.06)';
-    const bgPanel = 'rgba(8,19,31,0.98)';
+    const border = 'rgba(26,115,232,0.15)';
+    const borderS = 'rgba(255,255,255,0.08)';
+    const bgPanel = 'rgba(10,20,40,0.85)';
 
     // ── Control content (shared by sidebar + mobile sheet) ──────────
     const Controls = () => (
@@ -570,7 +472,7 @@ export function SimulationPage() {
                     : <AlertTriangle size={18} style={{ color: cfg.riskColor, flexShrink: 0 }} />}
                 <div>
                     <p className="text-[0.9rem] font-extrabold leading-tight" style={{ color: cfg.riskColor }}>{cfg.riskLabel}</p>
-                    <p className="text-[0.56rem] font-semibold text-slate-500 uppercase tracking-wider">Current Status</p>
+                    <p className="text-[0.56rem] font-semibold text-slate-400 uppercase tracking-wider">Current Status</p>
                 </div>
             </div>
 
@@ -629,12 +531,12 @@ export function SimulationPage() {
 
             {/* Demo cycle */}
             <button onClick={() => setDemoMode(!demoMode)} className={cn(
-                'flex items-center justify-center gap-2 w-full py-2.5 rounded-[11px] border text-[0.7rem] font-semibold transition-all',
+                'flex items-center justify-center gap-2 w-full py-3 rounded-2xl border text-xs font-bold transition-all active:scale-95',
                 demoMode
-                    ? 'bg-blue-500/[0.12] border-blue-400/[0.35] text-blue-300'
-                    : 'bg-white/[0.025] border-white/[0.06] text-slate-500 hover:bg-blue-500/10 hover:border-blue-400/30 hover:text-blue-300'
+                    ? 'bg-blue-500/[0.15] border-blue-400/[0.4] text-blue-300 shadow-[0_0_12px_rgba(26,115,232,0.25)]'
+                    : 'bg-white/[0.05] border-white/[0.1] text-slate-400 hover:bg-blue-500/10 hover:border-blue-400/30 hover:text-blue-300'
             )}>
-                <Settings2 size={13} />
+                <Settings2 size={14} />
                 {demoMode ? 'Stop Demo Cycle' : 'Start Demo Cycle'}
             </button>
         </>
@@ -649,29 +551,29 @@ export function SimulationPage() {
                 display: 'flex', flexDirection: 'column',
                 height: 'calc(100dvh - 64px)',   /* above bottom nav */
                 paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-                background: '#03080f', color: '#e8f0ff',
+                background: '#060C18', color: '#e8f0ff',
                 fontFamily: 'Inter,system-ui,sans-serif', overflow: 'hidden',
             }}>
                 {/* ── MOBILE TOPBAR ── */}
                 <header className="lg:hidden flex items-center gap-2.5 px-4 py-2.5 shrink-0"
-                    style={{ background: 'rgba(3,8,15,0.97)', backdropFilter: 'blur(24px) saturate(180%)', borderBottom: `1px solid ${border}` }}
+                    style={{ background: 'rgba(6,12,24,0.92)', backdropFilter: 'blur(20px)', borderBottom: `1px solid ${border}` }}
                 >
                     <button onClick={() => navigate('/home')}
-                        className="flex items-center justify-center w-8 h-8 rounded-[9px] border transition-all"
-                        style={{ background: 'rgba(255,255,255,0.04)', borderColor: borderS, color: '#4a6080' }}>
+                        className="flex items-center justify-center w-8 h-8 rounded-xl border transition-all active:scale-95"
+                        style={{ background: 'rgba(255,255,255,0.05)', borderColor: borderS, color: '#8aa8cc' }}>
                         <ArrowLeft size={16} />
                     </button>
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <Droplets size={16} className="text-sky-400 shrink-0" />
-                        <span className="text-[0.85rem] font-bold tracking-tight truncate">Flood Simulation</span>
+                        <Droplets size={16} className="text-blue-400 shrink-0" />
+                        <span className="text-[0.85rem] font-black tracking-tight truncate text-white">Flood Simulation</span>
                         <span className="shrink-0 px-2 py-0.5 rounded-full text-[0.58rem] font-bold uppercase tracking-wide"
                             style={{ background: cfg.riskBg, color: cfg.riskColor, border: `1px solid ${cfg.riskBorder}` }}>
                             {cfg.riskLabel}
                         </span>
                     </div>
                     <button onClick={() => setDemoMode(!demoMode)} className={cn(
-                        'shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[0.6rem] font-bold uppercase tracking-wide border transition-all',
-                        demoMode ? 'bg-blue-500/15 border-blue-400/40 text-blue-300' : 'bg-white/[0.03] border-white/[0.06] text-slate-500')}>
+                        'shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[0.6rem] font-bold uppercase tracking-wide border transition-all active:scale-95',
+                        demoMode ? 'bg-blue-500/20 border-blue-400/40 text-blue-300' : 'bg-white/[0.05] border-white/[0.1] text-slate-400')}>
                         <Activity size={11} />{demoMode ? 'Live' : 'Demo'}
                     </button>
                 </header>
@@ -682,50 +584,53 @@ export function SimulationPage() {
                     {/* ── DESKTOP SIDEBAR ── */}
                     <aside className="hidden lg:flex flex-col shrink-0 overflow-y-auto overflow-x-hidden"
                         style={{
-                            width: 292, minWidth: 292, height: '100%',
-                            background: `linear-gradient(180deg, ${bgPanel} 0%, rgba(11,27,45,0.98) 100%)`,
+                            width: 320, minWidth: 320, height: '100%',
+                            background: `linear-gradient(180deg, ${bgPanel} 0%, rgba(6,12,24,0.98) 100%)`,
                             borderRight: `1px solid ${border}`,
-                            scrollbarWidth: 'thin', scrollbarColor: 'rgba(59,130,246,0.22) transparent',
+                            backdropFilter: 'blur(16px)',
+                            scrollbarWidth: 'thin', scrollbarColor: 'rgba(26,115,232,0.3) transparent',
                         }}
                     >
-                        <div className="flex items-center gap-2.5 px-4 py-[18px] shrink-0"
-                            style={{ borderBottom: `1px solid ${border}`, background: 'rgba(3,8,15,0.45)' }}>
+                        <div className="flex items-center gap-2.5 px-4 py-5 shrink-0"
+                            style={{ borderBottom: `1px solid ${border}`, background: 'rgba(6,12,24,0.45)' }}>
                             <button onClick={() => navigate('/home')}
-                                className="flex items-center justify-center w-8 h-8 rounded-[9px] border transition-all"
-                                style={{ background: 'rgba(255,255,255,0.04)', borderColor: borderS, color: '#4a6080' }}>
-                                <ArrowLeft size={15} />
+                                className="flex items-center justify-center w-9 h-9 rounded-xl border transition-all active:scale-95 hover:bg-white/10"
+                                style={{ background: 'rgba(255,255,255,0.05)', borderColor: borderS, color: '#8aa8cc' }}>
+                                <ArrowLeft size={16} />
                             </button>
-                            <div className="flex items-center gap-2">
-                                <Droplets size={18} className="text-sky-400" />
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)' }}>
+                                    <Droplets size={16} className="text-white fill-white/20" />
+                                </div>
                                 <div>
-                                    <p className="text-[0.88rem] font-extrabold tracking-tight text-slate-100 leading-none">Flood Sim</p>
-                                    <p className="text-[0.57rem] font-semibold text-slate-500 uppercase tracking-[0.08em] mt-0.5">KL Digital Twin</p>
+                                    <p className="text-[0.95rem] font-black tracking-tight text-white leading-none">Flood Sim</p>
+                                    <p className="text-[0.57rem] font-bold text-blue-300 uppercase tracking-widest mt-1">KL Digital Twin</p>
                                 </div>
                             </div>
                         </div>
-                        <div className="flex flex-col gap-3 px-3.5 pt-3.5 pb-5">
+                        <div className="flex flex-col gap-4 px-4 pt-4 pb-6">
                             <Controls />
                         </div>
                     </aside>
 
                     {/* ── 3D VIEWPORT ── */}
-                    <div className="relative flex-1 min-h-0 overflow-hidden" style={{ background: '#03080f' }}>
+                    <div className="relative flex-1 min-h-0 overflow-hidden" style={{ background: '#060C18' }}>
 
                         {/* Drag hint — desktop only, mobile users rely on touch gestures */}
-                        <div className="hidden lg:flex absolute bottom-3 left-1/2 -translate-x-1/2 items-center gap-1.5 px-3 py-1.5 rounded-full z-10 pointer-events-none text-[0.6rem] text-slate-500 whitespace-nowrap"
-                            style={{ background: 'rgba(3,8,15,0.7)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                            <RotateCcw size={11} /> Drag • Scroll zoom • Right-drag pan
+                        <div className="hidden lg:flex absolute bottom-4 left-1/2 -translate-x-1/2 items-center gap-2 px-4 py-2 rounded-full z-10 pointer-events-none text-xs font-bold text-slate-300 whitespace-nowrap shadow-xl"
+                            style={{ background: 'rgba(10,20,40,0.85)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                            <RotateCcw size={12} className="text-blue-400" /> Drag • Scroll zoom • Right-drag pan
                         </div>
 
                         {/* Desktop corner stats */}
-                        <div className="absolute bottom-14 right-3.5 hidden lg:flex flex-col gap-1.5 z-10">
+                        <div className="absolute bottom-14 right-4 hidden lg:flex flex-col gap-2 z-10">
                             {[
-                                { icon: <Droplets size={11} className="text-blue-400" />, val: <><AnimCounter value={cfg.rainfall} unit="" />{' mm/h'}</> },
-                                { icon: <Wind size={11} className="text-cyan-400" />, val: cfg.windSpeed },
-                                { icon: <span className="text-[11px]">💧</span>, val: cfg.waterLevel, col: cfg.riskColor },
+                                { icon: <Droplets size={12} className="text-blue-400" />, val: <><AnimCounter value={cfg.rainfall} unit="" />{' mm/h'}</> },
+                                { icon: <Wind size={12} className="text-cyan-400" />, val: cfg.windSpeed },
+                                { icon: <span className="text-[12px]">💧</span>, val: cfg.waterLevel, col: cfg.riskColor },
                             ].map((c, i) => (
-                                <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] text-[0.67rem] font-semibold tabular-nums"
-                                    style={{ background: 'rgba(3,8,15,0.75)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.07)', color: c.col ?? '#8aa8cc' }}>
+                                <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold tabular-nums shadow-lg border"
+                                    style={{ background: 'rgba(10,20,40,0.85)', backdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.1)', color: c.col ?? '#8aa8cc' }}>
                                     {c.icon}{c.val}
                                 </div>
                             ))}
@@ -735,7 +640,7 @@ export function SimulationPage() {
                         {level !== 'normal' && (
                             <div className="absolute inset-0 pointer-events-none z-[5]" style={{
                                 opacity: level === 'high' ? 0.65 : 0.35,
-                                backgroundImage: 'repeating-linear-gradient(transparent 0%,transparent 46%,rgba(130,190,255,0.065) 50%,transparent 54%,transparent 100%)',
+                                backgroundImage: 'repeating-linear-gradient(transparent 0%,transparent 46%,rgba(26,115,232,0.1) 50%,transparent 54%,transparent 100%)',
                                 backgroundSize: '3px 32px',
                                 animation: 'simRainFall 0.12s linear infinite',
                             }} />
@@ -745,30 +650,23 @@ export function SimulationPage() {
                         <button
                             className="lg:hidden absolute z-20 active:scale-[0.97]"
                             style={{
-                                bottom: 16,
-                                left: '50%',
-                                transform: 'translateX(-50%)',
+                                bottom: 16, left: '50%', transform: 'translateX(-50%)',
                                 display: 'flex', alignItems: 'center', gap: 10,
-                                padding: '12px 22px',
-                                borderRadius: 999,
-                                background: 'rgba(5,11,22,0.94)',
-                                backdropFilter: 'blur(24px) saturate(180%)',
-                                border: `1.5px solid ${cfg.riskBorder}`,
-                                color: cfg.riskColor,
-                                boxShadow: `0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px ${cfg.riskBorder}, inset 0 1px 0 rgba(255,255,255,0.06)`,
-                                fontSize: '0.82rem', fontWeight: 700,
-                                letterSpacing: '0.01em',
-                                whiteSpace: 'nowrap',
-                                transition: 'all 0.2s cubic-bezier(0.34,1.56,0.64,1)',
+                                padding: '14px 24px', borderRadius: 999,
+                                background: 'rgba(10,20,40,0.95)', backdropFilter: 'blur(24px)',
+                                border: `1px solid ${cfg.riskBorder}`, color: cfg.riskColor,
+                                boxShadow: `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px ${cfg.riskBorder}`,
+                                fontSize: '0.85rem', fontWeight: 900,
+                                whiteSpace: 'nowrap', transition: 'all 0.2s',
                             }}
                             onClick={() => setShowPanel(true)}
                         >
                             {level === 'normal'
-                                ? <CheckCircle size={15} style={{ flexShrink: 0 }} />
-                                : <AlertTriangle size={15} style={{ flexShrink: 0 }} />}
+                                ? <CheckCircle size={16} style={{ flexShrink: 0 }} />
+                                : <AlertTriangle size={16} style={{ flexShrink: 0 }} />}
                             <span>{cfg.riskLabel}</span>
-                            <span style={{ width: 1, height: 14, background: cfg.riskBorder, flexShrink: 0 }} />
-                            <Settings2 size={13} style={{ opacity: 0.6, flexShrink: 0 }} />
+                            <span style={{ width: 1, height: 16, background: cfg.riskBorder, flexShrink: 0 }} />
+                            <Settings2 size={15} style={{ opacity: 0.8, flexShrink: 0 }} />
                         </button>
 
                         <Canvas shadows dpr={[1, 1.8]}
@@ -785,16 +683,14 @@ export function SimulationPage() {
                 </div>
             </div>
 
-            {/* ══ MOBILE BOTTOM SHEET (fixed, outside root) ══ */}
+            {/* ══ MOBILE BOTTOM SHEET ══ */}
 
             {/* Backdrop */}
             <div onClick={() => setShowPanel(false)}
                 className="lg:hidden fixed inset-0 z-[60]"
                 style={{
-                    background: 'rgba(0,0,0,0.7)',
-                    backdropFilter: 'blur(4px)',
-                    opacity: showPanel ? 1 : 0,
-                    pointerEvents: showPanel ? 'auto' : 'none',
+                    background: 'rgba(6,12,24,0.8)', backdropFilter: 'blur(8px)',
+                    opacity: showPanel ? 1 : 0, pointerEvents: showPanel ? 'auto' : 'none',
                     transition: 'opacity 0.3s',
                 }}
             />
@@ -802,50 +698,47 @@ export function SimulationPage() {
             {/* Drawer */}
             <div className="lg:hidden fixed left-0 right-0 z-[70] flex flex-col"
                 style={{
-                    bottom: 64,                     /* sits flush above bottom nav */
-                    maxHeight: 'calc(80vh - 64px)',
-                    borderRadius: '24px 24px 0 0',
-                    background: 'rgba(5,12,23,0.97)',
-                    backdropFilter: 'blur(32px) saturate(200%)',
-                    border: `1px solid ${border}`,
-                    borderBottom: 'none',
-                    boxShadow: '0 -12px 48px rgba(0,0,0,0.7)',
+                    bottom: 64, maxHeight: 'calc(85vh - 64px)',
+                    borderRadius: '28px 28px 0 0',
+                    background: 'rgba(10,20,40,0.98)', backdropFilter: 'blur(32px)',
+                    border: `1px solid ${border}`, borderBottom: 'none',
+                    boxShadow: '0 -16px 48px rgba(0,0,0,0.8)',
                     transform: showPanel ? 'translateY(0)' : 'translateY(108%)',
-                    transition: 'transform 0.38s cubic-bezier(0.32,0.72,0,1)',
+                    transition: 'transform 0.4s cubic-bezier(0.32,0.72,0,1)',
                 }}
             >
                 {/* Pill handle */}
                 <div className="flex justify-center pt-3 pb-2 shrink-0">
-                    <div className="w-10 h-1 rounded-full bg-white/20" />
+                    <div className="w-12 h-1.5 rounded-full bg-white/20" />
                 </div>
 
                 {/* Sheet header */}
-                <div className="flex items-center justify-between px-4 pb-3 shrink-0"
-                    style={{ borderBottom: `1px solid ${border}` }}>
-                    <div className="flex items-center gap-2.5">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-xl"
+                <div className="flex items-center justify-between px-5 pb-4 shrink-0 border-b"
+                    style={{ borderColor: border }}>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-xl"
                             style={{ background: cfg.riskBg, border: `1px solid ${cfg.riskBorder}` }}>
                             {level === 'normal'
-                                ? <CheckCircle size={15} style={{ color: cfg.riskColor }} />
-                                : <AlertTriangle size={15} style={{ color: cfg.riskColor }} />}
+                                ? <CheckCircle size={18} style={{ color: cfg.riskColor }} />
+                                : <AlertTriangle size={18} style={{ color: cfg.riskColor }} />}
                         </div>
                         <div>
-                            <p className="text-[0.88rem] font-extrabold tracking-tight text-slate-100 leading-none">Simulation Config</p>
-                            <p className="text-[0.56rem] text-slate-500 uppercase tracking-wider mt-0.5">KL Digital Twin • {cfg.label} Mode</p>
+                            <p className="text-[0.95rem] font-black tracking-tight text-white leading-none">Simulation Config</p>
+                            <p className="text-[0.6rem] font-bold text-slate-400 uppercase tracking-widest mt-1">KL Digital Twin • {cfg.label}</p>
                         </div>
                     </div>
                     <button onClick={() => setShowPanel(false)}
-                        className="flex items-center justify-center w-8 h-8 rounded-full transition-all hover:bg-white/10"
-                        style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${borderS}`, color: '#4a6080' }}>
-                        <X size={14} />
+                        className="flex items-center justify-center w-9 h-9 rounded-full transition-all bg-white/5 border hover:bg-white/10 active:scale-95"
+                        style={{ borderColor: borderS, color: '#8aa8cc' }}>
+                        <X size={16} />
                     </button>
                 </div>
 
                 {/* Scrollable body */}
-                <div className="flex flex-col gap-3 px-4 py-4 overflow-y-auto"
+                <div className="flex flex-col gap-4 px-5 py-5 overflow-y-auto"
                     style={{ overscrollBehavior: 'contain', scrollbarWidth: 'none' }}>
                     <Controls />
-                    <div className="h-2" />     {/* breathing room at end */}
+                    <div className="h-4" />
                 </div>
             </div>
         </>

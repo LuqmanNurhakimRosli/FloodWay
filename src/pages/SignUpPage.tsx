@@ -1,27 +1,14 @@
-// Sign Up Page — Tailwind + shadcn/ui with FloodWay branding
+// Sign Up Page — FloodWay · Blue/White/Black · Clean human-centric design
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Eye, EyeOff, UserPlus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { Eye, EyeOff, Waves } from 'lucide-react';
 
-/* ─── Spinner ─── */
 function Spinner() {
     return (
-        <svg
-            className="w-[18px] h-[18px] shrink-0 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-        >
+        <svg className="w-[18px] h-[18px] shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" strokeOpacity="0.25" />
-            <path
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
+            <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
         </svg>
     );
 }
@@ -35,9 +22,36 @@ const GoogleIcon = () => (
     </svg>
 );
 
+function UnderlineInput({
+    id, type = 'text', placeholder, value, onChange, required, disabled, minLength, rightElement
+}: {
+    id: string; type?: string; placeholder: string; value: string;
+    onChange: (v: string) => void; required?: boolean; disabled?: boolean;
+    minLength?: number; rightElement?: React.ReactNode;
+}) {
+    const [focused, setFocused] = useState(false);
+    return (
+        <div className="relative">
+            <input
+                id={id} type={type} placeholder={placeholder} value={value}
+                onChange={e => onChange(e.target.value)}
+                required={required} disabled={disabled} minLength={minLength}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
+                className="w-full h-[50px] bg-transparent border-0 border-b text-slate-100 text-[0.88rem] font-medium placeholder:text-slate-600 outline-none pb-2 pr-10 transition-all duration-200"
+                style={{ borderBottomColor: focused ? '#1A73E8' : 'rgba(255,255,255,0.12)' }}
+            />
+            {rightElement && (
+                <div className="absolute right-0 top-3">{rightElement}</div>
+            )}
+        </div>
+    );
+}
+
 export function SignUpPage() {
     const { signUp, signInWithGoogle } = useAuth();
     const navigate = useNavigate();
+
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -53,205 +67,138 @@ export function SignUpPage() {
         if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
         if (name.trim().length < 2) { setError('Please enter your full name (at least 2 characters).'); return; }
         setLoading(true);
-        const { error: signUpError } = await signUp(email, password, name.trim());
-        if (signUpError) { setError(signUpError.message); setLoading(false); }
+        const { error: err } = await signUp(email, password, name.trim());
+        if (err) { setError(err.message); setLoading(false); }
         else navigate('/loading');
     };
 
-    const handleGoogleSignIn = async () => {
+    const handleGoogle = async () => {
         setError(''); setGoogleLoading(true);
-        const { error: signInError } = await signInWithGoogle();
-        if (signInError) { setError(signInError.message); setGoogleLoading(false); }
+        const { error: err } = await signInWithGoogle();
+        if (err) { setError(err.message); setGoogleLoading(false); }
         else navigate('/loading');
     };
 
-    const isLoading = loading || googleLoading;
+    const busy = loading || googleLoading;
+
+    const eyeBtn = (
+        <button type="button" onClick={() => setShowPassword(!showPassword)}
+            className="text-slate-500 hover:text-slate-300 transition-colors bg-transparent border-none cursor-pointer p-0">
+            {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+        </button>
+    );
 
     return (
-        <div className="min-h-dvh bg-[linear-gradient(160deg,#0B1120_0%,#0F1B2D_40%,#0B1A2A_100%)] flex items-center justify-center relative overflow-hidden font-[system-ui,sans-serif] p-4">
-
-            {/* Ambient orbs */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute w-[40vw] h-[40vw] max-w-[500px] max-h-[500px] rounded-full blur-[100px] opacity-[0.12] bg-[radial-gradient(circle,#3b82f6,transparent)] top-[-10%] left-[-5%] animate-[float1_12s_ease-in-out_infinite]" />
-                <div className="absolute w-[35vw] h-[35vw] max-w-[400px] max-h-[400px] rounded-full blur-[90px] opacity-[0.10] bg-[radial-gradient(circle,#0d9488,transparent)] bottom-[-8%] right-[-5%] animate-[float2_15s_ease-in-out_infinite]" />
-            </div>
-
-            {/* Dot pattern */}
-            <div
-                className="absolute inset-0 pointer-events-none opacity-[0.03]"
-                style={{
-                    backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
-                    backgroundSize: '30px 30px',
-                }}
-            />
-
-            {/* Keyframe definitions */}
+        <div className="min-h-dvh bg-[#060C18] flex flex-col items-center justify-center relative overflow-hidden p-5">
             <style>{`
-                @keyframes float1 { 0%,100%{ transform: translate(0,0) scale(1); } 50%{ transform: translate(12px,-18px) scale(1.05); } }
-                @keyframes float2 { 0%,100%{ transform: translate(0,0) scale(1); } 50%{ transform: translate(-15px,12px) scale(1.08); } }
-                @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes floatA { 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(-20px,-30px); } }
+                @keyframes floatB { 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(25px,20px); } }
+                @keyframes cardIn { from{ opacity:0; transform:translateY(28px); } to{ opacity:1; transform:translateY(0); } }
             `}</style>
 
-            {/* Card */}
-            <div
-                className={cn(
-                    'relative z-10 w-full max-w-[420px] max-h-[95dvh] overflow-y-auto',
-                    'bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-3xl',
-                    'px-6 py-7 shadow-[0_25px_60px_-12px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.05)]',
-                    'sm:px-5 sm:py-5',
-                )}
-                style={{ animation: 'fadeInUp 0.7s cubic-bezier(0.22,1,0.36,1) both' }}
-            >
-                {/* Header */}
-                <div className="text-center mb-5">
-                    {/* FloodWay Logo */}
-                    <div className="inline-flex items-center justify-center mb-3">
-                        <img
-                            src="/floodway logo.png"
-                            alt="FloodWay Logo"
-                            className="w-16 h-16 object-contain drop-shadow-[0_0_16px_rgba(59,130,246,0.5)]"
-                        />
-                    </div>
+            {/* Background orbs */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute w-[50vw] h-[50vw] max-w-[500px] max-h-[500px] rounded-full blur-[120px] opacity-[0.10]"
+                    style={{ background: 'radial-gradient(circle, #1A73E8, transparent)', top: '-15%', left: '-10%', animation: 'floatA 14s ease-in-out infinite' }} />
+                <div className="absolute w-[40vw] h-[40vw] max-w-[380px] max-h-[380px] rounded-full blur-[100px] opacity-[0.07]"
+                    style={{ background: 'radial-gradient(circle, #4A90E2, transparent)', bottom: '-10%', right: '-8%', animation: 'floatB 18s ease-in-out infinite' }} />
+            </div>
 
-                    <h1 className="text-[1.75rem] font-black leading-none m-0 bg-[linear-gradient(135deg,#ffffff_0%,#94a3b8_100%)] bg-clip-text text-transparent sm:text-2xl">
-                        Join FloodWay
+            <div className="absolute inset-0 pointer-events-none opacity-[0.025]"
+                style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+
+            {/* Card */}
+            <div className="relative z-10 w-full max-w-[400px] max-h-[95dvh] overflow-y-auto"
+                style={{ animation: 'cardIn 0.65s cubic-bezier(0.22,1,0.36,1) both' }}>
+
+                {/* Logo */}
+                <div className="flex flex-col items-center mb-7">
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+                        style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', boxShadow: '0 0 32px rgba(26,115,232,0.4)' }}>
+                        <Waves className="w-7 h-7 text-white" />
+                    </div>
+                    <h1 className="text-[1.75rem] font-black text-white tracking-tight leading-none">
+                        Create your account
                     </h1>
-                    <p className="text-[0.78rem] text-slate-500 mt-1 font-medium">
-                        AI-powered flood monitoring &amp; early warning system
+                    <p className="text-slate-400 text-[0.78rem] mt-1.5 font-medium">
+                        AI-powered flood monitoring &amp; early warning
                     </p>
                 </div>
 
                 {/* Error */}
                 {error && (
-                    <div className="px-3 py-2 rounded-xl mb-3 bg-red-500/10 border border-red-500/20 text-red-300 text-[0.78rem] font-semibold text-center">
+                    <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-[0.78rem] font-semibold text-center">
                         {error}
                     </div>
                 )}
 
-                {/* Google Sign Up */}
-                <Button
+                {/* Google */}
+                <button
                     id="google-signup-btn"
-                    variant="outline"
-                    className="w-full h-12 rounded-xl text-[0.85rem] font-bold gap-2.5 bg-white/[0.06] border-white/10 text-slate-200 hover:bg-white/[0.12] hover:border-white/20 hover:-translate-y-px transition-all duration-200 backdrop-blur-md"
-                    onClick={handleGoogleSignIn}
-                    disabled={isLoading}
+                    onClick={handleGoogle}
+                    disabled={busy}
+                    className="w-full h-[52px] flex items-center justify-center gap-3 rounded-2xl border text-[0.88rem] font-semibold text-white mb-5 transition-all duration-200 disabled:opacity-50"
+                    style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.12)' }}
+                    onMouseEnter={e => { if (!busy) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.20)'; } }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.12)'; }}
                 >
                     {googleLoading ? <Spinner /> : <GoogleIcon />}
-                    Sign up with Google
-                </Button>
+                    Continue with Google
+                </button>
 
                 {/* Divider */}
-                <div className="flex items-center gap-3 my-3">
-                    <div className="flex-1 h-px bg-white/[0.06]" />
+                <div className="flex items-center gap-3 mb-5">
+                    <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
                     <span className="text-[0.62rem] text-slate-600 font-semibold uppercase tracking-widest">or email</span>
-                    <div className="flex-1 h-px bg-white/[0.06]" />
+                    <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSignUp} className="flex flex-col gap-3">
-                    {/* Full Name */}
+                <form onSubmit={handleSignUp} className="flex flex-col gap-4">
                     <div className="flex flex-col gap-1.5">
-                        <Label className="text-[0.68rem] font-bold text-slate-400 uppercase tracking-widest">
-                            Full Name
-                        </Label>
-                        <Input
-                            id="name"
-                            type="text"
-                            placeholder="Ahmad Farid"
-                            value={name}
-                            onChange={e => setName(e.target.value)}
-                            required
-                            disabled={isLoading}
-                            className="h-11 rounded-xl bg-white/[0.05] border-white/10 text-slate-100 text-[0.85rem] font-medium placeholder:text-slate-600 focus-visible:border-teal-400/50 focus-visible:ring-teal-400/10 focus-visible:bg-white/[0.07] transition-all"
-                        />
+                        <label htmlFor="name" className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-[0.15em]">Full Name</label>
+                        <UnderlineInput id="name" placeholder="Ahmad Farid" value={name} onChange={setName} required disabled={busy} />
                     </div>
 
-                    {/* Email */}
                     <div className="flex flex-col gap-1.5">
-                        <Label className="text-[0.68rem] font-bold text-slate-400 uppercase tracking-widest">
-                            Email
-                        </Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            placeholder="name@example.com"
-                            value={email}
-                            onChange={e => setEmail(e.target.value)}
-                            required
-                            disabled={isLoading}
-                            className="h-11 rounded-xl bg-white/[0.05] border-white/10 text-slate-100 text-[0.85rem] font-medium placeholder:text-slate-600 focus-visible:border-teal-400/50 focus-visible:ring-teal-400/10 focus-visible:bg-white/[0.07] transition-all"
-                        />
+                        <label htmlFor="email" className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-[0.15em]">Email Address</label>
+                        <UnderlineInput id="email" type="email" placeholder="name@example.com" value={email} onChange={setEmail} required disabled={busy} />
                     </div>
 
-                    {/* Password */}
                     <div className="flex flex-col gap-1.5">
-                        <Label className="text-[0.68rem] font-bold text-slate-400 uppercase tracking-widest">
-                            Password
-                        </Label>
-                        <div className="relative">
-                            <Input
-                                id="password"
-                                type={showPassword ? 'text' : 'password'}
-                                placeholder="Min. 6 characters"
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                                required
-                                disabled={isLoading}
-                                minLength={6}
-                                className="h-11 rounded-xl bg-white/[0.05] border-white/10 text-slate-100 text-[0.85rem] font-medium placeholder:text-slate-600 pr-11 focus-visible:border-teal-400/50 focus-visible:ring-teal-400/10 focus-visible:bg-white/[0.07] transition-all"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors p-0 bg-transparent border-none cursor-pointer flex"
-                            >
-                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                            </button>
-                        </div>
+                        <label htmlFor="password" className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-[0.15em]">Password</label>
+                        <UnderlineInput id="password" type={showPassword ? 'text' : 'password'} placeholder="Min. 6 characters"
+                            value={password} onChange={setPassword} required disabled={busy} minLength={6} rightElement={eyeBtn} />
                     </div>
 
-                    {/* Confirm Password */}
                     <div className="flex flex-col gap-1.5">
-                        <Label className="text-[0.68rem] font-bold text-slate-400 uppercase tracking-widest">
-                            Confirm Password
-                        </Label>
-                        <Input
-                            id="confirmPassword"
-                            type={showPassword ? 'text' : 'password'}
-                            placeholder="Repeat password"
-                            value={confirmPassword}
-                            onChange={e => setConfirmPassword(e.target.value)}
-                            required
-                            disabled={isLoading}
-                            minLength={6}
-                            className="h-11 rounded-xl bg-white/[0.05] border-white/10 text-slate-100 text-[0.85rem] font-medium placeholder:text-slate-600 focus-visible:border-teal-400/50 focus-visible:ring-teal-400/10 focus-visible:bg-white/[0.07] transition-all"
-                        />
+                        <label htmlFor="confirmPassword" className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-[0.15em]">Confirm Password</label>
+                        <UnderlineInput id="confirmPassword" type={showPassword ? 'text' : 'password'} placeholder="Repeat password"
+                            value={confirmPassword} onChange={setConfirmPassword} required disabled={busy} minLength={6} />
                     </div>
 
-                    {/* Submit */}
-                    <Button
+                    <button
                         type="submit"
                         id="email-signup-btn"
-                        disabled={isLoading}
-                        className="mt-1 h-12 rounded-xl text-[0.85rem] font-bold gap-2 bg-[linear-gradient(135deg,#0d9488_0%,#0891b2_100%)] text-white shadow-[0_4px_20px_rgba(13,148,136,0.3)] hover:-translate-y-px hover:shadow-[0_8px_30px_rgba(13,148,136,0.45)] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled={busy}
+                        className="mt-2 w-full h-[52px] rounded-2xl text-[0.88rem] font-bold text-white flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-60"
+                        style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', boxShadow: '0 4px 20px rgba(26,115,232,0.3)' }}
                     >
-                        {loading ? <><Spinner /> Creating account…</> : <><UserPlus size={17} /> Create Account</>}
-                    </Button>
+                        {loading ? <><Spinner /> Creating account…</> : 'Create Account'}
+                    </button>
                 </form>
 
                 {/* Sign in link */}
-                <p className="text-center text-[0.82rem] text-slate-500 font-medium mt-4 mb-1">
+                <p className="text-center text-[0.82rem] text-slate-500 font-medium mt-5">
                     Already have an account?{' '}
-                    <Link
-                        to="/"
-                        className="text-teal-400 font-bold no-underline border-b border-teal-400/30 hover:text-teal-300 hover:border-teal-300/50 transition-colors"
-                    >
+                    <Link to="/" className="font-bold no-underline transition-colors"
+                        style={{ color: '#4A90E2', borderBottom: '1px solid rgba(74,144,226,0.35)' }}>
                         Sign in
                     </Link>
                 </p>
 
-                <p className="text-center text-[0.6rem] text-slate-700 mt-2">
-                    Flood Monitoring &amp; Navigation System • Kuala Lumpur Region
+                <p className="text-center text-[0.60rem] text-slate-700 mt-4">
+                    Flood Monitoring &amp; Navigation System · Kuala Lumpur Region
                 </p>
             </div>
         </div>

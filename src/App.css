@@ -4,29 +4,30 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(0.13 0.028 261.692);
-  --foreground: oklch(0.985 0.002 247.839);
-  --card: oklch(0.17 0.03 264);
-  --card-foreground: oklch(0.985 0.002 247.839);
-  --popover: oklch(0.17 0.03 264);
-  --popover-foreground: oklch(0.985 0.002 247.839);
-  --primary: oklch(0.62 0.2 250);
-  --primary-foreground: oklch(0.985 0.002 247.839);
-  --secondary: oklch(0.278 0.033 256.848);
-  --secondary-foreground: oklch(0.985 0.002 247.839);
-  --muted: oklch(0.278 0.033 256.848);
-  --muted-foreground: oklch(0.707 0.022 261.325);
-  --accent: oklch(0.278 0.033 256.848);
-  --accent-foreground: oklch(0.985 0.002 247.839);
+  /* ── Blue / White / Black Design System ── */
+  --background: oklch(0.07 0.015 250);
+  --foreground: oklch(0.97 0.005 240);
+  --card: oklch(0.10 0.018 250);
+  --card-foreground: oklch(0.97 0.005 240);
+  --popover: oklch(0.10 0.018 250);
+  --popover-foreground: oklch(0.97 0.005 240);
+  --primary: oklch(0.58 0.22 255);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.16 0.025 250);
+  --secondary-foreground: oklch(0.97 0.005 240);
+  --muted: oklch(0.16 0.025 250);
+  --muted-foreground: oklch(0.58 0.015 250);
+  --accent: oklch(0.16 0.025 250);
+  --accent-foreground: oklch(0.97 0.005 240);
   --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0.002 247.839);
+  --destructive-foreground: oklch(0.97 0.005 240);
   --success: oklch(0.7 0.2 160);
-  --success-foreground: oklch(0.985 0.002 247.839);
+  --success-foreground: oklch(0.97 0.005 240);
   --warning: oklch(0.75 0.18 80);
   --warning-foreground: oklch(0.2 0.03 80);
-  --border: oklch(0.278 0.033 256.848);
-  --input: oklch(0.278 0.033 256.848);
-  --ring: oklch(0.62 0.2 250);
+  --border: oklch(0.20 0.02 250);
+  --input: oklch(0.20 0.02 250);
+  --ring: oklch(0.58 0.22 255);
   --radius: 0.75rem;
 
   --safe-top: env(safe-area-inset-top, 0px);
@@ -66,23 +67,14 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground antialiased;
-  }
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground antialiased; }
 }
 
 /* ============================================
-   Essential Global Styles
+   Global Base
    ============================================ */
-
-html,
-body,
-#root,
-.app {
+html, body, #root, .app {
   height: 100%;
   min-height: 100dvh;
 }
@@ -97,145 +89,62 @@ body {
    Custom Animations
    ============================================ */
 @keyframes orbFloat {
-
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  25% {
-    transform: translate(30px, -30px) scale(1.1);
-  }
-
-  50% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-
-  75% {
-    transform: translate(20px, 30px) scale(1.05);
-  }
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25%  { transform: translate(30px, -30px) scale(1.1); }
+  50%  { transform: translate(-20px, 20px) scale(0.9); }
+  75%  { transform: translate(20px, 30px) scale(1.05); }
 }
 
 @keyframes logoGlow {
-
-  0%,
-  100% {
-    box-shadow: 0 0 40px rgba(59, 130, 246, 0.3);
-  }
-
-  50% {
-    box-shadow: 0 0 80px rgba(59, 130, 246, 0.5);
-  }
+  0%, 100% { box-shadow: 0 0 40px rgba(26, 115, 232, 0.3); }
+  50%  { box-shadow: 0 0 80px rgba(26, 115, 232, 0.55); }
 }
 
 @keyframes pulseBorder {
-
-  0%,
-  100% {
-    border-color: rgba(239, 68, 68, 0.4);
-  }
-
-  50% {
-    border-color: rgba(239, 68, 68, 1);
-  }
+  0%, 100% { border-color: rgba(239, 68, 68, 0.4); }
+  50%       { border-color: rgba(239, 68, 68, 1); }
 }
 
 @keyframes popIn {
-  0% {
-    transform: scale(0);
-  }
-
-  50% {
-    transform: scale(1.15);
-  }
-
-  100% {
-    transform: scale(1);
-  }
+  0%   { transform: scale(0); }
+  50%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
 }
 
 @keyframes markerPulse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-
-  100% {
-    transform: scale(2.5);
-    opacity: 0;
-  }
+  0%   { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
 }
 
 @keyframes ringPulse {
-  0% {
-    transform: translateX(-50%) scale(0.8);
-    opacity: 1;
-  }
-
-  100% {
-    transform: translateX(-50%) scale(1.5);
-    opacity: 0;
-  }
+  0%   { transform: translateX(-50%) scale(0.8); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1.5); opacity: 0; }
 }
 
 @keyframes navPulse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-
-  100% {
-    transform: scale(2);
-    opacity: 0;
-  }
-}
-
-/* Animation utilities */
-.animate-orb-float {
-  animation: orbFloat 20s ease-in-out infinite;
-}
-
-.animate-orb-float-reverse {
-  animation: orbFloat 25s ease-in-out infinite reverse;
-}
-
-.animate-orb-float-medium {
-  animation: orbFloat 15s ease-in-out infinite;
-}
-
-.animate-logo-glow {
-  animation: logoGlow 3s ease-in-out infinite;
-}
-
-.animate-pulse-border {
-  animation: pulseBorder 2s ease-in-out infinite;
-}
-
-.animate-pop-in {
-  animation: popIn 0.5s ease;
+  0%   { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2); opacity: 0; }
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-out;
-}
+/* Animation utilities */
+.animate-orb-float         { animation: orbFloat 20s ease-in-out infinite; }
+.animate-orb-float-reverse { animation: orbFloat 25s ease-in-out infinite reverse; }
+.animate-orb-float-medium  { animation: orbFloat 15s ease-in-out infinite; }
+.animate-logo-glow         { animation: logoGlow 3s ease-in-out infinite; }
+.animate-pulse-border      { animation: pulseBorder 2s ease-in-out infinite; }
+.animate-pop-in            { animation: popIn 0.5s ease; }
+.animate-fade-in           { animation: fadeIn 0.5s ease-out; }
 
 /* ============================================
-   Leaflet Map Styles
+   Leaflet Map Styles — Blue Theme
    ============================================ */
 .leaflet-container {
-  background: oklch(0.17 0.03 264) !important;
+  background: #080D19 !important;
 }
 
 .leaflet-control-attribution {
@@ -259,7 +168,7 @@ body {
 .user-marker-pulse {
   position: absolute;
   inset: 0;
-  background: rgba(59, 130, 246, 0.4);
+  background: rgba(26, 115, 232, 0.4);
   border-radius: 50%;
   animation: markerPulse 2s ease-out infinite;
 }
@@ -271,7 +180,7 @@ body {
   transform: translate(-50%, -50%);
   width: 14px;
   height: 14px;
-  background: oklch(0.62 0.2 250);
+  background: #1A73E8;
   border: 3px solid white;
   border-radius: 50%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -291,21 +200,21 @@ body {
 .shelter-marker-pin {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, oklch(0.6 0.2 300), oklch(0.55 0.22 280));
+  background: linear-gradient(135deg, #1A73E8, #0D47A1);
   border-radius: 50% 50% 50% 0;
   transform: rotate(-45deg);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
   border: 3px solid white;
 }
 
 .shelter-marker.selected .shelter-marker-pin {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, oklch(0.7 0.2 160), oklch(0.6 0.2 160));
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+  background: linear-gradient(135deg, #22C55E, #15803D);
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5);
 }
 
 .shelter-marker-pin span {
@@ -324,7 +233,7 @@ body {
   transform: translateX(-50%);
   width: 64px;
   height: 64px;
-  border: 3px solid oklch(0.7 0.2 160);
+  border: 3px solid #22C55E;
   border-radius: 50%;
   animation: ringPulse 1.5s ease-out infinite;
 }
@@ -332,41 +241,29 @@ body {
 /* ============================================
    Scrollbar
    ============================================ */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: rgba(26, 115, 232, 0.3);
   border-radius: 3px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.4 0.03 256);
+  background: rgba(26, 115, 232, 0.6);
 }
 
-/* Scrollbar hide utility */
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
 
 /* ============================================
-   Flood Zone Tooltip Styles
+   Flood Zone Tooltip Styles — Blue
    ============================================ */
 .flood-zone-tooltip {
-  background: rgba(15, 23, 42, 0.95) !important;
+  background: rgba(8, 14, 26, 0.97) !important;
   color: white !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(26, 115, 232, 0.25) !important;
   border-radius: 12px !important;
   padding: 8px 14px !important;
   font-family: 'Inter', -apple-system, sans-serif !important;
@@ -375,11 +272,11 @@ body {
 }
 
 .flood-zone-tooltip::before {
-  border-top-color: rgba(15, 23, 42, 0.95) !important;
+  border-top-color: rgba(8, 14, 26, 0.97) !important;
 }
 
 /* ============================================
-   Flood Report Markers (Community Sentinel)
+   Flood Report Markers
    ============================================ */
 .flood-report-marker-icon {
   background: transparent !important;
@@ -398,7 +295,7 @@ body {
 .flood-report-pin {
   width: 36px;
   height: 36px;
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(8, 14, 26, 0.95);
   border: 2.5px solid;
   border-radius: 50%;
   display: flex;
@@ -437,31 +334,19 @@ body {
   animation: floodReportPulse 2s ease-out infinite;
 }
 
-.flood-report-marker.is-flood .flood-report-pulse {
-  background: rgba(239, 68, 68, 0.4);
-}
-
-.flood-report-marker.is-warning .flood-report-pulse {
-  background: rgba(245, 158, 11, 0.4);
-}
+.flood-report-marker.is-flood .flood-report-pulse   { background: rgba(239, 68, 68, 0.4); }
+.flood-report-marker.is-warning .flood-report-pulse { background: rgba(245, 158, 11, 0.4); }
 
 @keyframes floodReportPulse {
-  0% {
-    transform: translate(-50%, -50%) scale(0.8);
-    opacity: 0.8;
-  }
-
-  100% {
-    transform: translate(-50%, -50%) scale(2.5);
-    opacity: 0;
-  }
+  0%   { transform: translate(-50%, -50%) scale(0.8); opacity: 0.8; }
+  100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
 }
 
 /* Flood Report Popup */
 .flood-report-popup .leaflet-popup-content-wrapper {
-  background: rgba(15, 23, 42, 0.96) !important;
+  background: rgba(8, 14, 26, 0.97) !important;
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(26, 115, 232, 0.2) !important;
   border-radius: 16px !important;
   color: white !important;
   padding: 0 !important;
@@ -474,6 +359,6 @@ body {
 }
 
 .flood-report-popup .leaflet-popup-tip {
-  background: rgba(15, 23, 42, 0.96) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(8, 14, 26, 0.97) !important;
+  border: 1px solid rgba(26, 115, 232, 0.2) !important;
 }

@@ -1,26 +1,15 @@
-// Login Page — Tailwind + shadcn/ui with FloodWay branding
+// Login Page — FloodWay · Blue/White/Black · Squarespace-inspired clean design
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Mail, Eye, EyeOff } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
+import { Mail, Eye, EyeOff, Waves } from 'lucide-react';
 
-/* ─── Spinner ─── */
+/* ─── Helpers ─── */
 function Spinner() {
     return (
-        <svg
-            className="w-[18px] h-[18px] shrink-0 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-        >
+        <svg className="w-[18px] h-[18px] shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" strokeOpacity="0.25" />
-            <path
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
+            <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
         </svg>
     );
 }
@@ -63,111 +52,109 @@ export function LoginPage() {
     const busy = loading || gLoading;
 
     return (
-        <div className="min-h-dvh bg-[linear-gradient(160deg,#0B1120_0%,#0F1B2D_40%,#0B1A2A_100%)] flex items-center justify-center relative overflow-hidden p-4">
-
+        <div className="min-h-dvh bg-[#060C18] flex flex-col items-center justify-center relative overflow-hidden p-5">
             {/* Keyframes */}
             <style>{`
-                @keyframes float1 { 0%,100%{ transform: translate(0,0) scale(1); } 50%{ transform: translate(12px,-18px) scale(1.05); } }
-                @keyframes float2 { 0%,100%{ transform: translate(0,0) scale(1); } 50%{ transform: translate(-15px,12px) scale(1.08); } }
-                @keyframes float3 { 0%,100%{ transform: translate(0,0); } 50%{ transform: translate(8px,10px); } }
-                @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-                @keyframes emailSlideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes floatA { 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(-20px,-30px); } }
+                @keyframes floatB { 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(25px,20px); } }
+                @keyframes cardIn { from{ opacity:0; transform:translateY(28px); } to{ opacity:1; transform:translateY(0); } }
+                @keyframes slideExpand { from{ opacity:0; transform:translateY(-8px); } to{ opacity:1; transform:translateY(0); } }
             `}</style>
 
-            {/* Ambient orbs */}
+            {/* Background orbs */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute w-[40vw] h-[40vw] max-w-[500px] max-h-[500px] rounded-full blur-[100px] opacity-[0.15] bg-[radial-gradient(circle,#0d9488,transparent)] top-[-10%] right-[-5%] animate-[float1_12s_ease-in-out_infinite]" />
-                <div className="absolute w-[35vw] h-[35vw] max-w-[400px] max-h-[400px] rounded-full blur-[90px] opacity-[0.10] bg-[radial-gradient(circle,#3b82f6,transparent)] bottom-[-8%] left-[-5%] animate-[float2_15s_ease-in-out_infinite]" />
-                <div className="absolute w-[20vw] h-[20vw] max-w-[250px] max-h-[250px] rounded-full blur-[70px] opacity-[0.08] bg-[radial-gradient(circle,#8b5cf6,transparent)] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-[float3_10s_ease-in-out_infinite]" />
+                <div className="absolute w-[50vw] h-[50vw] max-w-[500px] max-h-[500px] rounded-full blur-[120px] opacity-[0.12]"
+                    style={{ background: 'radial-gradient(circle, #1A73E8, transparent)', top: '-15%', right: '-10%', animation: 'floatA 14s ease-in-out infinite' }} />
+                <div className="absolute w-[40vw] h-[40vw] max-w-[400px] max-h-[400px] rounded-full blur-[100px] opacity-[0.08]"
+                    style={{ background: 'radial-gradient(circle, #4A90E2, transparent)', bottom: '-10%', left: '-8%', animation: 'floatB 18s ease-in-out infinite' }} />
             </div>
 
-            {/* Dot pattern */}
-            <div
-                className="absolute inset-0 pointer-events-none opacity-[0.03]"
-                style={{
-                    backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
-                    backgroundSize: '30px 30px',
-                }}
-            />
+            {/* Grid dots */}
+            <div className="absolute inset-0 pointer-events-none opacity-[0.025]"
+                style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
 
             {/* Card */}
             <div
-                className={cn(
-                    'relative z-10 w-full max-w-[420px]',
-                    'bg-white/[0.03] backdrop-blur-xl border border-white/[0.06] rounded-[28px]',
-                    'px-7 py-8 shadow-[0_25px_60px_-12px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.05)]',
-                    'sm:px-6 sm:py-6',
-                )}
-                style={{ animation: 'fadeInUp 0.7s cubic-bezier(0.22,1,0.36,1) both' }}
+                className="relative z-10 w-full max-w-[400px]"
+                style={{ animation: 'cardIn 0.65s cubic-bezier(0.22,1,0.36,1) both' }}
             >
-                {/* Logo + Branding */}
-                <div className="text-center mb-6">
-                    {/* FloodWay Logo */}
-                    <div className="flex justify-center mb-4">
-                        <img
-                            src="/floodway logo.png"
-                            alt="FloodWay Logo"
-                            className="w-50 h-40 object-contain drop-shadow-[0_0_20px_rgba(59,130,246,0.55)]"
-                        />
+                {/* Logo */}
+                <div className="flex flex-col items-center mb-8">
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5"
+                        style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', boxShadow: '0 0 32px rgba(26,115,232,0.4)' }}>
+                        <Waves className="w-7 h-7 text-white" />
                     </div>
-
-                    <h1 className="text-[2.2rem] font-black tracking-tight leading-none m-0 bg-[linear-gradient(135deg,#ffffff_0%,#94a3b8_100%)] bg-clip-text text-transparent sm:text-[1.9rem]">
-                        FloodWay
+                    <h1 className="text-[1.85rem] font-black text-white tracking-tight leading-none">
+                        Sign in to FloodWay
                     </h1>
-                    <p className="text-[0.72rem] font-semibold text-slate-500 tracking-[0.2em] mt-1.5 uppercase">
+                    <p className="text-slate-400 text-[0.78rem] mt-2 font-medium">
                         Flood Monitoring &amp; Early Warning System
                     </p>
                 </div>
 
                 {/* Error */}
                 {error && (
-                    <div className="px-3 py-2.5 rounded-xl mb-3 bg-red-500/10 border border-red-500/20 text-red-300 text-[0.78rem] font-semibold text-center">
+                    <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-[0.78rem] font-semibold text-center">
                         {error}
                     </div>
                 )}
 
-                {/* Auth buttons */}
-                <div className="flex flex-col gap-3">
-                    {/* Google */}
-                    <Button
-                        id="google-signin-btn"
-                        variant="outline"
-                        className="w-full h-[52px] rounded-[14px] text-[0.88rem] font-bold gap-3 bg-white/[0.06] border-white/10 text-slate-200 hover:bg-white/[0.12] hover:border-white/20 hover:-translate-y-px hover:shadow-[0_8px_25px_rgba(0,0,0,0.2)] transition-all duration-200 backdrop-blur-md"
-                        onClick={handleGoogle}
-                        disabled={busy}
-                    >
-                        {gLoading ? <Spinner /> : <GoogleIcon />}
-                        Continue with Google
-                    </Button>
+                {/* Google button */}
+                <button
+                    id="google-signin-btn"
+                    onClick={handleGoogle}
+                    disabled={busy}
+                    className="w-full h-[52px] flex items-center justify-center gap-3 rounded-2xl border text-[0.88rem] font-semibold text-white mb-3 transition-all duration-200 disabled:opacity-50"
+                    style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.12)' }}
+                    onMouseEnter={e => { if (!busy) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.20)'; } }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.12)'; }}
+                >
+                    {gLoading ? <Spinner /> : <GoogleIcon />}
+                    Continue with Google
+                </button>
 
-                    {/* Email toggle / form */}
-                    {!showEmail ? (
-                        <Button
-                            id="email-toggle-btn"
-                            className="w-full h-[52px] rounded-[14px] text-[0.88rem] font-bold gap-3 bg-[linear-gradient(135deg,#0d9488_0%,#0891b2_100%)] text-white shadow-[0_4px_20px_rgba(13,148,136,0.3)] hover:-translate-y-px hover:shadow-[0_8px_30px_rgba(13,148,136,0.45)] transition-all duration-200"
-                            onClick={() => setShowEmail(true)}
-                            disabled={busy}
-                        >
-                            <Mail size={18} />
-                            Continue with Email
-                        </Button>
-                    ) : (
-                        <form
-                            onSubmit={handleEmail}
-                            className="flex flex-col gap-2"
-                            style={{ animation: 'emailSlideIn 0.3s ease both' }}
-                        >
-                            <Input
+                {/* Email toggle / form */}
+                {!showEmail ? (
+                    <button
+                        id="email-toggle-btn"
+                        onClick={() => setShowEmail(true)}
+                        disabled={busy}
+                        className="w-full h-[52px] flex items-center justify-center gap-3 rounded-2xl text-[0.88rem] font-bold text-white transition-all duration-200 disabled:opacity-50"
+                        style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', boxShadow: '0 4px 20px rgba(26,115,232,0.3)' }}
+                        onMouseEnter={e => { if (!busy) (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px rgba(26,115,232,0.5)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 20px rgba(26,115,232,0.3)'; }}
+                    >
+                        <Mail size={18} />
+                        Continue with Email
+                    </button>
+                ) : (
+                    <form onSubmit={handleEmail} className="flex flex-col gap-3" style={{ animation: 'slideExpand 0.3s ease both' }}>
+                        {/* Email field */}
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-[0.15em]">
+                                Email Address
+                            </label>
+                            <input
                                 type="email"
-                                placeholder="Email address"
+                                placeholder="name@example.com"
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
                                 required
                                 disabled={busy}
-                                className="h-[50px] rounded-xl bg-white/[0.05] border-white/10 text-slate-100 text-[0.88rem] font-medium placeholder:text-slate-600 focus-visible:border-teal-400/50 focus-visible:ring-teal-400/10 focus-visible:bg-white/[0.07] transition-all"
+                                className="h-[50px] bg-transparent border-0 border-b text-slate-100 text-[0.88rem] font-medium placeholder:text-slate-600 outline-none transition-all duration-200 pb-2"
+                                style={{ borderBottomColor: 'rgba(255,255,255,0.12)' }}
+                                onFocus={e => { (e.currentTarget as HTMLElement).style.borderBottomColor = '#1A73E8'; }}
+                                onBlur={e => { (e.currentTarget as HTMLElement).style.borderBottomColor = 'rgba(255,255,255,0.12)'; }}
                             />
+                        </div>
+
+                        {/* Password field */}
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-[0.15em]">
+                                Password
+                            </label>
                             <div className="relative">
-                                <Input
+                                <input
                                     type={showPw ? 'text' : 'password'}
                                     placeholder="Password"
                                     value={password}
@@ -175,51 +162,55 @@ export function LoginPage() {
                                     required
                                     minLength={6}
                                     disabled={busy}
-                                    className="h-[50px] rounded-xl bg-white/[0.05] border-white/10 text-slate-100 text-[0.88rem] font-medium placeholder:text-slate-600 pr-11 focus-visible:border-teal-400/50 focus-visible:ring-teal-400/10 focus-visible:bg-white/[0.07] transition-all"
+                                    className="w-full h-[50px] bg-transparent border-0 border-b text-slate-100 text-[0.88rem] font-medium placeholder:text-slate-600 outline-none pr-10 pb-2 transition-all duration-200"
+                                    style={{ borderBottomColor: 'rgba(255,255,255,0.12)' }}
+                                    onFocus={e => { (e.currentTarget as HTMLElement).style.borderBottomColor = '#1A73E8'; }}
+                                    onBlur={e => { (e.currentTarget as HTMLElement).style.borderBottomColor = 'rgba(255,255,255,0.12)'; }}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPw(!showPw)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors p-0 bg-transparent border-none cursor-pointer flex"
+                                    className="absolute right-0 top-3 text-slate-500 hover:text-slate-300 transition-colors bg-transparent border-none cursor-pointer p-0"
                                 >
                                     {showPw ? <EyeOff size={17} /> : <Eye size={17} />}
                                 </button>
                             </div>
-                            <Button
-                                type="submit"
-                                disabled={busy}
-                                className="w-full h-[52px] rounded-[14px] text-[0.88rem] font-bold gap-2 bg-[linear-gradient(135deg,#0d9488_0%,#0891b2_100%)] text-white shadow-[0_4px_20px_rgba(13,148,136,0.3)] hover:-translate-y-px hover:shadow-[0_8px_30px_rgba(13,148,136,0.45)] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
-                            >
-                                {loading ? <><Spinner /> Signing in…</> : 'Sign In'}
-                            </Button>
-                        </form>
-                    )}
-                </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={busy}
+                            className="mt-2 w-full h-[52px] rounded-2xl text-[0.88rem] font-bold text-white flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-60"
+                            style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', boxShadow: '0 4px 20px rgba(26,115,232,0.3)' }}
+                        >
+                            {loading ? <><Spinner /> Signing in…</> : 'Log In'}
+                        </button>
+                    </form>
+                )}
 
                 {/* Divider */}
-                <div className="flex items-center gap-3 my-3">
-                    <div className="flex-1 h-px bg-white/[0.06]" />
-                    <span className="text-[0.65rem] text-slate-600 font-semibold uppercase tracking-widest">or</span>
-                    <div className="flex-1 h-px bg-white/[0.06]" />
+                <div className="flex items-center gap-3 my-5">
+                    <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
+                    <span className="text-[0.62rem] text-slate-600 font-semibold uppercase tracking-widest">or</span>
+                    <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
                 </div>
 
-                {/* Sign up link */}
-                <p className="text-center text-[0.82rem] text-slate-500 font-medium m-0">
+                {/* Sign up */}
+                <p className="text-center text-[0.82rem] text-slate-500 font-medium">
                     Don't have an account?{' '}
-                    <Link
-                        to="/signup"
-                        className="text-teal-400 font-bold no-underline border-b border-teal-400/30 hover:text-teal-300 hover:border-teal-300/50 transition-colors"
-                    >
-                        Sign up free
+                    <Link to="/signup"
+                        className="font-bold no-underline transition-colors"
+                        style={{ color: '#4A90E2', borderBottom: '1px solid rgba(74,144,226,0.35)' }}>
+                        Create account
                     </Link>
                 </p>
 
                 {/* Footer */}
-                <p className="text-center text-[0.62rem] text-slate-700 mt-3 mb-0 leading-relaxed">
+                <p className="text-center text-[0.60rem] text-slate-700 mt-5">
                     By signing in, you agree to our{' '}
-                    <span className="text-teal-400/80 font-semibold cursor-pointer hover:text-teal-400 transition-colors">Terms of Service</span>
+                    <span className="cursor-pointer" style={{ color: '#4A90E2' }}>Terms of Service</span>
                     {' '}and{' '}
-                    <span className="text-teal-400/80 font-semibold cursor-pointer hover:text-teal-400 transition-colors">Privacy Policy</span>
+                    <span className="cursor-pointer" style={{ color: '#4A90E2' }}>Privacy Policy</span>
                 </p>
             </div>
         </div>

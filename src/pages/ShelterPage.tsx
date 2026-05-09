@@ -178,7 +178,7 @@ export function ShelterPage() {
                     {/* Forecast Overlays - driven by timeline selection */}
                     <FloodZoneLayer selectedHourIndex={selectedHourIndex} />
 
-                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" className="custom-map-tiles" />
 
                     <Marker position={[userPosition.lat, userPosition.lng]} icon={userIcon} />
 
@@ -186,7 +186,7 @@ export function ShelterPage() {
                         <Polyline
                             positions={routePreview}
                             pathOptions={{
-                                color: '#10B981',
+                                color: '#1A73E8',
                                 weight: 4,
                                 dashArray: '10, 15',
                                 opacity: 0.9
@@ -214,7 +214,8 @@ export function ShelterPage() {
             {/* Top Center Flood Alert Notification */}
             {showAlert && prediction && (
                 <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm animate-in slide-in-from-top-4 duration-500 pointer-events-none">
-                    <div className="bg-red-500/90 backdrop-blur-xl border border-red-400/30 rounded-2xl p-4 shadow-2xl shadow-red-900/40 flex items-center gap-4 pointer-events-auto">
+                    <div className="backdrop-blur-xl border rounded-2xl p-4 flex items-center gap-4 pointer-events-auto shadow-2xl"
+                        style={{ background: 'rgba(239, 68, 68, 0.9)', borderColor: 'rgba(248, 113, 113, 0.3)', boxShadow: '0 8px 32px rgba(220, 38, 38, 0.4)' }}>
                         <div className="size-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
                             <AlertTriangle className="size-6 text-white" />
                         </div>
@@ -251,21 +252,22 @@ export function ShelterPage() {
                 style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}
             >
                 {/* Content Container */}
-                <div className="w-full h-full bg-slate-900/95 backdrop-blur-xl border-t md:border-t-0 md:border-r border-white/10 rounded-t-[2.5rem] md:rounded-none flex flex-col pointer-events-auto shadow-2xl overflow-hidden">
+                <div className="w-full h-full border-t md:border-t-0 md:border-r border-white/10 rounded-t-[2.5rem] md:rounded-none flex flex-col pointer-events-auto shadow-2xl overflow-hidden text-slate-100"
+                    style={{ background: 'rgba(6,12,24,0.92)', backdropFilter: 'blur(24px)' }}>
                     {/* Drag Handle (Mobile Only) */}
                     <div className="md:hidden w-12 h-1.5 bg-white/20 rounded-full mx-auto my-3 shrink-0" />
 
                     {/* Header */}
-                    <header className="flex items-center gap-3.5 px-5 pb-4 md:p-5 border-b border-white/5">
+                    <header className="flex items-center gap-3.5 px-5 pb-4 md:p-5 border-b" style={{ borderColor: 'rgba(26,115,232,0.15)' }}>
                         <div className="flex-1">
-                            <h1 className="text-lg md:text-xl font-bold tracking-tight">Emergency Shelters</h1>
-                            <span className="text-[10px] md:text-xs text-muted-foreground">{shelters.length} locations nearby</span>
+                            <h1 className="text-lg md:text-xl font-black tracking-tight text-white">Emergency Shelters</h1>
+                            <span className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-wider">{shelters.length} locations nearby</span>
                         </div>
                         {/* Mobile Hide Button */}
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="md:hidden size-10 rounded-xl"
+                            className="md:hidden size-10 rounded-xl bg-white/5 hover:bg-white/10 text-white"
                             onClick={() => setIsPanelVisible(false)}
                         >
                             <X className="size-5" />
@@ -275,14 +277,14 @@ export function ShelterPage() {
                     {/* Scrollable Content Area */}
                     <div className="flex-1 overflow-y-auto overscroll-contain pb-6 md:pb-18 scrollbar-thin scrollbar-thumb-white/10">
                         {/* 1. Forecast Overlay Context */}
-                        <div className="px-5 py-4 border-b border-white/5 bg-white/5">
-                            <span className="block text-[10px] text-muted-foreground uppercase tracking-widest mb-3 font-semibold">Flood Risk Forecast</span>
+                        <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(26,115,232,0.1)', background: 'rgba(26,115,232,0.03)' }}>
+                            <span className="block text-[10px] text-slate-400 uppercase tracking-widest mb-3 font-semibold">Flood Risk Forecast</span>
                             <ForecastOverlay selectedHourIndex={selectedHourIndex} />
                         </div>
 
                         {/* 2. Timeline Scrubber */}
-                        <div className="px-5 py-6 border-b border-white/5">
-                            <span className="block text-[10px] text-muted-foreground uppercase tracking-widest mb-4 font-semibold">Interactive Timeline</span>
+                        <div className="px-5 py-6 border-b" style={{ borderColor: 'rgba(26,115,232,0.1)' }}>
+                            <span className="block text-[10px] text-slate-400 uppercase tracking-widest mb-4 font-semibold">Interactive Timeline</span>
                             <FloodTimelineScrubber
                                 selectedHourIndex={selectedHourIndex}
                                 onHourChange={setSelectedHourIndex}
@@ -294,46 +296,48 @@ export function ShelterPage() {
                             {selectedShelter ? (
                                 <div className="animate-in fade-in slide-in-from-right-4 duration-300">
                                     <div className="flex items-center justify-between mb-4">
-                                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold text-emerald-500">Selected Shelter</span>
+                                        <span className="text-[10px] uppercase tracking-widest font-black text-blue-400">Selected Shelter</span>
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="size-8 rounded-lg hover:bg-red-500/10 hover:text-red-500"
+                                            className="size-8 rounded-lg hover:bg-red-500/10 hover:text-red-500 transition-colors"
                                             onClick={handleClose}
                                         >
                                             <X className="size-4" />
                                         </Button>
                                     </div>
 
-                                    <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4">
+                                    <div className="border rounded-2xl p-4 mb-4 shadow-xl" style={{ border: '1px solid rgba(26,115,232,0.2)', background: 'rgba(10,20,40,0.85)' }}>
                                         <div className="flex items-start gap-4 mb-4">
-                                            <div className="size-14 flex items-center justify-center bg-emerald-500/20 rounded-2xl text-2xl shrink-0 border border-emerald-500/20">🏥</div>
+                                            <div className="size-14 flex items-center justify-center rounded-2xl text-2xl shrink-0 border"
+                                                style={{ background: 'rgba(26,115,232,0.15)', borderColor: 'rgba(26,115,232,0.3)', boxShadow: '0 0 16px rgba(26,115,232,0.2)' }}>🏥</div>
                                             <div className="flex-1 min-w-0">
-                                                <h2 className="text-base font-bold mb-2 leading-tight">{selectedShelter.name}</h2>
+                                                <h2 className="text-base font-black mb-2 leading-tight text-white">{selectedShelter.name}</h2>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground bg-white/5 px-2 py-0.5 rounded-lg border border-white/5">
-                                                        <MapPin className="size-3" /> {selectedShelter.distance} km
+                                                    <span className="flex items-center gap-1 text-[11px] font-bold text-slate-300 px-2 py-0.5 rounded-lg border border-white/10" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                                                        <MapPin className="size-3 text-blue-400" /> {selectedShelter.distance} km
                                                     </span>
-                                                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground bg-white/5 px-2 py-0.5 rounded-lg border border-white/5">
-                                                        <Clock className="size-3" /> ~{getEstimatedTimeForMode(selectedShelter, selectedMode)} min
+                                                    <span className="flex items-center gap-1 text-[11px] font-bold text-slate-300 px-2 py-0.5 rounded-lg border border-white/10" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                                                        <Clock className="size-3 text-amber-400" /> ~{getEstimatedTimeForMode(selectedShelter, selectedMode)} min
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="space-y-3">
-                                            <span className="block text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Travel Mode</span>
+                                            <span className="block text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Travel Mode</span>
                                             <div className="grid grid-cols-3 gap-2">
                                                 {TRANSPORT_MODES.map(({ mode, label, icon: Icon }) => (
                                                     <button
                                                         key={mode}
                                                         onClick={() => setSelectedMode(mode)}
                                                         className={cn(
-                                                            "flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all",
+                                                            "flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all duration-200 cursor-pointer",
                                                             selectedMode === mode
-                                                                ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
-                                                                : "border-white/5 bg-white/5 text-muted-foreground hover:bg-white/10"
+                                                                ? "shadow-[0_0_12px_rgba(26,115,232,0.25)]"
+                                                                : "border-white/5 bg-white/5 text-slate-400 hover:bg-white/10"
                                                         )}
+                                                        style={selectedMode === mode ? { borderColor: 'rgba(26,115,232,0.5)', background: 'rgba(26,115,232,0.15)', color: '#74B3F7' } : {}}
                                                     >
                                                         <Icon className="size-5" />
                                                         <span className="text-[10px] font-bold">{label}</span>
@@ -344,25 +348,27 @@ export function ShelterPage() {
                                     </div>
 
                                     <Button
-                                        className="w-full h-12 text-base font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-900/40 border border-emerald-400/20"
+                                        className="w-full h-14 text-base font-black text-white rounded-[1.25rem] transition-all active:scale-95"
+                                        style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', border: '1px solid rgba(26,115,232,0.3)', boxShadow: '0 8px 24px rgba(26,115,232,0.35)' }}
                                         onClick={handleNavigate}
                                         disabled={isRouteLoading}
                                     >
                                         {isRouteLoading ? (
                                             <><Loader2 className="size-5 animate-spin mr-2" />Calculating...</>
                                         ) : (
-                                            <><Navigation className="size-5 mr-2" />Start Navigation</>
+                                            <><Navigation className="size-5 mr-2 fill-white" />Start Navigation</>
                                         )}
                                     </Button>
                                 </div>
                             ) : (
                                 <div className="space-y-2.5">
                                     <div className="flex items-center justify-between mb-4">
-                                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold flex items-center gap-2">
-                                            <Shield className="size-3.5 text-emerald-500" />
+                                        <span className="text-[10px] text-slate-400 uppercase tracking-widest font-black flex items-center gap-2">
+                                            <Shield className="size-3.5 text-blue-400" />
                                             Available Shelters
                                         </span>
-                                        <span className="text-[10px] font-bold py-0.5 px-2 bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/20">
+                                        <span className="text-[10px] font-bold py-0.5 px-2 rounded-full border"
+                                            style={{ background: 'rgba(26,115,232,0.15)', borderColor: 'rgba(26,115,232,0.3)', color: '#74B3F7' }}>
                                             {shelters.length} Total
                                         </span>
                                     </div>
@@ -371,28 +377,30 @@ export function ShelterPage() {
                                             <Card
                                                 key={shelter.id}
                                                 className={cn(
-                                                    "cursor-pointer border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all",
-                                                    i === 0 && "border-emerald-500/30 bg-emerald-500/5"
+                                                    "cursor-pointer transition-all border",
+                                                    i === 0 ? "border-blue-500/30 bg-blue-500/5 shadow-lg shadow-blue-900/20" : "border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20"
                                                 )}
+                                                style={i === 0 ? { border: '1px solid rgba(26,115,232,0.3)', background: 'rgba(26,115,232,0.08)' } : { border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(10,20,40,0.7)' }}
                                                 onClick={() => handleShelterClick(shelter)}
                                             >
                                                 <CardContent className="p-4 flex items-center gap-4">
                                                     <div className={cn(
-                                                        "size-10 flex items-center justify-center rounded-xl text-xs font-black shrink-0 relative",
-                                                        i === 0 ? "bg-emerald-500 text-white shadow-lg shadow-emerald-900/50" : "bg-slate-800 text-slate-400"
-                                                    )}>
-                                                        {i === 0 && <Star className="absolute -top-1 -right-1 size-3 text-amber-400 fill-amber-400" />}
+                                                        "size-10 flex items-center justify-center rounded-xl text-xs font-black shrink-0 relative border",
+                                                        i === 0 ? "text-white shadow-lg shadow-blue-500/30" : "bg-white/5 text-slate-400 border-white/5"
+                                                    )}
+                                                        style={i === 0 ? { background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', borderColor: 'rgba(26,115,232,0.4)' } : {}}>
+                                                        {i === 0 && <Star className="absolute -top-1.5 -right-1.5 size-3.5 text-amber-400 fill-amber-400 drop-shadow" />}
                                                         {i + 1}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <h4 className="text-xs font-bold truncate mb-1">{shelter.name}</h4>
-                                                        <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-                                                            <span>{shelter.distance} km</span>
-                                                            <span className="opacity-40">•</span>
-                                                            <span>~{shelter.estimatedTime} min</span>
+                                                        <h4 className="text-sm font-bold truncate mb-1 text-white">{shelter.name}</h4>
+                                                        <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400">
+                                                            <span className="flex items-center gap-1"><MapPin className="size-3 text-blue-400/70" />{shelter.distance} km</span>
+                                                            <span className="opacity-30">•</span>
+                                                            <span className="flex items-center gap-1"><Clock className="size-3 text-amber-400/70" />~{shelter.estimatedTime} min</span>
                                                         </div>
                                                     </div>
-                                                    <ChevronRight className="size-4 text-white/20" />
+                                                    <ChevronRight className="size-4 text-white/20 group-hover:text-white/60 transition-colors" />
                                                 </CardContent>
                                             </Card>
                                         ))}
@@ -413,14 +421,15 @@ export function ShelterPage() {
                 )}
             >
                 <button
-                    className="flex items-center justify-center bg-slate-900/95 backdrop-blur-xl border border-white/10 border-l-0 w-7 h-16 rounded-r-xl shadow-2xl hover:bg-slate-800 transition-colors group cursor-pointer"
+                    className="flex items-center justify-center border border-l-0 w-7 h-16 rounded-r-xl shadow-2xl transition-colors group cursor-pointer text-white"
+                    style={{ background: 'rgba(6,12,24,0.95)', borderColor: 'rgba(26,115,232,0.2)', backdropFilter: 'blur(16px)' }}
                     onClick={() => setIsPanelVisible(!isPanelVisible)}
                     aria-label={isPanelVisible ? 'Close panel' : 'Open panel'}
                 >
                     {isPanelVisible ? (
-                        <ChevronLeft className="size-4 text-white/50 group-hover:text-white transition-colors" />
+                        <ChevronLeft className="size-4 text-blue-300 group-hover:text-white transition-colors" />
                     ) : (
-                        <ChevronRight className="size-4 text-white/50 group-hover:text-white transition-colors" />
+                        <ChevronRight className="size-4 text-blue-300 group-hover:text-white transition-colors" />
                     )}
                 </button>
             </div>
@@ -428,8 +437,8 @@ export function ShelterPage() {
             {/* Mobile Fab to Show Panel */}
             {!isPanelVisible && (
                 <Button
-                    className="fixed right-4 z-30 size-12 rounded-full bg-emerald-600 shadow-xl text-white animate-in zoom-in-50 duration-300 md:hidden"
-                    style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px) + 1rem)' }}
+                    className="fixed right-4 z-30 size-14 rounded-2xl shadow-xl text-white animate-in zoom-in-50 duration-300 md:hidden active:scale-95"
+                    style={{ bottom: 'calc(64px + env(safe-area-inset-bottom, 0px) + 1rem)', background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', border: '1px solid rgba(26,115,232,0.3)', boxShadow: '0 8px 24px rgba(26,115,232,0.35)' }}
                     onClick={() => setIsPanelVisible(true)}
                 >
                     <Shield className="size-6" />
@@ -440,15 +449,17 @@ export function ShelterPage() {
             <Button
                 variant="secondary"
                 size="icon"
-                className="absolute top-4 left-4 z-10 size-10 rounded-full bg-slate-900/90 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-slate-800 text-white"
+                className="absolute top-4 left-4 z-10 size-10 rounded-[12px] shadow-2xl transition-all active:scale-95 text-slate-300 border hover:text-white"
+                style={{ background: 'rgba(10,20,40,0.85)', backdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.1)' }}
                 onClick={() => navigate('/home')}
             >
                 <ArrowLeft className="size-5" />
             </Button>
 
-            {/* User Position Badge - Top Right (Visible on Desktop/Mobile) */}
-            <div className="absolute top-4 right-4 z-10 flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-full text-[9px] md:text-[10px] font-bold text-white/80">
-                <div className="size-1.5 md:size-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+            {/* User Position Badge - Top Right */}
+            <div className="absolute top-4 right-4 z-10 flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[9px] md:text-[10px] font-bold text-white shadow-xl border"
+                style={{ background: 'rgba(10,20,40,0.85)', backdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.1)' }}>
+                <div className="size-1.5 md:size-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(26,115,232,1)]" />
                 <span>ME (KLCC)</span>
             </div>
         </div>

@@ -5,11 +5,9 @@ import { useAuth } from './contexts/AuthContext';
 import { LoginPage } from './pages/WelcomePage';
 import { SignUpPage } from './pages/SignUpPage';
 import { ProfilePage } from './pages/ProfilePage';
-import { LoadingPage } from './pages/LoadingPage';
 import { HomePage } from './pages/HomePage';
 import { ShelterPage } from './pages/ShelterPage';
 import { NavigationPage } from './pages/NavigationPage';
-import { FutureWorkPage } from './pages/FutureWorkPage';
 import { ReportPage } from './pages/ReportPage';
 import { SimulationPage } from './pages/SimulationPage';
 import { BottomNav } from './components/BottomNav';
@@ -24,14 +22,16 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   const location = useLocation();
 
   if (loading) {
-    // Show a minimal loader while Firebase checks auth state
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-slate-900">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600/30 to-cyan-500/30 flex items-center justify-center border border-white/10 animate-pulse">
-            <span className="text-2xl">🦦</span>
+      <div className="min-h-dvh flex items-center justify-center" style={{ background: '#060C18' }}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #1A73E8, #0D47A1)', boxShadow: '0 0 32px rgba(26,115,232,0.4)' }}>
+            <span className="text-2xl">🌊</span>
           </div>
-          <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
+            style={{ borderColor: '#1A73E8', borderTopColor: 'transparent' }} />
+          <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>FloodWay</p>
         </div>
       </div>
     );
@@ -64,9 +64,6 @@ function AppLayout() {
         <Route path="/" element={<RedirectIfAuthed><LoginPage /></RedirectIfAuthed>} />
         <Route path="/signup" element={<RedirectIfAuthed><SignUpPage /></RedirectIfAuthed>} />
 
-        {/* Onboarding (auth required) */}
-        <Route path="/loading" element={<RequireAuth><LoadingPage /></RequireAuth>} />
-
         {/* Main App (auth required) */}
         <Route path="/home" element={<RequireAuth><HomePage /></RequireAuth>} />
         <Route path="/shelters" element={<RequireAuth><ShelterPage /></RequireAuth>} />
@@ -78,7 +75,8 @@ function AppLayout() {
         <Route path="/navigation/:shelterId" element={<RequireAuth><NavigationPage /></RequireAuth>} />
 
         {/* Legacy redirects */}
-        <Route path="/location" element={<Navigate to="/loading" replace />} />
+        <Route path="/loading" element={<Navigate to="/home" replace />} />
+        <Route path="/location" element={<Navigate to="/home" replace />} />
         <Route path="/shellter" element={<Navigate to="/shelters" replace />} />
         <Route path="/sheller" element={<Navigate to="/shelters" replace />} />
         <Route path="/shelter" element={<Navigate to="/shelters" replace />} />
