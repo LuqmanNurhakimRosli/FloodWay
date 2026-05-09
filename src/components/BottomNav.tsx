@@ -6,9 +6,9 @@ import { useAuth } from '../contexts/AuthContext';
 
 const tabs = [
     { path: '/home', icon: Home, label: 'Home' },
-    { path: '/shelters', icon: Building2, label: 'Shelter' },
-    { path: '/reports', icon: MapPin, label: 'Reports' },
     { path: '/simulation', icon: Waves, label: 'Simulate' },
+    { path: '/reports', icon: MapPin, label: 'Reports' },
+    { path: '/shelters', icon: Building2, label: 'Shelter' },
     { path: '/profile', icon: User, label: 'Profile' },
 ];
 

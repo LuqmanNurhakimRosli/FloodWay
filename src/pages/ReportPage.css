@@ -64,6 +64,36 @@
     white-space: nowrap;
 }
 
+@media (max-width: 480px) {
+    .tw-header {
+        padding: 8px 12px;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 4px;
+    }
+    .tw-header__left {
+        gap: 6px;
+    }
+    .tw-header__logo {
+        display: none; /* Hide logo on mobile to save space */
+    }
+    .tw-header__title {
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+    .tw-header__sub {
+        display: none;
+    }
+    .tw-header__right {
+        gap: 4px;
+    }
+    .tw-header-report-btn {
+        padding: 5px 8px;
+        font-size: 0.6rem;
+        margin-right: 0;
+    }
+}
+
 .tw-header__title em {
     font-style: normal;
     color: #ef4444;
@@ -234,6 +264,257 @@
     border-bottom-color: #3b82f6;
 }
 
+/* ── Header Report Button ── */
+.tw-header-report-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-right: 8px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.tw-header-report-btn:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+/* ── Header Location Chip ── */
+.tw-header__location-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    margin-right: 4px;
+}
+
+.tw-loc-dot {
+    width: 6px;
+    height: 6px;
+    background: #3b82f6;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #3b82f6;
+    animation: tw-blink 2s infinite;
+}
+
+@keyframes tw-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.tw-loc-text {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 0.02em;
+}
+
+@media (max-width: 480px) {
+    .tw-header__location-chip {
+        padding: 4px 8px;
+        max-width: 70px;
+        border-radius: 8px;
+    }
+    .tw-loc-text {
+        font-size: 0.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+/* ── Filter Station V2 (Premium Image Match) ── */
+.tw-filter-station-v2 {
+    margin: 12px 16px;
+    background: rgba(13, 19, 40, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.tw-area-row {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.tw-area-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px;
+    background: transparent;
+    border: none;
+    color: #475569;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.tw-area-tab.active {
+    color: #3b82f6;
+    background: rgba(59, 130, 246, 0.03);
+}
+
+.tw-area-tab .tw-tab-icon {
+    font-size: 1rem;
+    opacity: 0.6;
+}
+
+.tw-area-tab.active .tw-tab-icon {
+    opacity: 1;
+}
+
+.tw-time-container {
+    display: flex;
+    padding: 6px;
+    gap: 6px;
+}
+
+.tw-time-row {
+    flex: 1;
+    display: flex;
+    gap: 6px;
+    transition: opacity 0.3s;
+}
+
+.tw-time-row--dimmed {
+    opacity: 0.2;
+}
+
+.tw-time-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    color: #475569;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.tw-time-tab.active {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: white;
+}
+
+.tw-time-tab.disabled {
+    cursor: default;
+}
+
+/* ── Control Bar ── */
+.tw-control-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px 16px;
+    gap: 12px;
+}
+
+@media (max-width: 640px) {
+    .tw-control-bar {
+        overflow-x: auto;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 8px;
+        scrollbar-width: none;
+    }
+    .tw-control-bar::-webkit-scrollbar {
+        display: none;
+    }
+    .tw-status-pills, .tw-bar-actions {
+        flex-shrink: 0;
+    }
+}
+
+.tw-status-pills {
+    display: flex;
+    gap: 8px;
+}
+
+.tw-pill-v2 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(13, 19, 40, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    color: #94a3b8;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.tw-pill-v2.active {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: #f1f5f9;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
+}
+
+.tw-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tw-bar-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: rgba(13, 19, 40, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    color: #94a3b8;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.tw-view-toggle {
+    display: flex;
+    background: rgba(13, 19, 40, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.tw-view-btn {
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    color: #475569;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.tw-view-btn.active {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+}
+
 .tw-tab__count {
     padding: 1px 7px;
     border-radius: 20px;
@@ -241,6 +522,7 @@
     font-weight: 700;
     background: rgba(255, 255, 255, .07);
 }
+
 
 .tw-tab--active .tw-tab__count {
     background: rgba(59, 130, 246, .2);

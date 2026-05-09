@@ -9,6 +9,7 @@
     color: var(--text-primary);
     font-family: 'Inter', sans-serif;
     animation: fade-in 0.3s ease-out;
+    border: 1px solid rgba(255, 255, 255, 0.15); /* Visible outer boundary */
 }
 
 /* ── Info Panel (Header) ── */
@@ -98,19 +99,42 @@
     /* Space for bottom bar */
 }
 
-/* ── Visual Area (Camera/Preview) ── */
+/* ── Visual Area (Camera/Preview/Map) ── */
 .emergency-visual-area {
     width: 100%;
-    background: #000;
+    background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
     position: relative;
     aspect-ratio: 4/3;
-    /* Mobile friendly default */
     max-height: 50vh;
     overflow: hidden;
     flex-shrink: 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 4px solid #3b82f6;
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.auto-tag--btn {
+    background: rgba(6, 182, 212, 0.1);
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.auto-tag--btn:hover {
+    background: rgba(6, 182, 212, 0.2);
+    border-color: rgba(6, 182, 212, 0.4);
+    transform: translateY(-1px);
+}
+
+.auto-tag--btn.active {
+    background: #0891b2;
+    border-color: #0891b2;
+    color: white;
 }
 
 /* SELECTION Mode */
@@ -146,18 +170,20 @@
     align-items: center;
     gap: 12px;
     padding: 24px 16px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-xl);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     color: var(--text-primary);
 }
 
 .selection-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-4px);
     border-color: var(--accent-blue);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(59, 130, 246, 0.2);
 }
 
 .selection-icon {
@@ -371,8 +397,9 @@
         height: 100%;
         max-height: none;
         border-bottom: none;
-        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        border-right: 2px solid rgba(255, 255, 255, 0.1); /* Vertical divider */
         aspect-ratio: auto;
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
     }
 
     /* Column 2: Info (Top Right) */
@@ -418,3 +445,102 @@
         justify-content: center;
     }
 }
+
+/* ── MAP PICKER ── */
+.emergency-map-picker {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: #05070a;
+}
+
+.map-picker-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    z-index: 1000;
+}
+
+.map-picker-hint {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(12px);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    animation: slide-down 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.map-confirm-btn {
+    pointer-events: auto;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    padding: 14px 40px;
+    border-radius: 30px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.9rem;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 15px 30px rgba(37, 99, 235, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slide-up 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.map-confirm-btn:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(37, 99, 235, 0.5), 0 0 25px rgba(37, 99, 235, 0.3);
+}
+
+.map-confirm-btn:active {
+    transform: translateY(-1px) scale(0.98);
+}
+
+@keyframes slide-down {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slide-up {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes shimmer {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+    animation: shimmer 2.5s infinite linear;
+}
+
+/* ── Panel Polish ── */
+.emergency-info-panel {
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.auto-tag {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.auto-tag:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+

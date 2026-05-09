@@ -116,6 +116,15 @@ export function isFullyVerified(report: FloodReport): boolean {
     return false;
 }
 
+// Helper: is a report "Active"?
+// Rule: Created within the last 24 hours.
+export function isFloodActive(report: FloodReport): boolean {
+    const created = new Date(report.createdAt).getTime();
+    const now = new Date().getTime();
+    const ageHours = (now - created) / (1000 * 60 * 60);
+    return ageHours <= 24;
+}
+
 export type AppScreen = 'MAP' | 'EMERGENCY' | 'VERIFICATION' | 'REPORT';
 
 // ── ReportForm "Golden Record" ──

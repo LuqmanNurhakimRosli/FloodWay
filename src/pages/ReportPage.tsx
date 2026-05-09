@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import type { AIVerificationResult, AutoTags, ReportFormOutput } from '../types/report';
-import { ReportCategory, VerificationStatus, HumanReviewStatus, CATEGORY_META } from '../types/report';
+import { ReportCategory, VerificationStatus, HumanReviewStatus, CATEGORY_META, isFloodActive } from '../types/report';
 import type { FloodReport } from '../types/report';
 
 import EmergencyMode from '../components/report/EmergencyMode';
@@ -14,6 +14,8 @@ import './ReportPage.css';
 
 type ReportScreen = 'LIST' | 'EMERGENCY' | 'VERIFICATION' | 'REPORT' | 'MODERATOR';
 type FilterTab = 'all' | 'verified' | 'pending';
+type AreaFilter = 'MY_AREA' | 'OTHER_AREAS';
+type TimeFilter = 'TODAY' | 'HISTORY';
 
 // ── Fake user profiles for the 2 seeded reports ──────────────────────────────
 const PROFILES = [
@@ -59,6 +61,28 @@ function pipelineInfo(report: FloodReport) {
     if (ai === VerificationStatus.UNVERIFIED) return { label: 'Escalated', cls: 'tw-badge--orange', icon: '⚠️', phase: 2 };
     return { label: 'Processing', cls: 'tw-badge--gray', icon: '🔄', phase: 1 };
 }
+
+// ── Distance & Time Utilities ────────────────────────────────────────────────
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+function isToday(isoString: string) {
+    const d = new Date(isoString);
+    const today = new Date();
+    return d.getDate() === today.getDate() &&
+        d.getMonth() === today.getMonth() &&
+        d.getFullYear() === today.getFullYear();
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 export function ReportPage() {
@@ -117,7 +141,7 @@ export function ReportPage() {
             )}
             {screen === 'REPORT' && (
                 <ReportForm
-                    userLocation={{ lat: geo.lat ?? 3.1498, lng: geo.lng ?? 101.6942, accuracy: geo.accuracy ?? 10 }}
+                    userLocation={{ lat: geo.lat ?? 3.1578, lng: geo.lng ?? 101.7119, accuracy: geo.accuracy ?? 10 }}
                     onSubmit={handleReportSubmit}
                     onSafe={handleSafe}
                     onCancel={() => setScreen('LIST')}
@@ -140,18 +164,47 @@ function FeedScreen({
     onActivateEmergency: () => void;
     onOpenModerator: () => void;
 }) {
+    const { floodReports, userPosition } = useApp();
     const [filter, setFilter] = useState<FilterTab>('all');
+    const [areaFilter, setAreaFilter] = useState<AreaFilter>('MY_AREA');
+    const [timeFilter, setTimeFilter] = useState<TimeFilter>('TODAY');
+
+    const userLat = userPosition.lat;
+    const userLng = userPosition.lng;
 
     const filtered = useMemo(() => {
-        if (filter === 'verified')
-            return reports.filter(r =>
+        let list = [...reports];
+
+        // 1. Status Filter
+        if (filter === 'verified') {
+            list = list.filter(r =>
                 r.humanReview.status === HumanReviewStatus.APPROVED ||
                 r.humanReview.status === HumanReviewStatus.OVERRIDDEN,
             );
-        if (filter === 'pending')
-            return reports.filter(r => r.humanReview.status === HumanReviewStatus.PENDING);
-        return reports;
-    }, [reports, filter]);
+        } else if (filter === 'pending') {
+            list = list.filter(r => r.humanReview.status === HumanReviewStatus.PENDING);
+        }
+
+        // 2. Area Filter
+        list = list.filter(r => {
+            const dist = calculateDistance(userLat, userLng, r.autoTags.lat, r.autoTags.lng);
+            const inArea = dist <= 5;
+
+            // Debug distance log to help identify why reports might be mis-categorized
+            console.log(`[Filter] Report ${r.id.slice(0, 8)}: dist=${dist.toFixed(2)}km, inArea=${inArea}, filter=${areaFilter}`);
+
+            return areaFilter === 'MY_AREA' ? inArea : !inArea;
+        });
+
+        // 3. Time Filter
+        list = list.filter(r => {
+            const today = isToday(r.createdAt);
+            return timeFilter === 'TODAY' ? today : !today;
+        });
+
+        return list;
+    }, [reports, filter, areaFilter, timeFilter, userLat, userLng]);
+
 
     const verifiedCount = reports.filter(
         r => r.humanReview.status === HumanReviewStatus.APPROVED ||
@@ -168,10 +221,19 @@ function FeedScreen({
                     <div className="tw-header__logo">🛰️</div>
                     <div>
                         <h1 className="tw-header__title">Community <em>Sentinel</em></h1>
-                        <p className="tw-header__sub">Dual AI + human verified flood reports · Kuala Lumpur</p>
+                        <p className="tw-header__sub">AI + Human verified reports · KL Metro</p>
                     </div>
                 </div>
                 <div className="tw-header__right">
+                    <div className="tw-header__location-chip">
+                        <span className="tw-loc-dot" />
+                        <span className="tw-loc-text">{placeLabel(userLat, userLng)}</span>
+                    </div>
+                    
+                    <button className="tw-header-report-btn" onClick={onActivateEmergency} id="report-emergency-btn">
+                        🚨 Report Flood
+                    </button>
+
                     <button className="tw-icon-btn" onClick={onOpenModerator} id="moderator-panel-btn" title="Moderator">
                         🔑
                     </button>
@@ -198,35 +260,87 @@ function FeedScreen({
                 <div className="tw-stat-sep" />
                 <div className="tw-stat">
                     <span className="tw-stat__n tw-stat__n--red">
-                        {reports.filter(r => r.aiResult?.waterDetected).length}
+                        {reports.filter(r => isFloodActive(r)).length}
                     </span>
                     <span className="tw-stat__l">Flood Active</span>
                 </div>
             </div>
 
-            {/* ── Filter tabs ── */}
-            <div className="tw-tabs">
-                {(['all', 'verified', 'pending'] as FilterTab[]).map(t => (
-                    <button
-                        key={t}
-                        className={`tw-tab ${filter === t ? 'tw-tab--active' : ''}`}
-                        onClick={() => setFilter(t)}
-                    >
-                        {t === 'all' && <>🌊 All <span className="tw-tab__count">{reports.length}</span></>}
-                        {t === 'verified' && <>✅ Verified <span className="tw-tab__count">{verifiedCount}</span></>}
-                        {t === 'pending' && <>⏳ Pending <span className="tw-tab__count">{pendingCount}</span></>}
-                    </button>
-                ))}
+            {/* ── Filter Station (New Design) ── */}
+            <div className="tw-filter-station-v2">
+                <div className="tw-area-row">
+                    {(['MY_AREA', 'OTHER_AREAS'] as AreaFilter[]).map(a => (
+                        <button
+                            key={a}
+                            className={`tw-area-tab ${areaFilter === a ? 'active' : ''}`}
+                            onClick={() => setAreaFilter(a)}
+                        >
+                            <span className="tw-tab-icon">{a === 'MY_AREA' ? '📍' : '👥'}</span>
+                            {a === 'MY_AREA' ? 'My Area' : 'Other Areas'}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="tw-time-container">
+                    {/* ── Sub-tabs for MY_AREA ── */}
+                    <div className={`tw-time-row ${areaFilter !== 'MY_AREA' ? 'tw-time-row--dimmed' : ''}`}>
+                        {(['TODAY', 'HISTORY'] as TimeFilter[]).map(t => (
+                            <button
+                                key={`my-${t}`}
+                                className={`tw-time-tab ${areaFilter === 'MY_AREA' && timeFilter === t ? 'active' : ''}`}
+                                onClick={() => {
+                                    setAreaFilter('MY_AREA');
+                                    setTimeFilter(t);
+                                }}
+                            >
+                                <span className="tw-tab-icon">{t === 'TODAY' ? '📅' : '🕒'}</span>
+                                {t === 'TODAY' ? 'Today' : 'History'}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* ── Sub-tabs for OTHER_AREAS ── */}
+                    <div className={`tw-time-row ${areaFilter !== 'OTHER_AREAS' ? 'tw-time-row--dimmed' : ''}`}>
+                        {(['TODAY', 'HISTORY'] as TimeFilter[]).map(t => (
+                            <button
+                                key={`other-${t}`}
+                                className={`tw-time-tab ${areaFilter === 'OTHER_AREAS' && timeFilter === t ? 'active' : ''}`}
+                                onClick={() => {
+                                    setAreaFilter('OTHER_AREAS');
+                                    setTimeFilter(t);
+                                }}
+                            >
+                                <span className="tw-tab-icon">{t === 'TODAY' ? '📅' : '🕒'}</span>
+                                {t === 'TODAY' ? 'Today' : 'History'}
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
 
-            {/* ── Disclaimer banner ── */}
-            <div className="tw-disclaimer">
-                <span className="tw-disclaimer__icon">⚠️</span>
-                <span className="tw-disclaimer__text">
-                    Images shared on social media during floods cannot independently confirm flood authenticity.
-                    All reports undergo <strong>AI + human review</strong> before reaching verified status.
-                </span>
+            <div className="tw-control-bar">
+                <div className="tw-status-pills">
+                    <button className={`tw-pill-v2 ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>
+                        📅 All
+                    </button>
+                    <button className={`tw-pill-v2 ${filter === 'verified' ? 'active' : ''}`} onClick={() => setFilter('verified')}>
+                        ✅ Verified
+                    </button>
+                    <button className={`tw-pill-v2 ${filter === 'pending' ? 'active' : ''}`} onClick={() => setFilter('pending')}>
+                        🟡 Pending
+                    </button>
+                </div>
+
+                <div className="tw-bar-actions">
+                    <button className="tw-bar-btn"><span className="btn-icon">🔍</span> Filters ▾</button>
+                    <button className="tw-bar-btn"><span className="btn-icon">⇅</span> Sort: Newest ▾</button>
+                    <div className="tw-view-toggle">
+                        <button className="tw-view-btn active">▦</button>
+                        <button className="tw-view-btn">☰</button>
+                    </div>
+                </div>
             </div>
+
 
             {/* ── Feed content ── */}
             <div className="tw-content">
@@ -239,14 +353,6 @@ function FeedScreen({
                         ))}
                     </div>
                 )}
-            </div>
-
-            {/* ── Report FAB ── */}
-            <div className="tw-fab-wrap">
-                <button className="tw-fab" onClick={onActivateEmergency} id="report-emergency-btn">
-                    🚨
-                </button>
-                <span className="tw-fab__label">Report Flood</span>
             </div>
 
             {/* ── Bottom info bar ── */}

@@ -45,16 +45,22 @@ const createShelterIcon = (isSelected: boolean) => new L.DivIcon({
 });
 
 // Sensor icon
-const createSensorIcon = () => new L.DivIcon({
-    className: 'map-sensor-icon',
-    html: `
-        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse">
-            <span class="text-sm">💧</span>
-        </div>
-    `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-});
+const createSensorIcon = (status: 'SAFE' | 'WARNING' | 'DANGER') => {
+    const isDanger = status === 'DANGER';
+    const bgColor = isDanger ? 'bg-red-500' : 'bg-blue-500';
+    const shadowColor = isDanger ? 'rgba(239,68,68,0.5)' : 'rgba(59,130,246,0.5)';
+    
+    return new L.DivIcon({
+        className: 'map-sensor-icon',
+        html: `
+            <div class="w-8 h-8 ${bgColor} rounded-full flex items-center justify-center border-2 border-white shadow-[0_0_15px_${shadowColor}] animate-pulse">
+                <span class="text-sm">💧</span>
+            </div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+    });
+};
 
 // Map controller
 function MapController({ center, zoom = 14, shouldAnimate }: { center: [number, number] | null, zoom?: number, shouldAnimate: boolean }) {
@@ -99,7 +105,7 @@ export function ShelterPage() {
     const navigate = useNavigate();
     const location = useLocation();
     const focusSensor = location.state?.focusSensor;
-    const { userPosition, selectedLocation, prediction, setShelter, navigateToShelter, transportMode, setTransportMode, isRouteLoading, setLocation } = useApp();
+    const { userPosition, selectedLocation, prediction, setShelter, navigateToShelter, transportMode, setTransportMode, isRouteLoading, setLocation, iotStatus } = useApp();
     const [selectedShelterId, setSelectedShelterId] = useState<string | null>(null);
     const [animateToShelter, setAnimateToShelter] = useState(false);
     const [selectedMode, setSelectedMode] = useState<TransportMode>(transportMode);
@@ -137,7 +143,7 @@ export function ShelterPage() {
 
     const shelters = useMemo(() => getSheltersWithDistance(userPosition), [userPosition]);
     const userIcon = useMemo(() => createUserIcon(), []);
-    const sensorIcon = useMemo(() => createSensorIcon(), []);
+    const sensorIcon = useMemo(() => createSensorIcon(iotStatus), [iotStatus]);
     const selectedShelter = shelters.find(s => s.id === selectedShelterId);
 
     // All positions for initial bounds
@@ -201,7 +207,17 @@ export function ShelterPage() {
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
                     {/* IoT Sensor River Marker */}
-                    <Marker position={[3.149, 101.696]} icon={sensorIcon} />
+                    <Marker 
+                        position={[3.149, 101.696]} 
+                        icon={sensorIcon} 
+                        eventHandlers={{
+                            click: () => {
+                                if (iotStatus === 'DANGER') {
+                                    navigate('/reports');
+                                }
+                            }
+                        }}
+                    />
 
                     <Marker position={[userPosition.lat, userPosition.lng]} icon={userIcon} />
 

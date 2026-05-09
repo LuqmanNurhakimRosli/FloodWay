@@ -6,7 +6,7 @@ import { Fragment } from 'react';
 import { Marker, Popup, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import { useApp } from '../store';
-import { isFullyVerified, HumanReviewStatus } from '../types/report';
+import { isFullyVerified, HumanReviewStatus, isFloodActive } from '../types/report';
 
 // Pulse marker icon for flood reports
 const createReportMarkerIcon = (isFlood: boolean) => new L.DivIcon({
@@ -26,8 +26,8 @@ const createReportMarkerIcon = (isFlood: boolean) => new L.DivIcon({
 export function FloodReportLayer() {
     const { floodReports } = useApp();
 
-    // Only show reports that are FULLY verified (AI + Human)
-    const verifiedReports = floodReports.filter(isFullyVerified);
+    // Only show reports that are FULLY verified (AI + Human) AND ACTIVE (< 24h)
+    const verifiedReports = floodReports.filter(r => isFullyVerified(r) && isFloodActive(r));
 
     if (verifiedReports.length === 0) return null;
 
