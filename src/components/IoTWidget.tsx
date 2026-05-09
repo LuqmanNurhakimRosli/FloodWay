@@ -16,37 +16,6 @@ export function IoTWidget() {
         }
     }, []);
 
-    if (!iotConnected) {
-        return (
-            <div className="fixed bottom-24 right-4 z-50 bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-xl shadow-black/50 pointer-events-auto">
-                <div className="flex flex-col items-center gap-2 text-center">
-                    <p className="text-xs text-white/50 font-medium">IoT Sensor</p>
-                    {isSupported ? (
-                        <button 
-                            onClick={connectIoT}
-                            className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-2 px-4 rounded-xl transition-colors shadow-lg shadow-blue-500/20"
-                        >
-                            Connect USB/COM
-                        </button>
-                    ) : (
-                        <div className="bg-white/5 border border-white/10 text-white/40 text-xs font-semibold py-2 px-3 rounded-xl">
-                            Offline (Unsupported)
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-    }
-
-    // Color mapping based on status
-    const colors = {
-        DANGER: { fill: '#ef4444', text: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/30' },
-        WARNING: { fill: '#eab308', text: 'text-yellow-500', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30' },
-        SAFE: { fill: '#3b82f6', text: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/30' }
-    };
-
-    const currentStyle = colors[iotStatus] || colors.SAFE;
-    const distance = (Math.round(calculateDistance(userPosition, IOT_SENSOR_LOCATION.position) * 10) / 10).toFixed(1);
 
     if (!iotConnected) {
         return (
