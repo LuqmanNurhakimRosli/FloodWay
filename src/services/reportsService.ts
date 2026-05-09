@@ -139,15 +139,16 @@ function deduplicate(reports: FloodReport[]): FloodReport[] {
     const seen = new Set<string>();
     const result: FloodReport[] = [];
     for (const r of reports) {
-        // Universal key: first 120 chars of description (always unique between real reports)
-        const key = r.description.trim().slice(0, 120);
-        if (!seen.has(key)) {
-            seen.add(key);
+        // Dedup by ID is safest for modern Firestore documents.
+        // Legacy addDoc copies with same content are rare now that ensureSeedDocs uses fixed IDs.
+        if (!seen.has(r.id)) {
+            seen.add(r.id);
             result.push(r);
         }
     }
     return result;
 }
+
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 

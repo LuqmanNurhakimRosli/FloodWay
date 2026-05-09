@@ -25,6 +25,8 @@ import { ForecastOverlay } from '../components/ForecastOverlay';
 import { FloodZoneLayer } from '../components/FloodZoneLayer';
 import { FloodTimelineScrubber } from '../components/FloodTimelineScrubber';
 import { FloodReportLayer } from '../components/FloodReportLayer';
+import { isFullyVerified, isFloodActive } from '../types/report';
+
 
 // Custom user icon
 const createUserIcon = () => new L.DivIcon({
@@ -115,7 +117,8 @@ export function ShelterPage() {
     const navigate = useNavigate();
     const location = useLocation();
     const focusSensor = location.state?.focusSensor;
-    const { userPosition, selectedLocation, prediction, setShelter, navigateToShelter, transportMode, setTransportMode, isRouteLoading, setLocation, iotStatus } = useApp();
+    const { userPosition, selectedLocation, prediction, setShelter, navigateToShelter, transportMode, setTransportMode, isRouteLoading, setLocation, iotStatus, floodReports } = useApp();
+
     const [selectedShelterId, setSelectedShelterId] = useState<string | null>(null);
     const [animateToShelter, setAnimateToShelter] = useState(false);
     const [selectedMode, setSelectedMode] = useState<TransportMode>(transportMode);
@@ -156,11 +159,22 @@ export function ShelterPage() {
     const sensorIcon = useMemo(() => createSensorIcon(iotStatus), [iotStatus]);
     const selectedShelter = shelters.find(s => s.id === selectedShelterId);
 
-    // All positions for initial bounds
-    const allPositions: [number, number][] = useMemo(() => [
-        [userPosition.lat, userPosition.lng],
-        ...shelters.map(s => [s.position.lat, s.position.lng] as [number, number])
-    ], [userPosition, shelters]);
+    // All positions for initial bounds (User + Shelters + Active Reports)
+    const allPositions: [number, number][] = useMemo(() => {
+        const positions: [number, number][] = [
+            [userPosition.lat, userPosition.lng],
+            ...shelters.map(s => [s.position.lat, s.position.lng] as [number, number])
+        ];
+
+        // Add active/verified reports to bounds so user doesn't miss them
+        const verifiedReports = floodReports.filter(r => isFullyVerified(r) && isFloodActive(r));
+        verifiedReports.forEach(r => {
+            positions.push([r.autoTags.lat, r.autoTags.lng]);
+        });
+
+        return positions;
+    }, [userPosition, shelters, floodReports]);
+
 
     const handleShelterClick = useCallback((shelter: Shelter) => {
         setSelectedShelterId(shelter.id);

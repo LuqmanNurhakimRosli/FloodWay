@@ -101,20 +101,28 @@ export interface FloodReport {
 export function isFullyVerified(report: FloodReport): boolean {
     const humanStatus = report.humanReview.status;
 
-    // Human explicitly overrode (approved despite AI rejection) → always show
-    if (humanStatus === HumanReviewStatus.OVERRIDDEN) return true;
-
-    // Human rejected → never show, regardless of AI result
+    // 1. Human Rejection is FINAL -> Never show
     if (humanStatus === HumanReviewStatus.REJECTED) return false;
 
-    // Human approved → also require AI to have passed
+    // 2. Human Override is FINAL -> Always show
+    if (humanStatus === HumanReviewStatus.OVERRIDDEN) return true;
+
+    // 3. Human Approved -> Require AI to also have passed (Standard protocol)
     if (humanStatus === HumanReviewStatus.APPROVED) {
         return report.aiResult?.status === VerificationStatus.VERIFIED;
     }
 
-    // Human is still PENDING → don't show yet
+    // 4. Human is still PENDING -> Show if AI verified it OR even if low confidence (Unverified)
+    // We show Unverified on map as "Incidents" (Warning icon) to ensure community awareness.
+    if (humanStatus === HumanReviewStatus.PENDING) {
+        return report.aiResult?.status === VerificationStatus.VERIFIED || 
+               report.aiResult?.status === VerificationStatus.UNVERIFIED;
+    }
+
+
     return false;
 }
+
 
 // Helper: is a report "Active"?
 // Rule: Created within the last 24 hours.
